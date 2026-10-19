@@ -61,8 +61,14 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 
 ```bash
 # Desde la raíz del repositorio FitFamily
-pip install crewai duckduckgo-search tavily-python
+python -m pip install -r requirements.txt
 ```
+**Nota sobre dependencias:**
+- El codigo utiliza ddgs (no duckduckgo-search, que es el nombre anterior del paquete).
+- 	avily-python es opcional: solo se necesita si se configura TAVILY_API_KEY en el entorno.
+- crewai trae muchas dependencias transitivas; solo las anteriores son estrictamente necesarias.
+
+
 
 **No se requieren** credenciales, claves API ni servicios externos para el funcionamiento básico.
 
@@ -98,6 +104,22 @@ print(f"Cobertura: {result.coverage_percentage}%")
 **Sin conexión a Internet**: El módulo funciona completamente offline. Las búsquedas web devolverán errores controlados, pero la estructura, validación y lógica interna son totalmente funcionales.
 
 **Con conexión a Internet**: `search_web` y `read_web_page` realizarán búsquedas y lecturas reales.
+
+## Semántica de coverage_percentage
+
+El campo `coverage_percentage` en `ResearchResult` representa la **cobertura de respuestas generadas mediante análisis LLM**, NO el volumen de datos recogidos.
+
+- `0.0%`: Sin análisis LLM. El módulo funciona con herramientas deterministas (sin clave OpenAI).
+- Los datos reales (competidores, evidencias, URLs, fragmentos) SÍ se recogen de la web.
+- Las preguntas del encargo se marcan como no resueltas si no hay LLM para analizarlas.
+- Distinción importante:
+  - **Recopilación de datos**: Competidores y evidencias reales de la web (SÍ se realiza).
+  - **Análisis LLM**: Interpretación y respuesta a preguntas (NO se realiza sin clave OpenAI).
+  - **Preguntas respondidas**: Aquellas respaldadas por evidencia suficiente.
+  - **Preguntas pendientes**: Las que requieren análisis LLM o datos adicionales.
+  - **Errores**: Fallos de búsqueda o lectura se registran pero no detienen la ejecución.
+
+El módulo NO afirma haber ejecutado un flujo de CrewAI cuando realiza la recopilación directamente mediante herramientas Python.
 
 ---
 

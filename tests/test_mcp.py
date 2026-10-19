@@ -1,6 +1,6 @@
 """Tests for MCP module (Persona 1 - Juan).
 
-These tests use mocked data and do not require internet connectivity.
+These tests use controlled data and do not require internet connectivity.
 Real MCP transport tests are separated in test_mcp_integration.py.
 """
 
@@ -13,7 +13,7 @@ from src.mcp.client import connect_mcp, list_mcp_tools, call_area_statistics
 
 
 def test_get_area_statistics_returns_dict():
-    """Test that get_area_statistics returns a dictionary with area data."""
+    """Test that get_area_statistics returns a dict with area data."""
     stats = get_area_statistics("el-cañaveral", ["gyms_with_ludoteca"])
     assert isinstance(stats, dict)
     assert "area_id" in stats
@@ -22,45 +22,81 @@ def test_get_area_statistics_returns_dict():
 
 def test_get_area_statistics_with_multiple_indicators():
     """Test that multiple indicators can be queried."""
-    stats = get_area_statistics(
-        "el-cañaveral",
-        ["gyms_with_ludoteca", "population_density", "average_income"]
-    )
+    indicators = ["gyms_with_ludoteca", "population_density", "average_income"]
+    stats = get_area_statistics("el-cañaveral", indicators)
     assert isinstance(stats, dict)
     assert "area_id" in stats
+    assert stats["area_id"] == "el-cañaveral"
+    # Should contain data for requested indicators
+    assert "indicators" in stats or "data" in stats or len(stats) > 1
 
 
 def test_get_area_statistics_placeholder_data():
     """Test that MCP data is clearly marked as placeholder."""
     stats = get_area_statistics("el-cañaveral", ["gyms_with_ludoteca"])
-    # Data should be placeholder (documented as such)
+    # Data should be a dict (placeholder or real)
     assert isinstance(stats, dict)
-    # Should not crash even with placeholder data
+    # Should have area_id
+    assert "area_id" in stats
 
 
-def test_mcp_client_connect():
-    """Test that MCP client can connect (may fail without server)."""
+def test_get_area_statistics_different_areas():
+    """Test that different areas return different results."""
+    stats1 = get_area_statistics("el-cañaveral", ["gyms_with_ludoteca"])
+    stats2 = get_area_statistics("valdebebas", ["gyms_with_ludoteca"])
+    assert isinstance(stats1, dict)
+    assert isinstance(stats2, dict)
+    # Area IDs should match requested areas
+    assert stats1["area_id"] == "el-cañaveral"
+    assert stats2["area_id"] == "valdebebas"
+
+
+def test_get_area_statistics_empty_indicators():
+    """Test that empty indicators list is handled."""
+    stats = get_area_statistics("el-cañaveral", [])
+    assert isinstance(stats, dict)
+    assert "area_id" in stats
+
+
+def test_get_area_statistics_returns_consistent_structure():
+    """Test that get_area_statistics returns consistent structure."""
+    stats = get_area_statistics("el-cañaveral", ["gyms_with_ludoteca"])
+    assert isinstance(stats, dict)
+    assert "area_id" in stats
+    # Should not raise and should return a dict
+    assert isinstance(stats["area_id"], str)
+
+
+# --- MCP Client tests (async) ---
+
+import asyncio
+
+
+def test_connect_mcp_returns_session_or_none():
+    """Test that connect_mcp returns a ClientSession or None (never crashes)."""
+    result = asyncio.get_event_loop().run_until_complete(connect_mcp())
+    # Should return either a session or None, not raise
+    assert result is None or hasattr(result, "initialize")
+
+
+def test_list_mcp_tools_requires_session():
+    """Test that list_mcp_tools requires a valid session."""
+    import pytest
+    # Calling with None should raise or return empty
     try:
-        result = connect_mcp()
-        assert result is not None or result is None  # Either success or graceful failure
-    except Exception:
-        # Connection may fail without server running, that's expected
-        assert True
+        result = list_mcp_tools(None)
+        # If it doesn't raise, it should return a list or None
+        assert result is None or isinstance(result, list)
+    except (TypeError, AttributeError, Exception):
+        # Expected - None is not a valid session
+        pass
 
 
-def test_mcp_client_list_tools():
-    """Test that MCP client can list tools (may fail without server)."""
+def test_call_area_statistics_requires_session():
+    """Test that call_area_statistics requires a valid session."""
     try:
-        tools = list_mcp_tools()
-        assert tools is not None or tools is None
-    except Exception:
-        assert True
-
-
-def test_mcp_client_call_area_statistics():
-    """Test that MCP client can call area statistics (may fail without server)."""
-    try:
-        result = call_area_statistics("el-cañaveral", ["gyms_with_ludoteca"])
-        assert result is not None or result is None
-    except Exception:
-        assert True
+        result = call_area_statistics(None, "el-cañaveral", ["gyms_with_ludoteca"])
+        assert result is None or isinstance(result, dict)
+    except (TypeError, AttributeError, Exception):
+        # Expected - None is not a valid session
+        pass

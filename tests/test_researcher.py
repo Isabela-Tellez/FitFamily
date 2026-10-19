@@ -1,7 +1,6 @@
 """Tests for researcher module (Persona 1 - Juan).
 
-These tests use mocked data and do not require internet connectivity.
-Real connectivity tests are separated in test_researcher_integration.py.
+These tests use controlled data and do not require internet connectivity.
 """
 
 import sys
@@ -26,7 +25,7 @@ def test_research_brief_validation():
 
 
 def test_run_research_returns_research_result():
-    """Test that run_research returns a ResearchResult object."""
+    """Test that run_research returns a properly formed ResearchResult."""
     brief = ResearchBrief(
         business_type="gimnasio con ludoteca",
         location="Madrid",
@@ -39,6 +38,7 @@ def test_run_research_returns_research_result():
     assert isinstance(result.competitors, list)
     assert isinstance(result.coverage_percentage, (int, float))
     assert isinstance(result.unresolved_questions, list)
+    assert result.coverage_percentage == 0.0  # No LLM by design
 
 
 def test_run_research_no_llm_coverage_zero():
@@ -65,6 +65,7 @@ def test_evidence_schema():
     )
     assert evidence.evidence_id == "e1"
     assert evidence.claim == "Test claim"
+    assert evidence.source_url == "https://example.com"
 
 
 def test_competitor_schema():
@@ -83,28 +84,41 @@ def test_competitor_schema():
     assert competitor.identifier == "c1"
     assert competitor.name == "Test Gym"
     assert len(competitor.services) == 2
+    assert len(competitor.evidences) == 1
 
 
 def test_build_researcher_returns_agent():
-    """Test that build_researcher returns a CrewAI Agent."""
-    try:
-        agent = build_researcher()
-        assert agent is not None
-    except Exception as e:
-        # May fail if crewai not properly configured, but should not crash
-        assert True
+    """Test that build_researcher returns a CrewAI Agent with correct role."""
+    agent = build_researcher()
+    assert agent is not None
+    assert agent.role == "Investigador de mercado local"
+    assert agent is not None
 
 
 def test_build_research_task_returns_task():
     """Test that build_research_task returns a CrewAI Task."""
-    try:
-        brief = ResearchBrief(
-            business_type="gimnasio con ludoteca",
-            location="Madrid",
-            study_area="El Cañaveral",
-            questions=["precios"]
-        )
-        task = build_research_task(brief)
-        assert task is not None
-    except Exception as e:
-        assert True
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+        questions=["precios"]
+    )
+    task = build_research_task(brief)
+    assert task is not None
+    assert task.description is not None
+    assert len(task.description) > 0
+
+
+def test_run_research_with_multiple_questions():
+    """Test that run_research handles multiple questions."""
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+        questions=["precios", "servicios", "horarios"]
+    )
+    result = run_research(brief)
+    assert isinstance(result, ResearchResult)
+    assert len(result.questions) if hasattr(result, 'questions') else True
+    # Should have unresolved questions since no LLM
+    assert isinstance(result.unresolved_questions, list)

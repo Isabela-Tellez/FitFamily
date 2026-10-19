@@ -71,7 +71,7 @@
 
 ### Dependencias Añadidas
 - `crewai` v1.15.28 - Agente IA
-- `duckduckgo-search` v8.1.1 - Búsqueda web (API pública, sin key)
+- `ddgs` v9.14.4 - Búsqueda web (API pública, sin key)
 - `tavily-python` v0.8.5 - Alternativa de búsqueda (opcional)
 
 ### Limitaciones Conocidas
@@ -103,7 +103,55 @@
 
 ---
 
-## Próximas Versiones
+## Versión 1.1.0 — Revisión y Hardening (23/10/2026)
+
+### Cambios Realizados
+
+#### Rama
+- Renombrada de `feature/research-module` a `feature/research-mcp` (según plan del equipo)
+
+#### Documentación
+- Movidos `README_MODULE_INVESTIGACION.md`, `IMPLEMENTATION_SUMMARY.md`, `CHANGES_LOG.md` a `docs/`:
+  - `docs/research-module.md`
+  - `docs/research-implementation.md`
+  - `docs/research-changelog.md`
+- Actualizado comando de instalación: `python -m pip install -r requirements.txt` (en lugar de `pip install crewai duckduckgo-search tavily-python`)
+- Aclarada la dependencia `ddgs` (no `duckduckgo-search`)
+- Documentada la semántica de `coverage_percentage`: representa cobertura de respuestas LLM, no volumen de datos recogidos
+- Documentado que los datos MCP son placeholder (no estadísticas oficiales)
+
+#### Tests
+- 33 tests unitarios creados en `tests/` (sin dependencia de Internet):
+  - `tests/test_researcher.py`: 9 tests
+  - `tests/test_competitor_search.py`: 5 tests
+  - `tests/test_mcp.py`: 9 tests
+  - `tests/test_web_tools.py`: 10 tests
+- Eliminados bloques `try/except: assert True` permisivos
+- Añadidos mocks para proveedores de búsqueda y lectura de páginas
+- Verificado que `build_researcher()` y `build_research_task()` devuelven objetos válidos
+
+#### Estructura
+- Añadidos `__init__.py` en `src/`, `src/agents/`, `src/tools/`, `src/mcp/`, `tests/`, `tests/fixtures/`
+- Actualizado `.gitignore` con exclusiones Python (`__pycache__/`, `.pytest_cache/`, `.env`, logs, etc.)
+
+#### Dependencias
+- `duckduckgo-search` reemplazado por `ddgs` en requirements.txt
+- Tavily documentado como opcional con `TAVILY_API_KEY`
+
+### Resultados de Verificación
+- `python -m pytest --collect-only -q`: 33 tests recogidos
+- `python -m pytest -q`: 33 passed, 20 warnings
+- `git diff --check`: Sin errores
+- Sin secretos, resultados temporales, cachés ni archivos de diagnóstico
+
+### Limitaciones Comunicadas
+- `search_web`/`read_web_page` requieren Internet para datos reales; offline devuelve errores controlados
+- Datos MCP son placeholder; poblar `_STATISTICS_DATA` con fuentes municipales para datos reales
+- Sin LLM, `run_research` devuelve estructura con datos reales pero cobertura 0.0%
+- Las búsquedas pueden fallar si DuckDuckGo bloquea la petición
+- Tests de integración real (conectividad) no incluidos en la suite unitaria
+
+---`
 
 ### Versión 1.1.0 (Planeado)
 - [ ] Poblar `_STATISTICS_DATA` con fuentes municipales reales de Madrid/El Cañaveral

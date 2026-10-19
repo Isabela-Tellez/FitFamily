@@ -11,7 +11,7 @@ Este documento registra todas las modificaciones y creación de archivos durante
 - Repositorio clonado en `C:\Users\JUAN\Desktop\Proyectos\FitFamily`
 - Rama `main` con commit inicial (`76c60e8`): `.gitignore`, `LICENSE`, `README.md`
 - Remotes: `origin/main`, `origin/dev` (rama dev existe pero está vacía)
-- Entorno Python: Python 3.13.12 con paquetes: `pydantic`, `mcp`, `crewai` (v1.15.28), `duckduckgo-search`, `tavily-python`, `httpx`, `beautifulsoup4`, `pytest`
+- Entorno Python: Python 3.13.12 con paquetes: `pydantic`, `mcp`, `crewai` (v1.15.28), `ddgs` (v9.14.4), `tavily-python` (v0.8.5), `httpx`, `beautifulsoup4`, `pytest`
 
 ### Hallazgos
 - No había código Python previo en el repositorio (solo archivos de configuración)
