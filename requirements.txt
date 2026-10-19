@@ -1,0 +1,17 @@
+# requirements.txt - Dependencias para FitFamily Módulo Persona 1
+# --------------------------------
+# Paquetes obligatorios:
+# - crewai: Marco de agentes AI
+# - ddgs: Búsqueda web (reemplaza a duckduckgo-search)
+# - tavily-python: Búsqueda alternativa (opcional, requiere TAVILY_API_KEY)
+
+crewai==1.15.28
+ddgs==9.14.4
+tavily-python==0.8.5
+
+# Notas:
+# - El paquete duckduckgo-search NO se incluye porque el código usa from ddgs import DDGS
+# - tavily-python es opcional: solo necesita TAVILY_API_KEY configurado en el entorno
+#   para usar Tavily como proveedor de búsqueda alternativa
+# - crewai trae muchas dependencias transitivas; solo las anteriores son estrictamente
+#   necesarias para el módulo de Persona 1

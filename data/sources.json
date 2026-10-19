@@ -1,0 +1,24 @@
+{
+  "sources": [
+    {
+      "id": "ddg_gym_search",
+      "name": "DuckDuckGo Web Search",
+      "url": "https://duckduckgo.com/",
+      "type": "search_engine",
+      "geo_scope": "global",
+      "period": "current",
+      "use": "initial competitor discovery and market research",
+      "limitations": "Results may be blocked or limited by the search provider; does not guarantee access to all local businesses."
+    },
+    {
+      "id": "mcp_local_data",
+      "name": "Local Statistics (FitFamily module)",
+      "url": "n/a - local data store",
+      "type": "local_documentation",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "2020-2024",
+      "use": "provide statistics via MCP get_area_statistics tool",
+      "limitations": "Data is placeholder; no live database connected. Real data would require municipal sources."
+    }
+  ]
+}
