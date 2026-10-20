@@ -95,16 +95,18 @@ _STATISTICS_DATA: Dict[str, Any] = {
             ),
         },
         "businesses_open": {
-            "value": 126,
-            "unit": "negocios",
-            "reference_period": "1 de junio de 2025",
-            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "value": 234,
+            "unit": "locales abiertos",
+            "reference_period": "20 de octubre de 2026 (dataset actualizado diariamente)",
+            "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
             "consulted_at": "2026-10-20",
-            "verification_status": "unverified",
+            "verification_status": "verified",
             "limitations": (
-                "Fuente secundaria: Wikipedia 'El Cañaveral' (ed. 6 sep 2026), citando datos "
-                "municipales. No se localizó el registro municipal original que respalde la cifra. "
-                "Incluye todo tipo de actividad, no solo ocio/deporte."
+                "Locales con situación 'Abierto' en El Cañaveral según el Censo de Locales "
+                "del Ayuntamiento de Madrid (datos.madrid.es/200085-0-censo-locales, CSV, "
+                "actualizado diariamente). 'Locales' (premises) no equivale a 'negocios' "
+                "(establecimientos): un local puede albergar varias actividades. "
+                "Cifra secundaria previa no verificada: 126 'negocios' (Wikipedia, junio 2025)."
             ),
         },
         "families_with_children": {

@@ -10,7 +10,7 @@ El servidor MCP (`src/mcp/server.py`) publica una herramienta llamada `get_area_
 | `households_total` | `null` | — | Sin verificación primaria: 9.224 (ene 2026) es cifra secundaria (Instagram/Padrón) |
 | `average_household_size` | `null` | — | Sin verificación primaria: 2,70 (ene 2026) es cifra secundaria |
 | `population_under_20_share` | 28,29 % | 1 oct 2026 | Padrón Municipal (calculado de datos.madrid.es) |
-| `businesses_open` | 126 negocios | 1 jun 2025 | Wikipedia (secundaria, citando datos municipales) |
+| `businesses_open` | 234 locales | actualizado diariamente | Censo de Locales (datos.madrid.es, actualizado diariamente) |
 | `families_with_children` | `null` | — | Sin censo directo; referencia indirecta: 25,46 % de la población es menor de 20 años |
 | `gyms_registered` | `null` | — | Sin censo municipal publicado; conteo manual no verificado |
 | `gyms_with_ludoteca` | `null` | — | Sin censo municipal; ningún centro localizado publica ludoteca de forma verificable |

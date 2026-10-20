@@ -21,13 +21,23 @@
       "limitations": "Dataset mensual, actualizado el 6 de octubre de 2026. Los datos de hogares no están disponibles a nivel de barrio en este dataset."
     },
     {
+      "id": "censo_locales_madrid",
+      "name": "Censo de Locales y Actividades - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "type": "official_open_data",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "actualizado diariamente (consulta: 20 oct 2026)",
+      "use": "businesses_open: conteo de locales con situación 'Abierto' en El Cañaveral",
+      "limitations": "Cuenta locales (premises), no negocios (establecimientos). Un local puede albergar varias actividades."
+    },
+    {
       "id": "wikipedia_canaveral",
       "name": "Wikipedia - El Cañaveral",
       "url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
       "type": "secondary_source",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "ed. 6 sep 2026",
-      "use": "businesses_open (126, junio 2025) y contexto demográfico",
+      "use": "contexto demográfico y cifra secundaria de 126 negocios (jun 2025, no verificada)",
       "limitations": "Fuente secundaria que cita datos municipales. No verificado contra registro primario."
     },
     {
