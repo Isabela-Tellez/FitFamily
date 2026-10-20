@@ -26,6 +26,7 @@ ENV/
 
 # Caches y PyCache
 __pycache__/
+*.pyc
 .pytest_cache/
 pycache/
 
