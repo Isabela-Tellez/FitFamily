@@ -197,8 +197,30 @@
 
 ---
 
-## Backlog
-- [ ] Poblar `_STATISTICS_DATA` con fuentes municipales reales de Madrid/El Cañaveral
+## Versión 1.1.2 — Población de datos MCP con fuentes verificables (20/10/2026)
+
+### Cambios Realizados
+
+#### Datos MCP (`src/mcp/server.py`)
+- `population_total`: 27 014 habitantes empadronados (agosto 2026, Padrón vía Wikipedia)
+- `households_total`: 9 224 hogares (enero 2026, Padrón)
+- `average_household_size`: 2,70 personas por hogar
+- `population_under_20_share`: 25,46 % (pirámide de población 2021)
+- `businesses_open`: 126 negocios (junio 2025)
+- `families_with_children`, `gyms_registered`, `gyms_with_ludoteca`: siguen en `null` con limitación documentada (no hay censo publicado)
+
+#### Fuentes (`data/sources.json`)
+- Añadidas: Padrón Municipal (datos.madrid.es), Wikipedia 'El Cañaveral', Nuevosureste
+- Cada indicador cita su fuente y su fecha en el campo `limitations`
+
+#### Documentación
+- `docs/research-module.md`: limitaciones MCP actualizadas (ya no son placeholder puros)
+- `tests/test_mcp.py`: ajustado al nuevo número de indicadores
+
+### Estado
+- 43 tests pasando
+- Los datos reales conviven con los `null` declarados; no se ha inventado ningún valor
+- [x] Poblar `_STATISTICS_DATA` con fuentes municipales reales de Madrid/El Cañaveral (parcial: población, hogares, negocios y pirámide; gimnasios siguen en `null`)
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

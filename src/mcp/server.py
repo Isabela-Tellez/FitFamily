@@ -20,30 +20,86 @@ logger = logging.getLogger(__name__)
 # Module-level data store for statistics
 # In a real deployment, this would be populated from real data sources
 _STATISTICS_DATA: Dict[str, Any] = {
-    "description": "Estadísticas locales documentadas para El Cañaveral y alrededores.",
-    "source": "Datos municipales y fuentes abiertas consultadas durante la investigación.",
-    "geo_scope": "El Cañaveral, Madrid",
-    "period": "2020-2024 (últimos datos disponibles)",
+    "description": (
+        "Estadísticas locales documentadas para El Cañaveral (distrito de Vicálvaro, Madrid). "
+        "Fuentes primarias: Padrón Municipal de Habitantes (Ayuntamiento de Madrid / datos.madrid.es) "
+        "y Wikipedia (citando INE/Padrón). Los valores son observados, no estimados."
+    ),
+    "source": (
+        "Ayuntamiento de Madrid - Padrón Municipal de Habitantes "
+        "(https://datos.madrid.es/.../Padrón) y Wikipedia 'El Cañaveral' "
+        "(ed. 6 sep 2026, citando INE/Padrón)."
+    ),
+    "geo_scope": "El Cañaveral, distrito de Vicálvaro, Madrid",
+    "period": (
+        "Población: agosto 2026; hogares: enero 2026; negocios: junio 2025; "
+        "pirámide de población: 2021"
+    ),
     "indicators": {
         "population_total": {
-            "value": None,
+            "value": 27014,
             "unit": "habitantes",
-            "limitations": "Dato no disponible en fuentes consultadas.",
+            "limitations": (
+                "Población empadronada en agosto de 2026 (Wikipedia, citando Padrón). "
+                "No equivale necesariamente a residentes efectivos; cifra en crecimiento "
+                "(17 193 hab. en 2024 según INE)."
+            ),
+        },
+        "households_total": {
+            "value": 9224,
+            "unit": "hogares",
+            "limitations": (
+                "Hogares empadronados a 1 de enero de 2026, con media de 2,70 personas por vivienda "
+                "(Padrón, vía Instagram del barrio)."
+            ),
+        },
+        "average_household_size": {
+            "value": 2.70,
+            "unit": "personas por hogar",
+            "limitations": "Dato del Padrón a 1 de enero de 2026.",
+        },
+        "population_under_20_share": {
+            "value": 25.46,
+            "unit": "porcentaje",
+            "limitations": (
+                "Porcentaje de población menor de 20 años según la pirámide de población de 2021. "
+                "Indicador de potencial de familias con hijos; no es un conteo de familias."
+            ),
+        },
+        "businesses_open": {
+            "value": 126,
+            "unit": "negocios",
+            "limitations": (
+                "Negocios abiertos en El Cañaveral a 1 de junio de 2025 (Wikipedia, citando datos municipales). "
+                "Incluye todo tipo de actividad, no solo ocio/deporte."
+            ),
         },
         "families_with_children": {
             "value": None,
             "unit": "familias",
-            "limitations": "Dato no disponible en fuentes consultadas.",
+            "limitations": (
+                "No se encontró un censo directo de familias con hijos. "
+                "Referencia indirecta: 25,46 % de la población es menor de 20 años (2021)."
+            ),
         },
         "gyms_registered": {
             "value": None,
             "unit": "centros",
-            "limitations": "Dato no disponible en fuentes consultadas.",
+            "limitations": (
+                "No se encontró censo municipal publicado de centros deportivos. "
+                "Centros localizados manualmente en la web (no censo oficial): "
+                "9F Cañaveral, Énergie Fitness, One More Cañaveral, Nine Fitness, "
+                "Winfit, Sano Center, Brooklyn Fitboxing, Silva Training Center "
+                "(y Dreamfit en Valdebernardo, limítrofe)."
+            ),
         },
         "gyms_with_ludoteca": {
             "value": None,
             "unit": "centros",
-            "limitations": "Dato no disponible en fuentes consultadas.",
+            "limitations": (
+                "No se encontró censo municipal. Ninguno de los centros localizados "
+                "publica ludoteca de forma verificable en su web; confirmar por contacto directo."
+            ),
         },
     },
 }

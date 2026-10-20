@@ -16,9 +16,39 @@
       "url": "n/a - local data store",
       "type": "local_documentation",
       "geo_scope": "El Cañaveral, Madrid",
-      "period": "2020-2024",
+      "period": "2021-2026",
       "use": "provide statistics via MCP get_area_statistics tool",
-      "limitations": "Data is placeholder; no live database connected. Real data would require municipal sources."
+      "limitations": "Mix of official data (padrón) and documented estimates; each indicator carries its own limitation. Real census-level data would require municipal sources."
+    },
+    {
+      "id": "padron_madrid",
+      "name": "Padrón Municipal de Habitantes - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/sites/v/index.jsp?vgnextoid=5deb7700f69e8410VgnVCM2000000c205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD",
+      "type": "official_open_data",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "2024-2026",
+      "use": "population and household counts for El Cañaveral",
+      "limitations": "Open data portal; figures may lag behind the latest padrón revision."
+    },
+    {
+      "id": "wikipedia_canaveral",
+      "name": "Wikipedia - El Cañaveral",
+      "url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+      "type": "secondary_source",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "ed. 6 sep 2026",
+      "use": "population, households, businesses, age pyramid and promotion counts",
+      "limitations": "Secondary source citing INE/Padrón and municipal data; verify against primary sources before quoting in the final report."
+    },
+    {
+      "id": "nuevosureste_canaveral",
+      "name": "Nuevosureste - El Cañaveral",
+      "url": "https://nuevosureste.es/habitantes-canaveral-madrid-2023/",
+      "type": "local_media",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "2023",
+      "use": "household size and share of Vicálvaro population",
+      "limitations": "Local media; useful as cross-check, not as primary evidence."
     }
   ]
 }

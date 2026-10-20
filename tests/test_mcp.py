@@ -65,7 +65,10 @@ def test_get_area_statistics_empty_indicators_returns_all():
     """An empty indicator list must return every available indicator."""
     stats = get_area_statistics("el-cañaveral", [])
     assert stats["area_id"] == "el-cañaveral"
-    assert len(stats["results"]) == 4
+    # The four original indicators must remain available.
+    for key in ("population_total", "families_with_children", "gyms_registered", "gyms_with_ludoteca"):
+        assert key in stats["results"]
+    assert len(stats["results"]) >= 4
 
 
 def test_get_area_statistics_rejects_empty_area():

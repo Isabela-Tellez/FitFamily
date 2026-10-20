@@ -241,9 +241,9 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - El proveedor DuckDuckGo puede bloquear búsquedas en ciertos regímenes
 
 ### Datos MCP
-- Los indicadores actuales son *placeholder* (valores `null` con limitaciones documentadas)
-- Para datos reales: poblar `_STATISTICS_DATA` en `src/mcp/server.py` con fuentes municipales de Madrid/El Cañaveral
-- Que un dato sea `null` es una respuesta válida: significa "no disponible en las fuentes consultadas", no un error del módulo
+- Mezcla de datos oficiales (Padrón Municipal) y documentados (Wikipedia, medios locales)
+- Cada indicador lleva su propia limitación; los no disponibles siguen en `null`
+- Para añadir o corregir datos: editar `_STATISTICS_DATA` en `src/mcp/server.py` y `data/sources.json`
 
 ### Transporte MCP
 - El servidor y el cliente usan el SDK oficial (`mcp`) y se comunican por `stdio` con un subproceso local
@@ -281,4 +281,4 @@ Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` e
 ---
 
 **Última actualización**: 20 de octubre de 2026
-**Versión**: 1.1.1 — Corrección del transporte MCP
+**Versión**: 1.1.2 — Datos MCP poblados con fuentes verificables
