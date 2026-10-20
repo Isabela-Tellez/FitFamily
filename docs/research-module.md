@@ -258,7 +258,8 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - Resolución DNS validada inmediatamente antes de conectar
 - Redirecciones gestionadas manualmente, validando cada destino
 - Bloqueo de IP privadas, loopback, link-local, multicast, hostnames internos y metadata
-- Limitación conocida: no se garantiza protección completa contra DNS rebinding (TOCTOU); httpx resuelve DNS en tiempo de conexión. Se documenta como riesgo pendiente.
+- **Transporte HTTP personalizado (`_ValidatingTransport`)**: conecta exclusivamente a IP validadas, resolviendo el TOCTOU/DNS rebinding. TLS/SNI y validación de certificados se preservan (httpcore pasa `server_hostname` por separado)
+- Limitación conocida: no se probaron formas alternativas de representar IP (decimal, octal, hexadecimal) ni credenciales con puertos no estándar
 
 ### Sin LLM Requerido
 - `run_research()` funciona sin clave OpenAI usando herramientas reales y deterministas

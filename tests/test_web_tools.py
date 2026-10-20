@@ -197,6 +197,36 @@ def test_read_web_page_blocks_redirect_chain():
             read_web_page("https://example.com/start")
 
 
+def test_validating_backend_connects_to_validated_ip():
+    """The transport must connect to the resolved IP, not the hostname."""
+    import socket
+    from unittest.mock import patch, MagicMock
+    from src.tools.read_web_page import _ValidatingBackend, _resolve_host
+
+    with patch("src.tools.read_web_page._resolve_host", return_value=["93.184.216.34"]), \
+         patch("socket.create_connection") as mock_conn:
+        mock_sock = MagicMock()
+        mock_conn.return_value = mock_sock
+        backend = _ValidatingBackend()
+        stream = backend.connect_tcp("example.com", 443, timeout=5.0)
+        # Connected to the IP, not the hostname
+        mock_conn.assert_called_once()
+        assert mock_conn.call_args[0][0] == ("93.184.216.34", 443)
+        assert stream is not None
+
+
+def test_validating_backend_blocks_private_resolved_ip():
+    """If DNS resolves to a private IP, the backend must refuse to connect."""
+    import pytest
+    from unittest.mock import patch
+    from src.tools.read_web_page import _ValidatingBackend
+
+    with patch("src.tools.read_web_page._resolve_host", return_value=["127.0.0.1"]):
+        backend = _ValidatingBackend()
+        with pytest.raises(RuntimeError, match="not allowed|denied"):
+            backend.connect_tcp("example.com", 443, timeout=5.0)
+
+
 def test_read_web_page_rejects_bad_scheme():
     """Non-http(s) schemes must be rejected."""
     import pytest

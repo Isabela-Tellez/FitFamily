@@ -26,7 +26,6 @@ from __future__ import annotations
 import logging
 import re
 import socket
-import time
 from datetime import datetime
 from typing import Optional, List
 from urllib.parse import urlsplit, urlunsplit, quote, unquote, urljoin
@@ -34,6 +33,8 @@ from urllib.parse import urlsplit, urlunsplit, quote, unquote, urljoin
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field, model_validator
 import httpx
+import httpcore
+from httpcore._backends.sync import SyncStream, map_exceptions as _map_exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -94,11 +95,8 @@ class PageReadResult(BaseModel):
     def extract_snippet(self) -> "PageReadResult":
         """Extract a short snippet from the body text for evidence support."""
         if self.body_text:
-            # Take first meaningful segment, capped at MAX_SNIPPET_LENGTH
             text = self.body_text[:MAX_SNIPPET_LENGTH].strip()
-            # Try to end at a sentence boundary
             if len(self.body_text) > MAX_SNIPPET_LENGTH:
-                # Find last period within cap
                 last_period = text.rfind(". ")
                 if last_period > MAX_SNIPPET_LENGTH * 0.8:
                     text = text[:last_period + 1]
@@ -118,25 +116,18 @@ def _is_private_ip(host: str) -> bool:
     if not host:
         return True
     host = host.strip().lower()
-    # Block obvious internal hostnames.
     if host in {"localhost", "metadata", "metadata.google.internal",
                 "metadata.azure.com", "169.254.169.254"}:
         return True
     if host.endswith(".internal") or host.endswith(".local"):
         return True
-    # Strip IPv6 brackets if present.
     if host.startswith("[") and host.endswith("]"):
         host = host[1:-1]
-    # IPv6 loopback / link-local / unique-local.
     if host in {"::1", "::"} or host.startswith("fe80:") or host.startswith("fc") or host.startswith("fd"):
         return True
-    # IPv4 checks.
-    private_prefixes = (
-        "127.", "10.", "192.168.", "169.254.", "0.",
-    )
+    private_prefixes = ("127.", "10.", "192.168.", "169.254.", "0.")
     if any(host.startswith(p) for p in private_prefixes):
         return True
-    # 172.16.0.0/12
     if host.startswith("172."):
         parts = host.split(".")
         if len(parts) >= 2 and parts[1].isdigit():
@@ -147,10 +138,7 @@ def _is_private_ip(host: str) -> bool:
 
 
 def _resolve_host(host: str) -> List[str]:
-    """Resolve a hostname to IP addresses.
-
-    Raises RuntimeError if resolution fails.
-    """
+    """Resolve a hostname to IP addresses."""
     try:
         infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
     except socket.gaierror as e:
@@ -165,8 +153,7 @@ def _validate_destination(url: str) -> str:
     """Validate a URL's scheme, host, port, credentials and resolved IPs.
 
     Returns the normalized URL. Raises ValueError/RuntimeError on any
-    disallowed destination. Each call re-resolves DNS, which narrows (but
-    does not fully eliminate) the TOCTOU window.
+    disallowed destination. Each call re-resolves DNS.
     """
     if not url or not isinstance(url, str):
         raise ValueError("URL must be a non-empty string.")
@@ -191,16 +178,104 @@ def _validate_destination(url: str) -> str:
     if _is_private_ip(host):
         raise RuntimeError(f"Access to private/internal host denied: {host}")
 
-    # Normalize the path (percent-encode unsafe characters).
     normalized_path = quote(unquote(split.path), safe="/%")
     normalized_url = urlunsplit((split.scheme, split.netloc, normalized_path, split.query, split.fragment))
 
-    # Resolve and validate every IP the host points to.
     for ip in _resolve_host(host):
         if _is_private_ip(ip):
             raise RuntimeError(f"Resolved IP not allowed: {ip}")
 
     return normalized_url
+
+
+class _ValidatingBackend(httpcore.SyncBackend):
+    """Network backend that connects only to validated IP addresses.
+
+    httpx/httpcore normally resolve the hostname themselves at connect time,
+    which opens a TOCTOU window. This backend resolves the hostname, validates
+    every resulting IP against the SSRF policy, and then connects to one of the
+    validated IPs directly. TLS/SNI keeps using the original hostname because
+    httpcore passes ``server_hostname`` separately to ``start_tls``.
+    """
+
+    def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
+        if _is_private_ip(host):
+            raise RuntimeError(f"Access to private/internal host denied: {host}")
+        ips = _resolve_host(host)
+        for ip in ips:
+            if _is_private_ip(ip):
+                raise RuntimeError(f"Resolved IP not allowed: {ip}")
+        if port not in ALLOWED_PORTS:
+            raise RuntimeError(f"Port not allowed: {port}")
+        # Connect to a validated IP (not the hostname) to defeat DNS rebinding.
+        ip = sorted(ips)[0]
+        address = (ip, port)
+        source_address = None if local_address is None else (local_address, 0)
+        exc_map = {
+            socket.timeout: httpcore.ConnectTimeout,
+            OSError: httpcore.ConnectError,
+        }
+        with _map_exceptions(exc_map):
+            sock = socket.create_connection(address, timeout, source_address=source_address)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            if socket_options:
+                for option in socket_options:
+                    sock.setsockopt(*option)
+        return SyncStream(sock)
+
+
+class _ValidatingTransport(httpx.BaseTransport):
+    """httpx transport that guarantees connections go to validated IPs."""
+
+    def __init__(self, verify=True, cert=None, trust_env=True, http1=True, http2=False,
+                 limits=httpx.Limits(max_connections=100, max_keepalive_connections=20,
+                                     keepalive_expiry=5.0), local_address=None,
+                 retries=0, socket_options=None):
+        import ssl as _ssl
+        ssl_context = httpx._transports.default.create_ssl_context(
+            verify=verify, cert=cert, trust_env=trust_env
+        )
+        self._pool = httpcore.ConnectionPool(
+            ssl_context=ssl_context,
+            max_connections=limits.max_connections,
+            max_keepalive_connections=limits.max_keepalive_connections,
+            keepalive_expiry=limits.keepalive_expiry,
+            http1=http1,
+            http2=http2,
+            local_address=local_address,
+            retries=retries,
+            socket_options=socket_options,
+            network_backend=_ValidatingBackend(),
+        )
+
+    def handle_request(self, request):
+        import httpcore as _hc
+        from httpx._models import Response
+        from httpx._transports.default import map_httpcore_exceptions, ResponseStream
+
+        req = _hc.Request(
+            method=request.method,
+            url=_hc.URL(
+                scheme=request.url.raw_scheme,
+                host=request.url.raw_host,
+                port=request.url.port,
+                target=request.url.raw_path,
+            ),
+            headers=request.headers.raw,
+            content=request.stream,
+            extensions=request.extensions,
+        )
+        with map_httpcore_exceptions():
+            resp = self._pool.handle_request(req)
+        return Response(
+            status_code=resp.status,
+            headers=resp.headers,
+            stream=ResponseStream(resp.stream),
+            extensions=resp.extensions,
+        )
+
+    def close(self):
+        self._pool.close()
 
 
 def _sanitize_html(raw_html: str) -> str:
@@ -209,20 +284,13 @@ def _sanitize_html(raw_html: str) -> str:
         return ""
     try:
         soup = BeautifulSoup(raw_html, "html.parser")
-
-        # Remove script and style elements
         for script in soup(["script", "style", "head", "title", "noscript"]):
             script.decompose()
-
-        # Get text
         text = soup.get_text(separator=" ")
-
-        # Clean up whitespace
         lines = (line.strip() for line in text.splitlines())
         chunks = (phrase.strip() for line in lines for phrase in line.split(" "))
         text = " ".join(chunk for chunk in chunks if chunk)
-
-        return text[:20000]  # Cap size
+        return text[:20000]
     except Exception as e:
         logger.warning(f"HTML sanitization error: {e}")
         return ""
@@ -232,6 +300,7 @@ def read_web_page(url: str) -> PageReadResult:
     """Read a web page and return structured content.
 
     Redirects are followed manually, validating each destination.
+    The HTTP transport connects only to validated IP addresses.
 
     Args:
         url: The HTTP/HTTPS URL to read.
@@ -243,7 +312,6 @@ def read_web_page(url: str) -> PageReadResult:
         ValueError: If the URL scheme is not http or https.
         RuntimeError: If the page cannot be accessed or is not valid HTML.
     """
-    # Validate the initial destination.
     try:
         current_url = _validate_destination(url)
     except (ValueError, RuntimeError) as e:
@@ -258,16 +326,15 @@ def read_web_page(url: str) -> PageReadResult:
         redirects = 0
 
         while True:
-            # Re-validate DNS right before connecting (mitigates rebinding).
             split = urlsplit(current_url)
             for ip in _resolve_host(split.hostname):
                 if _is_private_ip(ip):
                     raise RuntimeError(f"Resolved IP not allowed: {ip}")
 
             with httpx.Client(
+                transport=_ValidatingTransport(),
                 timeout=DEFAULT_TIMEOUT,
                 follow_redirects=False,
-                max_redirects=0,
             ) as client:
                 response = client.get(current_url)
 
@@ -276,7 +343,6 @@ def read_web_page(url: str) -> PageReadResult:
                 if not location:
                     break
                 next_url = urljoin(current_url, location)
-                # Validate the redirect destination before following.
                 try:
                     next_url = _validate_destination(next_url)
                 except (ValueError, RuntimeError) as e:
@@ -287,43 +353,34 @@ def read_web_page(url: str) -> PageReadResult:
                     raise RuntimeError(f"Too many redirects (>{MAX_REDIRECTS})")
                 current_url = next_url
                 continue
-            final_url = current_url
+            final_url = str(response.url) if response.url else current_url
             break
 
         if response is None:
             raise RuntimeError("No response received")
 
-        # Check content type
         content_type = response.headers.get("content-type", "")
         if not content_type.lower().startswith("text/"):
-            logger.warning(
-                f"Non-text content type: {content_type} for {url}"
-            )
-            warnings = [
-                f"Non-text content type: {content_type}"
-            ]
+            logger.warning(f"Non-text content type: {content_type} for {url}")
+            warnings = [f"Non-text content type: {content_type}"]
         else:
             warnings = []
 
-        # Check response size
         if len(response.content) > MAX_RESPONSE_SIZE:
             raise RuntimeError(
                 f"Response too large ({len(response.content)} bytes). "
                 f"Maximum allowed: {MAX_RESPONSE_SIZE} bytes."
             )
 
-        # Process HTML content
         status = str(response.status_code)
         final_url = str(response.url) if response.url else final_url
 
         if status == "200" and "text/html" in content_type.lower():
             body_text = _sanitize_html(response.text)
-            # Try to extract title
             title_tag_match = re.search(
                 r"<title>(.*?)</title>", response.text, re.IGNORECASE
             )
             title = title_tag_match.group(1).strip() if title_tag_match else ""
-
             body_text_clean = _sanitize_html(response.text)
 
             result = PageReadResult(
@@ -336,7 +393,6 @@ def read_web_page(url: str) -> PageReadResult:
                 warnings=warnings,
             )
         else:
-            # Non-200 or non-HTML
             result = PageReadResult(
                 url=url,
                 final_url=final_url,
@@ -351,7 +407,6 @@ def read_web_page(url: str) -> PageReadResult:
                 title="",
             )
 
-        # Extract snippet after construction
         result = result.model_validate(
             {
                 **result.model_dump(),
