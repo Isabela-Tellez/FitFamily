@@ -41,7 +41,8 @@ _STATISTICS_DATA: Dict[str, Any] = {
     "geo_scope": "El Cañaveral, distrito de Vicálvaro, Madrid",
     "period": (
         "Población y pirámide: 1 de octubre de 2026; "
-        "hogares (no verificado): enero 2026; negocios (no verificado): junio 2025"
+        "locales abiertos: descarga del 20 de octubre de 2026; "
+        "hogares: no verificado (enero 2026)"
     ),
     "indicators": {
         "population_total": {
