@@ -29,7 +29,10 @@ _STATISTICS_DATA: Dict[str, Any] = {
     "description": (
         "Estadísticas locales documentadas para El Cañaveral (distrito de Vicálvaro, Madrid). "
         "Población y pirámide de edad verificadas contra el Padrón Municipal (datos.madrid.es, "
-        "octubre 2026). Hogares y negocios proceden de fuentes secundarias no verificadas."
+        "octubre 2026). Hogares y tamaño medio del hogar verificados contra el fichero oficial "
+        "de hogares (datos.madrid.es/300438, referencia 1 de enero de 2025) agregado sobre las "
+        "secciones censales que la cartografía oficial asigna al barrio. Locales abiertos "
+        "verificados contra el Censo de Locales (octubre 2026)."
     ),
     "source": (
         "Padrón Municipal de Habitantes (Ayuntamiento de Madrid, datos.madrid.es), "
@@ -42,7 +45,7 @@ _STATISTICS_DATA: Dict[str, Any] = {
     "period": (
         "Población y pirámide: 1 de octubre de 2026; "
         "locales abiertos: descarga del 20 de octubre de 2026; "
-        "hogares: no verificado (enero 2026)"
+        "población, hogares y tamaño medio del hogar: 1 de enero de 2025"
     ),
     "indicators": {
         "population_total": {
@@ -59,33 +62,54 @@ _STATISTICS_DATA: Dict[str, Any] = {
                 "(Nuevosureste) y 17.193 hab. en 2024 (INE)."
             ),
         },
-        "households_total": {
-            "value": None,
-            "unit": "hogares",
-            "reference_period": None,
-            "source_url": None,
+        "population_total_2025": {
+            "value": 21492,
+            "unit": "habitantes",
+            "reference_period": "1 de enero de 2025",
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
             "consulted_at": "2026-10-20",
-            "verification_status": "unverified",
+            "verification_status": "verified",
             "limitations": (
-                "Cifra secundaria no verificada: 9.224 hogares (enero 2026), publicada por el "
-                "barrio en Instagram citando el Padrón. No se pudo contrastar contra la fuente "
-                "primaria: el dataset oficial (datos.madrid.es/300438-0-hogares-tamano) solo cubre "
-                "hasta el 1 de enero de 2025 y se organiza por distrito y sección censal, no por "
-                "barrio. Para verificar: descargar el XLSX 2025 y agregar las secciones censales "
-                "correspondientes a El Cañaveral."
+                "Población a 1 de enero de 2025 incluida en el fichero oficial de hogares "
+                "(datos.madrid.es/300438-0-hogares-tamano). Coincide exactamente con la "
+                "población oficial de El Cañaveral a esa fecha del dataset 'Población por "
+                "distrito y barrio a 1 de enero' (21.492). Se publica para que los "
+                "indicadores de hogares (referencia 1 ene 2025) y de población actual "
+                "(referencia oct 2026) no se combinen entre sí."
+            ),
+        },
+        "households_total": {
+            "value": 8140,
+            "unit": "hogares",
+            "reference_period": "1 de enero de 2025",
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+            "consulted_at": "2026-10-20",
+            "verification_status": "verified",
+            "limitations": (
+                "Suma exacta de los hogares de las 9 secciones censales que la cartografía "
+                "oficial del Ayuntamiento asigna a El Cañaveral (COD_BAR 194: 19052, 19053, "
+                "19054, 19055, 19056, 19058, 19059, 19060, 19061), según el Padrón Municipal "
+                "revisado a 1 de enero de 2025. La agregación es exacta, no estimada: esas "
+                "9 secciones teselan el polígono del barrio al 100% (0 m2 fuera del límite, "
+                "0 m2 sin cubrir), por lo que ninguna sección cruza el borde del barrio. "
+                "'Hogares' es el concepto del Padrón (personas que comparten vivienda), no "
+                "'familias' ni 'viviendas'. Referencia temporal: 1 ene 2025, NO la de "
+                "population_total (oct 2026); para ratios coherentes usar "
+                "population_total_2025."
             ),
         },
         "average_household_size": {
-            "value": None,
+            "value": 2.64,
             "unit": "personas por hogar",
-            "reference_period": None,
-            "source_url": None,
+            "reference_period": "1 de enero de 2025",
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
             "consulted_at": "2026-10-20",
-            "verification_status": "unverified",
+            "verification_status": "verified",
             "limitations": (
-                "Cifra secundaria no verificada: 2,70 personas por hogar (enero 2026), publicada "
-                "por el barrio en Instagram citando el Padrón. Sin respaldo de fuente primaria "
-                "para 2026."
+                "Derivado de los mismos datos que households_total: 21.492 habitantes / "
+                "8.140 hogares = 2,64 personas por hogar a 1 de enero de 2025. Coherente con "
+                "el 'tamaño medio del hogar' publicado por sección en el fichero oficial. "
+                "No debe combinarse con population_total (oct 2026): use population_total_2025."
             ),
         },
         "population_under_20_share": {
@@ -473,6 +497,268 @@ def refresh_locales_count(area_id: str = "el-cañaveral", csv_text: str = None,
         "consulted_at": consulted_at,
     }
 
+
+# ── Hogares (datos.madrid.es/300438-0-hogares-tamano) ────────────────────
+# Agregación EXACTA de los hogares de las secciones censales que la
+# cartografía oficial del Ayuntamiento asigna al barrio (columna COD_BAR).
+# No requiere reparto proporcional: las secciones del barrio lo teselan
+# íntegramente (verificado en el estudio espacial documentado).
+
+_HOGARES_XLSX_URL = (
+    "https://datos.madrid.es/dataset/300438-0-hogares-tamano/resource/"
+    "300438-2-hogares-tamano-xlsx/download/300438-2-hogares-tamano-xlsx.xlsx"
+)
+_SECCIONES_SHP_URL = (
+    "https://geoportal.madrid.es/fsdescargas/IDEAM_WBGEOPORTAL/"
+    "LIMITES_ADMINISTRATIVOS/Seccionado/Secciones_Censales.zip"
+)
+_HOGARES_REFERENCE_PERIOD = "1 de enero de 2025"
+
+# Codigo oficial de barrio (atributo COD_BAR de la cartografia municipal).
+_BARRIO_CODES = {
+    "el-cañaveral": 194,
+    "el-canaveral": 194,
+    "canaveral": 194,
+}
+
+
+def parse_households_rows(rows, section_codes) -> dict:
+    """Aggregate households data for a set of census sections.
+
+    Pure function: no network, no I/O. ``rows`` is an iterable of
+    ``(section_code, habitantes, total_hogares)`` tuples as published in the
+    official households workbook.
+
+    Returns a dict with:
+    - status: "ok" or "error"
+    - households: total households (or None on error)
+    - inhabitants: total inhabitants (or None on error)
+    - average_household_size: inhabitants / households
+    - sections: per-section detail
+    - missing_sections: requested sections absent from the source
+    """
+    wanted = {int(c) for c in section_codes}
+    result = {
+        "status": "ok",
+        "households": None,
+        "inhabitants": None,
+        "average_household_size": None,
+        "sections": {},
+        "missing_sections": sorted(wanted),
+        "reference_period": _HOGARES_REFERENCE_PERIOD,
+    }
+    total_h = 0
+    total_pop = 0.0
+    for code, habitantes, hogares in rows:
+        try:
+            code = int(code)
+        except (TypeError, ValueError):
+            continue
+        if code not in wanted:
+            continue
+        if not isinstance(hogares, (int, float)) or not isinstance(habitantes, (int, float)):
+            continue
+        result["sections"][code] = {
+            "inhabitants": habitantes,
+            "households": hogares,
+        }
+        total_h += hogares
+        total_pop += habitantes
+
+    if not result["sections"]:
+        result["status"] = "error"
+        result["error"] = "Ninguna de las secciones solicitadas aparece en el fichero de hogares."
+        return result
+
+    result["missing_sections"] = sorted(wanted - set(result["sections"]))
+    result["households"] = int(total_h)
+    result["inhabitants"] = int(round(total_pop))
+    result["average_household_size"] = round(total_pop / total_h, 4) if total_h else None
+    if result["missing_sections"]:
+        result["status"] = "error"
+        result["error"] = (
+            "Secciones ausentes en el fichero de hogares: "
+            f"{result['missing_sections']}. La suma no sería completa."
+        )
+    return result
+
+
+def _read_households_workbook(path):
+    """Read the official households workbook and return (code, hab, hog) rows.
+
+    Requires openpyxl (offline preparation tool, not a runtime dependency of
+    the MCP server). Raises RuntimeError if the dependency is missing.
+    """
+    try:
+        import openpyxl
+    except ImportError as e:
+        raise RuntimeError(
+            "openpyxl no está instalado; es necesario solo para regenerar el "
+            "fichero de hogares (herramienta offline, no dependencia del servidor MCP)."
+        ) from e
+
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb[wb.sheetnames[0]]
+    rows = []
+    for r in ws.iter_rows(values_only=True):
+        if len(r) < 4:
+            continue
+        code = r[1]
+        if not isinstance(code, int):
+            continue
+        rows.append((code, r[2], r[3]))
+    return rows
+
+
+def _read_sections_for_barrio(path, barrio_code):
+    """Return the census section codes officially assigned to a barrio.
+
+    Requires pyogrio (via geopandas) to read the DBF attribute table.
+    Raises RuntimeError if the dependency is missing.
+    """
+    try:
+        import pyogrio
+    except ImportError as e:
+        raise RuntimeError(
+            "pyogrio no está instalado; es necesario solo para regenerar el "
+            "fichero de hogares (herramienta offline, no dependencia del servidor MCP)."
+        ) from e
+
+    import tempfile
+    import zipfile
+    import os
+
+    with zipfile.ZipFile(path) as z:
+        names = [n for n in z.namelist() if n.upper().endswith(".DBF")]
+        if not names:
+            raise RuntimeError("El ZIP de secciones censales no contiene un DBF.")
+        with tempfile.TemporaryDirectory() as tmp:
+            z.extract(names[0], tmp)
+            table = pyogrio.read_dataframe(os.path.join(tmp, names[0]))
+    col = "COD_BAR" if "COD_BAR" in table.columns else None
+    if col is None:
+        raise RuntimeError("La capa de secciones censales no tiene la columna COD_BAR.")
+    codes = table[table[col].astype(int) == int(barrio_code)]["COD_SECCIO"]
+    return [int(c) for c in codes]
+
+
+def refresh_households(area_id: str = "el-cañaveral", rows=None, section_codes=None,
+                        store: dict = None, xlsx_path: str = None,
+                        sections_zip_path: str = None) -> dict:
+    """Refresh the households indicators for an area from official sources.
+
+    - If ``rows`` and ``section_codes`` are provided the aggregation is pure
+      (used by the unit tests).
+    - Otherwise the official workbook and the official section cartography are
+      read from disk (paths) or downloaded.
+
+    On failure the stored values are NOT modified.
+    """
+    canonical = (area_id or "").strip().lower().replace(" ", "-").replace("_", "-")
+    barrio_code = _BARRIO_CODES.get(canonical)
+    if barrio_code is None:
+        return {
+            "status": "unsupported",
+            "area_id": area_id,
+            "error": f"Área '{area_id}' sin código de barrio oficial conocido.",
+            "consulted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    consulted_at = datetime.now(timezone.utc).isoformat()
+
+    if rows is None or section_codes is None:
+        try:
+            import os
+            import tempfile
+            import urllib.request
+            import zipfile
+
+            tmp = tempfile.mkdtemp(prefix="fitfamily_hogares_")
+            if xlsx_path is None:
+                xlsx_path = os.path.join(tmp, "hogares.xlsx")
+                with urllib.request.urlopen(_HOGARES_XLSX_URL, timeout=300) as resp:
+                    data = resp.read()
+                with open(xlsx_path, "wb") as fh:
+                    fh.write(data)
+            if sections_zip_path is None:
+                sections_zip_path = os.path.join(tmp, "secciones.zip")
+                with urllib.request.urlopen(_SECCIONES_SHP_URL, timeout=300) as resp:
+                    data = resp.read()
+                with open(sections_zip_path, "wb") as fh:
+                    fh.write(data)
+            section_codes = _read_sections_for_barrio(sections_zip_path, barrio_code)
+            rows = _read_households_workbook(xlsx_path)
+        except Exception as e:
+            return {
+                "status": "error",
+                "area_id": area_id,
+                "consulted_at": consulted_at,
+                "error": f"Error al preparar los datos de hogares: {e}",
+            }
+
+    parsed = parse_households_rows(rows, section_codes)
+    if parsed["status"] != "ok":
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "consulted_at": consulted_at,
+            "error": parsed.get("error", "Error al agregar los datos de hogares."),
+        }
+
+    if store is None:
+        store = _STATISTICS_DATA
+
+    sections_desc = ", ".join(str(c) for c in sorted(parsed["sections"]))
+    households = parsed["households"]
+    average = parsed["average_household_size"]
+    inhabitants = parsed["inhabitants"]
+
+    try:
+        ind = store["indicators"]
+        ind["households_total"] = {
+            "value": households,
+            "unit": "hogares",
+            "reference_period": _HOGARES_REFERENCE_PERIOD,
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+            "consulted_at": consulted_at,
+            "verification_status": "verified",
+            "limitations": (
+                "Suma exacta de los hogares de las secciones censales que la cartografía "
+                f"oficial asigna al barrio ({sections_desc}), Padrón Municipal a "
+                f"{_HOGARES_REFERENCE_PERIOD}. 'Hogares' es el concepto del Padrón, no "
+                "'familias' ni 'viviendas'."
+            ),
+        }
+        ind["average_household_size"] = {
+            "value": round(average, 2),
+            "unit": "personas por hogar",
+            "reference_period": _HOGARES_REFERENCE_PERIOD,
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+            "consulted_at": consulted_at,
+            "verification_status": "verified",
+            "limitations": (
+                f"Derivado: {inhabitants} habitantes / {households} hogares a "
+                f"{_HOGARES_REFERENCE_PERIOD}. No combinar con population_total (oct 2026)."
+            ),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "consulted_at": consulted_at,
+            "error": f"Error al actualizar el almacén de datos: {e}",
+        }
+
+    return {
+        "status": "ok",
+        "area_id": area_id,
+        "households": households,
+        "inhabitants": inhabitants,
+        "average_household_size": average,
+        "sections": sorted(parsed["sections"]),
+        "reference_period": _HOGARES_REFERENCE_PERIOD,
+        "consulted_at": consulted_at,
+    }
 
 def run_mcp_server() -> None:
     """Run the MCP server using stdio transport.

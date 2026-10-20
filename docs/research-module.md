@@ -242,12 +242,14 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - El proveedor DuckDuckGo puede bloquear búsquedas en ciertos regímenes
 
 ### Datos MCP
-- Mezcla de datos verificados (Padrón Municipal, octubre 2026) y no verificados (fuentes secundarias)
+- Todos los valores publicados proceden de fuentes primarias oficiales del Ayuntamiento de Madrid
+- Población (27.480) y pirámide de edad (28,29 %): Padrón Municipal, referencia oct 2026
+- Hogares (8.140) y tamaño medio (2,64): fichero oficial de hogares, referencia 1 ene 2025, agregados **exactamente** sobre las 9 secciones censales que la cartografía oficial asigna al barrio
+- `population_total_2025` (21.492) se publica para que los households de 2025 no se combinen con la población de 2026
+- Locales abiertos (234): Censo de Locales, descarga del 20 oct 2026
 - Cada indicador lleva `verification_status`: `verified`, `unverified` o `unavailable`
-- Población (27.480) y pirámide de edad (28,29 %) verificadas contra el CSV oficial del Padrón
-- Hogares (9.224) y negocios (126) no verificados: se mantienen como `null` con explicación
 - Solicitar un área distinta de El Cañaveral devuelve `null` con limitación
-- Para añadir o corregir datos: editar `_STATISTICS_DATA` en `src/mcp/server.py` y `data/sources.json`
+- Actualización reproducible: `refresh_locales_count()` y `refresh_households()`; scripts offline en `data/raw/`
 
 ### Transporte MCP
 - El servidor y el cliente usan el SDK oficial (`mcp`) y se comunican por `stdio` con un subproceso local
@@ -258,9 +260,8 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - Validación de esquema, host, puerto y credenciales antes de la petición
 - Resolución DNS validada inmediatamente antes de conectar
 - Redirecciones gestionadas manualmente, validando cada destino
-- Bloqueo de IP privadas, loopback, link-local, multicast, hostnames internos y metadata
+- Clasificación de destinos con el módulo estándar `ipaddress`: se rechazan loopback, privadas, link-local, multicast, no especificadas, reservadas, CGNAT y direcciones IPv4 mapeadas en IPv6 (`::ffff:127.0.0.1`)
 - **Transporte HTTP personalizado (`_ValidatingTransport`)**: conecta exclusivamente a IP validadas, resolviendo el TOCTOU/DNS rebinding. TLS/SNI y validación de certificados se preservan (httpcore pasa `server_hostname` por separado)
-- Limitación conocida: no se probaron formas alternativas de representar IP (decimal, octal, hexadecimal) ni credenciales con puertos no estándar
 
 ### Sin LLM Requerido
 - `run_research()` funciona sin clave OpenAI usando herramientas reales y deterministas

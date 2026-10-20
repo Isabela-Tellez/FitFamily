@@ -382,6 +382,53 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 61 tests pasando.
 
+
+## Versión 1.1.8 — Endurecimiento SSRF por clasificación de IP y estudio espacial de hogares (20/10/2026)
+
+### Seguridad (src/tools/read_web_page.py)
+- Diagnóstico: la clasificación de destinos por prefijos de cadena dejaba pasar IPv4 mapeado en IPv6 (::ffff:127.0.0.1), broadcast limitado (255.255.255.255), multicast (224.0.0.0/4), reservadas (240.0.0.0/4) y CGNAT (100.64.0.0/10).
+- Cambio: _is_private_ip() clasifica ahora los literales IP con el módulo estándar ipaddress (allowlist de direcciones globalmente enrutables) y resuelve explícitamente el caso IPv4-mapeado en IPv6.
+- Impacto: no se modifica el transporte ni su arquitectura; solo la función de clasificación. La verificación TLS, SNI y de certificado se conservan intactas.
+- Formas decimales/hexadecimales (2130706433, 0x7f000001): no son literales IP válidos para ipaddress; se rejects en la resolución DNS, cuya IP resultante se valida igualmente.
+
+### Pruebas (tests/test_web_tools.py)
+- Nuevas: representaciones alternativas de IP, IPv4-mapeado en IPv6, broadcast, multicast, decimal, cadena de redirecciones público→público→privado, y comprobación de que las direcciones públicas siguen permitidas.
+- Total de la suite: 69 tests.
+
+### Estudio espacial (docs/auditoria-fuentes-datos.md)
+- La cartografía oficial de secciones censales del Ayuntamiento (Geoportal, EPSG:25830) asigna 9 secciones a El Cañaveral (COD_BAR 194).
+- Verificación geométrica: esas 9 secciones teselan el barrio al 100% (0 m2 fuera, 0 m2 sin cubrir). Ninguna sección cruza el límite, por lo que la agregación de hogares es EXACTA, no estimada.
+- Resultado del estudio: 8.140 hogares y 2,64 de tamaño medio del hogar a 1 de enero de 2025; el total de habitantes de las secciones (21.492) coincide con la población oficial del barrio a esa fecha.
+- Pendiente de decisión del equipo: fijar la referencia demográfica del módulo en 1 ene 2025 o publicar dos referencias, para no combinar población de 2026 con hogares de 2025.
+
+
+## Versión 1.1.9 — Hogares verificados y cierre de datos de El Cañaveral (20/10/2026)
+
+### Hallazgo
+- La cartografía oficial de secciones censales del Ayuntamiento (Geoportal, EPSG:25830, datos 31/08/2026) atribuye cada sección a un barrio mediante el atributo COD_BAR. El Cañaveral es COD_BAR 194 con 9 secciones: 19052, 19053, 19054, 19055, 19056, 19058, 19059, 19060, 19061.
+- Verificación geométrica: esas 9 secciones teselan el polígono del barrio al 100% (0 m2 fuera, 0 m2 sin cubrir, ratio 1,0 en todas). Ninguna sección cruza el límite, por lo que la agregación de hogares es EXACTA y no requiere reparto proporcional por superficie.
+- Contraste independiente: los 21.492 habitantes de esas secciones coinciden exactamente con la población oficial de El Cañaveral a 1 ene 2025 (dataset 300557).
+
+### Datos publicados
+- households_total: 8.140 hogares (referencia 1 ene 2025, verificado).
+- average_household_size: 2,64 personas por hogar (21.492 / 8.140, referencia 1 ene 2025, verificado).
+- population_total_2025: 21.492 habitantes (referencia 1 ene 2025, verificado) para evitar combinar hogares de 2025 con población de 2026.
+- Se retiran las cifras secundarias de Instagram (9.224 hogares, 2,70) al estar superadas por la fuente oficial.
+
+### Implementación
+- src/mcp/server.py: parse_households_rows() (función pura), refresh_households() (regenera los indicadores) y _read_households_workbook() / _read_sections_for_barrio() con importaciones perezosas: openpyxl y pyogrio son herramientas offline, NO dependencias del servidor MCP.
+- data/raw/extract_households.py: script offline reproducible que descarga las fuentes, agrega y verifica la geometría.
+- tests/test_households.py: 9 tests (agregación, secciones ausentes, sin coincidencia, actualización del almacén, área no soportada, error sin sobrescribir, coherencia de los valores publicados y de las referencias temporales).
+
+### Seguridad (continuación de 1.1.8)
+- 6 tests nuevos de regresión SSRF: IPv4 mapeado en IPv6, broadcast, multicast, decimal, cadena de redirecciones público→público→privado y verificación de que las direcciones públicas siguen permitidas.
+
+### Documentación
+- data/raw/README.md, data/sources.json, docs/research-module.md y docs/auditoria-fuentes-datos.md sincronizados.
+
+### Tests
+- Suite completa: 78 tests pasando.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

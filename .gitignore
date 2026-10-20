@@ -55,3 +55,4 @@ secret*
 data/raw/*.csv
 data/raw/*.xlsx
 data/raw/*.json.gz
+data/raw/cache/

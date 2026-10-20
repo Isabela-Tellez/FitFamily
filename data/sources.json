@@ -21,6 +21,26 @@
       "limitations": "Dataset mensual, actualizado el 6 de octubre de 2026. Los datos de hogares no están disponibles a nivel de barrio en este dataset."
     },
     {
+      "id": "hogares_tamano_madrid",
+      "name": "Hogares por tamaño, composición del hogar, nacionalidad y sección censal - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+      "type": "official_open_data",
+      "geo_scope": "Sección censal (distrito 19, barrio 194)",
+      "period": "1 de enero de 2025 (último dato oficial disponible)",
+      "use": "households_total, average_household_size y population_total_2025 (agregados sobre las 9 secciones censales de El Cañaveral)",
+      "limitations": "Cobertura hasta 1 ene 2025. Organizado por sección censal; la atribución a barrio procede de la cartografía oficial (COD_BAR). 'Hogares' es el concepto del Padrón, no familias ni viviendas."
+    },
+    {
+      "id": "cartografia_secciones_censales",
+      "name": "Límites administrativos actuales (secciones censales y barrios) - Geoportal del Ayuntamiento de Madrid",
+      "url": "https://geoportal.madrid.es/IDEAM_WBGEOPORTAL/dataset.iam?id=e251898e-4a9c-11eb-9104-dc4a3e8ce33b",
+      "type": "official_open_data",
+      "geo_scope": "Municipio de Madrid (2.462 secciones censales, 131 barrios)",
+      "period": "fecha de datos 31/08/2026; secciones censales actualizadas en junio de 2022",
+      "use": "atribución oficial sección censal -> barrio (atributo COD_BAR) y verificación geométrica de que las secciones teselan el barrio",
+      "limitations": "SRS EPSG:25830 (ETRS89/UTM 30N). Los límites de barrios son conformes al acuerdo del Pleno de 29/06/2021 (BOCM 12/07/2021)."
+    },
+    {
       "id": "censo_locales_madrid",
       "name": "Censo de Locales y Actividades - Ayuntamiento de Madrid",
       "url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
@@ -31,14 +51,24 @@
       "limitations": "Cuenta locales (premises), no negocios (establecimientos). Un local puede albergar varias actividades."
     },
     {
+      "id": "poblacion_distrito_barrio",
+      "name": "Población por distrito y barrio a 1 de enero - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/dataset/300557-0-poblacion-distrito-barrio",
+      "type": "official_open_data",
+      "geo_scope": "Distrito y barrio de Madrid (2018-2026)",
+      "period": "anual, 1 de enero de cada año (actualizado 29 jul 2026)",
+      "use": "contraste independiente de population_total_2025 (21.492 hab. a 1 ene 2025) y serie histórica por barrio",
+      "limitations": "No incluye hogares. Permite obtener la población de cualquier barrio de Madrid, útil para extender el módulo."
+    },
+    {
       "id": "wikipedia_canaveral",
       "name": "Wikipedia - El Cañaveral",
       "url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
       "type": "secondary_source",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "ed. 6 sep 2026",
-      "use": "contexto demográfico y cifra secundaria de 126 negocios (jun 2025, no verificada)",
-      "limitations": "Fuente secundaria que cita datos municipales. No verificado contra registro primario."
+      "use": "solo contexto; ninguna cifra del módulo se apoya en esta fuente",
+      "limitations": "Fuente secundaria. Las cifras que se publicaban desde aquí (población 27.014, hogares 9.224, negocios 126) han sido sustituidas por verificaciones contra fuente primaria."
     },
     {
       "id": "instagram_canaveral",
@@ -47,8 +77,8 @@
       "type": "secondary_source",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "enero 2026",
-      "use": "households_total (9.224) y average_household_size (2,70) — NO verificados",
-      "limitations": "Fuente secundaria. El dataset oficial de hogares (datos.madrid.es/300438-0-hogares-tamano) solo cubre hasta el 1 de enero de 2025 y se organiza por distrito y sección censal. Las cifras de 2026 no pudieron verificarse contra fuente primaria."
+      "use": "ninguna: los indicadores de hogares se apoyan ahora en la fuente oficial",
+      "limitations": "Fuente secundaria, no verificable. Se conserva solo como contexto histórico en el changelog."
     },
     {
       "id": "mcp_local_data",
@@ -58,7 +88,7 @@
       "geo_scope": "El Cañaveral, Madrid",
       "period": "2025-2026",
       "use": "provide statistics via MCP get_area_statistics tool",
-      "limitations": "Mezcla de datos verificados (Padrón municipal) y no verificados (fuentes secundarias). Cada indicador lleva verification_status."
+      "limitations": "Cada indicador lleva reference_period, source_url, consulted_at y verification_status. Los indicadores de hogares (1 ene 2025) y de población actual (oct 2026) tienen referencias distintas: population_total_2025 existe para no combinarlos."
     }
   ]
 }
