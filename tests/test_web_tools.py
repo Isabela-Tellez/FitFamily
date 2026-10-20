@@ -117,9 +117,10 @@ def test_read_web_page_blocks_private_ips():
         "http://127.0.0.1/test",
         "http://192.168.1.1/test",
         "http://10.0.0.1/test",
+        "http://[::1]/test",
     ]
     for url in private_urls:
-        with pytest.raises(RuntimeError, match="private IP|denied|blocked"):
+        with pytest.raises(RuntimeError, match="private IP|denied|blocked|not allowed"):
             read_web_page(url)
 
 
@@ -175,6 +176,25 @@ def test_read_web_page_rejects_non_standard_port():
     with patch("src.tools.read_web_page._resolve_host", return_value=["93.184.216.34"]):
         with pytest.raises(RuntimeError, match="Port not allowed"):
             read_web_page("https://example.com:8080/test")
+
+
+def test_read_web_page_blocks_redirect_chain():
+    """A redirect chain exceeding the limit must be blocked."""
+    import pytest
+    redirect_response = MagicMock()
+    redirect_response.status_code = 302
+    redirect_response.headers = {"location": "https://example.com/next", "content-type": "text/html"}
+    redirect_response.url = "https://example.com/start"
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.get.return_value = redirect_response
+
+    with patch("src.tools.read_web_page._resolve_host", return_value=["93.184.216.34"]), \
+         patch("src.tools.read_web_page.httpx.Client", return_value=mock_client):
+        with pytest.raises(RuntimeError, match="Too many redirects"):
+            read_web_page("https://example.com/start")
 
 
 def test_read_web_page_rejects_bad_scheme():
