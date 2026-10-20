@@ -91,6 +91,30 @@ python data/raw/extract_households.py --verify-geometry
 - **Dependencias:** `openpyxl` y `pyogrio` (ya instaladas). **No** son dependencias del servidor MCP: solo de esta herramienta offline.
 - **En el servidor MCP:** `refresh_households("el-cañaveral")` regenera los indicadores y `parse_households_rows(rows, section_codes)` es la función pura testeable sin red.
 
+## Registro de competidores respaldado por el Censo de Locales
+
+Script offline: **`data/raw/extract_competitor_registry.py`**. Une los tres recursos
+oficiales del Censo de Locales y, opcionalmente, enriquece cada competidor con los
+datos publicados en su propia web (precio y evidencia de ludoteca).
+
+```bash
+python data/raw/extract_competitor_registry.py            # con enriquecimiento web
+python data/raw/extract_competitor_registry.py --no-web   # solo datos oficiales
+```
+
+- **Módulo:** `src/tools/competitor_registry.py`.
+- **Fuentes:** Locales (identificador, dirección, CP, coordenadas), Actividades
+  (epígrafes) y Locales con información de licencia (referencia, tipo, situación y fecha).
+- **Salidas:** `data/processed/competitor_registry.json` (con evidencias) y
+  `data/processed/competitor_registry.csv` (DataFrame para el módulo de análisis).
+- **Reglas aplicadas:** identificador oficial conservado; coordenadas `0,0` o fuera del
+  entorno UTM 30N de Madrid marcadas como no disponibles; licencia ausente = "no
+  disponible" (nunca "denegada"); `has_playroom` en `True`/`False` solo con evidencia
+  fiable y `None` (desconocido) si la web no lo menciona; los precios conservan la
+  periodicidad publicada sin convertirla.
+- **Ficheros brutos:** se guardan en `data/raw/cache/` (ignorado por git) y no se
+  versionan.
+
 ## Trazabilidad
 
 Cada indicador expone `value`, `unit`, `reference_period`, `source_url`, `consulted_at`, `verification_status` (`verified` / `unverified` / `unavailable`) y `limitations`. Los valores no disponibles se devuelven como `null` y nunca como cero.
