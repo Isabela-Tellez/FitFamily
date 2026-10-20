@@ -7,15 +7,20 @@
 | Población total | Verificado | 27.480 (1 oct 2026) | Padrón Municipal, CSV oficial |
 | Menores de 20 años | Verificado | 28,29 % (1 oct 2026) | Padrón Municipal, calculado |
 | Población a 1 ene 2025 | Verificado | 21.492 | Fichero oficial de hogares |
-| **Hogares** | **Verificado** | **8.140 (1 ene 2025)** | Fichero oficial de hogares, suma exacta de las 9 secciones censales del barrio |
-| **Tamaño medio del hogar** | **Verificado** | **2,64 (1 ene 2025)** | Derivado de los mismos datos |
-| Locales abiertos | Verificado | 234 (20 oct 2026) | Censo de Locales, CSV oficial |
-| Familias con hijos | No disponible | `null` | Sin fuente oficial a nivel de barrio |
-| Gimnasios | No disponible | `null` | Sin censo a nivel de barrio |
+| Hogares | Verificado | 8.140 (1 ene 2025) | Fichero oficial de hogares, suma exacta de las 9 secciones censales del barrio |
+| Tamaño medio del hogar | Verificado | 2,64 (1 ene 2025) | Derivado de los mismos datos |
+| Hogares con menores | Verificado (mínimo) | 3.071 (1 ene 2025) | Hoja de composición del hogar del mismo fichero oficial |
+| Locales abiertos | Verificado | 234 (20 oct 2026) | Censo de Locales, fichero de Locales |
+| Gimnasios | Verificado | 9 (20 oct 2026) | Censo de Locales, fichero de Actividades, epígrafe 931008 |
+| Deporte y recreación | Verificado | 4 (20 oct 2026) | Censo de Locales, epígrafe 855002 |
+| Ocio infantil | Verificado | 3 (20 oct 2026) | Censo de Locales, epígrafes 932001 y 932002 |
+| Piscinas comunitarias | Verificado | 3 (20 oct 2026) | Censo de Locales, epígrafe 931010 |
+| Familias con hijos | No disponible | `null` | Ninguna fuente oficial define "familias con hijos" a nivel de barrio |
+| Gimnasios con ludoteca | No disponible | `null` | Ningún epígrafe combina gimnasio y ludoteca |
 
-**Hallazgo principal:** el cruce entre el fichero oficial de hogares y la cartografía oficial de secciones censales **no requiere estimación**. Las 9 secciones censales asignadas oficialmente a El Cañaveral **teselan el barrio al 100 %**, por lo que la suma es exacta.
+**Corrección de la auditoría anterior:** la primera revisión se quedó en el **primer recurso** de cada dataset (el fichero de Locales y la hoja de Tamaño del hogar) y concluyó que no había fuente para familias ni gimnasios. Ambos datasets tienen más recursos (el Censo de Locales tiene cuatro ficheros y el libro de hogares tres hojas). Ningún valor se había inventado, pero la conclusión era más fuerte que la evidencia. Esta versión incorpora los recursos que faltaban.
 
-**Estado de implementación:** los valores de hogares están publicados en el MCP (`households_total`, `average_household_size`, `population_total_2025`), con extracción reproducible en `data/raw/extract_households.py` y 9 tests de regresión.
+**Estado de implementación:** todos los indicadores con valor están publicados en el MCP con `reference_period`, `source_url`, `consulted_at` y `verification_status`, y son reproducibles con `data/raw/extract_censo_locales.py` y `data/raw/extract_households.py`.
 
 ## 2. Fuentes investigadas
 

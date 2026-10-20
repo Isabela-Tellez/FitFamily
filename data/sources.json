@@ -27,7 +27,7 @@
       "type": "official_open_data",
       "geo_scope": "Sección censal (distrito 19, barrio 194)",
       "period": "1 de enero de 2025 (último dato oficial disponible)",
-      "use": "households_total, average_household_size y population_total_2025 (agregados sobre las 9 secciones censales de El Cañaveral)",
+      "use": "households_total, average_household_size, population_total_2025 y households_with_minors (agregados sobre las 9 secciones censales de El Cañaveral; la última variable usa la hoja 'Composicion del hogar')",
       "limitations": "Cobertura hasta 1 ene 2025. Organizado por sección censal; la atribución a barrio procede de la cartografía oficial (COD_BAR). 'Hogares' es el concepto del Padrón, no familias ni viviendas."
     },
     {
@@ -47,8 +47,8 @@
       "type": "official_open_data",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "actualizado diariamente (consulta: 20 oct 2026)",
-      "use": "businesses_open: conteo de locales con situación 'Abierto' en El Cañaveral",
-      "limitations": "Cuenta locales (premises), no negocios (establecimientos). Un local puede albergar varias actividades."
+      "use": "businesses_open (234 locales abiertos, fichero de Locales) y equipamientos por epígrafe (gyms_registered 9 = 931008; sports_recreation_venues 4 = 855002; childrens_play_venues 3 = 932001 + 932002; community_pools 3 = 931010, fichero de Actividades)",
+      "limitations": "El fichero de Locales y el de Actividades no cubren exactamente el mismo conjunto: 229 de los 234 locales abiertos tienen actividad declarada. Cuentan locales (premises), no negocios (establecimientos): un local puede albergar varias actividades. Registro administrativo: puede contener inconsistencias."
     },
     {
       "id": "poblacion_distrito_barrio",

@@ -440,6 +440,40 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Pruebas
 - Añadido tests/test_search_limits.py con 7 tests: valor por defecto, valor del encargo, tope, valores inválidos y comprobación de que el límite llega a las dos herramientas.
 
+
+## Versión 1.1.11 — Indicadores de equipamientos y hogares con menores (20/10/2026)
+
+### Hallazgo: la auditoria anterior fue incompleta
+- Se habia revisado la ficha de cada dataset pero solo el PRIMER recurso de cada uno: el fichero de Locales del Censo de Locales y la hoja de Tamano del hogar del XLSX. Ambos tienen mas recursos: el Censo de Locales tiene cuatro ficheros (Locales, Actividades, Locales con licencia, Terrazas) y el libro de hogares tiene tres hojas (Tamano, Composicion del hogar, Tipo-Nacionalidad).
+- Consecuencia: familias y gimnasios estaban marcados como no disponibles cuando la fuente existia. Ningun valor se habia inventado, pero la conclusion era mas fuerte que la evidencia.
+
+### Indicadores anadidos (todos verificados contra fuente oficial)
+- gyms_registered: 9 locales abiertos con epigrafe 931008 (ACTIVIDADES DE LOS GIMNASIOS).
+- sports_recreation_venues: 4 locales con epigrafe 855002 (ensenanza no reglada deportiva y recreativa).
+- childrens_play_venues: 3 locales con epigrafes 932001 y 932002 (centros de juegos o celebraciones infantiles).
+- community_pools: 3 locales con epigrafe 931010 (piscinas de comunidades de vecinos).
+- households_with_minors: 3.071 hogares con al menos un menor (MINIMO verificable), referencia 1 ene 2025.
+
+### Indicadores que siguen en null
+- families_with_children: ninguna fuente oficial define ni publica familias con hijos a nivel de barrio; el Padron mide hogares. households_with_minors no es sinonimo.
+- gyms_with_ludoteca: no existe un epigrafe que combine gimnasio y ludoteca; los 9 de gimnasios y los 3 de ocio infantil son categorias distintas y un local puede estar en ambas. Falta confirmacion centro a centro.
+
+### Defectos propios detectados y corregidos
+- refresh_gyms_count() sobrescribia el indicador en vez de SUMAR los dos epigrafes que lo alimentan (childrens_play_venues devolvia 1 en lugar de 3). Ahora se suman y hay test de regresion.
+- La composicion del hogar clasificaba como ambiguas tanto las categorias con o sin menores como las explicitamente sin menores (3.146 en lugar de 662). Ahora se separan en tres grupos: con menores, sin menores y ambiguas.
+- Los parsers de CSV no toleraban la cabecera con BOM UTF-8: al leer el fichero oficial como texto, la primera columna (id_local) dejaba de reconocerse y el parser fallaba en silencio. Corregido y con test.
+
+### Implementacion
+- src/mcp/server.py: parse_actividades_csv(), refresh_gyms_count(), parse_household_composition_rows(), refresh_households_with_minors() y _sections_cache_path(). Importaciones perezosas: openpyxl y pyogrio son herramientas offline, NO dependencias del servidor MCP.
+- data/raw/extract_censo_locales.py: script offline que reproduce los 5 indicadores del Censo de Locales.
+- tests/test_area_indicators.py: 18 tests (recuentos, suma de epigrafes, BOM, cierres, areas no soportadas, errores que no tocan el almacen, composicion en tres grupos y contrato de los valores publicados).
+
+### Documentacion
+- data/raw/README.md, data/sources.json, docs/research-module.md, docs/research-changelog.md y docs/auditoria-fuentes-datos.md sincronizados.
+
+### Tests
+- Suite completa: 103 tests pasando.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

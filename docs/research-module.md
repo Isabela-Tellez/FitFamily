@@ -243,14 +243,15 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - El proveedor DuckDuckGo puede bloquear búsquedas en ciertos regímenes
 
 ### Datos MCP
-- Todos los valores publicados proceden de fuentes primarias oficiales del Ayuntamiento de Madrid
+- Todos los valores publicados proceden de **fuentes primarias oficiales** del Ayuntamiento de Madrid
 - Población (27.480) y pirámide de edad (28,29 %): Padrón Municipal, referencia oct 2026
 - Hogares (8.140) y tamaño medio (2,64): fichero oficial de hogares, referencia 1 ene 2025, agregados **exactamente** sobre las 9 secciones censales que la cartografía oficial asigna al barrio
+- Hogares con menores (3.071, **mínimo verificable**): hoja de composición del hogar del mismo fichero oficial
 - `population_total_2025` (21.492) se publica para que los households de 2025 no se combinen con la población de 2026
-- Locales abiertos (234): Censo de Locales, descarga del 20 oct 2026
+- Locales abiertos (234) y equipamientos (gimnasios 9, deporte y recreación 4, ocio infantil 3, piscinas 3): Censo de Locales, descarga del 20 oct 2026
 - Cada indicador lleva `verification_status`: `verified`, `unverified` o `unavailable`
 - Solicitar un área distinta de El Cañaveral devuelve `null` con limitación
-- Actualización reproducible: `refresh_locales_count()` y `refresh_households()`; scripts offline en `data/raw/`
+- Actualización reproducible: `refresh_locales_count()`, `refresh_gyms_count()`, `refresh_households()` y `refresh_households_with_minors()`; scripts offline en `data/raw/`
 
 ### Transporte MCP
 - El servidor y el cliente usan el SDK oficial (`mcp`) y se comunican por `stdio` con un subproceso local
