@@ -57,6 +57,21 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - `ResearchBrief`: encargo de investigación con tipo, ubicación, área y preguntas
 - `ResearchResult`: resultado estructurado con evidencias, competidores y cobertura
 
+### 6. Registro de competidores (oficial)
+- `src/tools/competitor_registry.py` une los tres recursos del Censo de Locales del
+  Ayuntamiento (locales, actividades y licencias) en registros de `Competitor` con el
+  identificador oficial del local.
+- Cada campo oficial lleva su propia `Evidence` (URL, fecha de consulta, limitaciones),
+  de modo que los datos municipales se distinguen de los comerciales.
+- Coordenadas `0,0` o fuera del entorno UTM 30N de Madrid se tratan como **no
+  disponibles** y no se usan para distancias ni clustering.
+- Una licencia ausente significa "no hay información", nunca "denegada".
+- `has_playroom` es `True`/`False` solo con evidencia fiable; si no, queda `None`
+  (desconocido).
+- `to_dataframe()` produce el DataFrame que consume el módulo de análisis de mercado
+  (`gym_name`, `monthly_price_eur`, `has_playroom` y contexto adicional).
+- Script reproducible: `python data/raw/extract_competitor_registry.py`.
+
 ---
 
 ## 🛠️ Instalación

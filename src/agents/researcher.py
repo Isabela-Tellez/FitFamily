@@ -167,6 +167,46 @@ def resolve_max_results(search_limits: Optional[Dict[str, Any]]) -> int:
             return min(int(raw), MAX_RESULTS_LIMIT)
     return DEFAULT_MAX_RESULTS
 
+def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
+    """Look for the sources that could provide the variables the brief misses.
+
+    Each candidate is returned as an :class:`Evidence` with its URL, the
+    organism and the reason why it was kept or discarded, so the result is
+    traceable and no source is presented as verified without having been read.
+    """
+    from src.tools.source_discovery import discover_sources
+
+    evidences: List[Evidence] = []
+    for variable in brief.missing_variables:
+        candidates = discover_sources(
+            variable,
+            area=f"{brief.study_area}, {brief.location}",
+        )
+        for index, candidate in enumerate(candidates):
+            if not candidate.get("url"):
+                continue
+            state = candidate.get("state", "discovered")
+            evidences.append(Evidence(
+                evidence_id=f"source_{index:03d}_{abs(hash(variable)) % 10000:04d}",
+                claim=(
+                    f"Fuente localizada para la variable '{variable}': "
+                    f"{candidate.get('title') or candidate['url']} "
+                    f"[{state}] {candidate.get('reason', '')}".strip()
+                ),
+                source_url=candidate.get("url"),
+                snippet=(
+                    f"organismo: {candidate.get('organism')} | consulta: "
+                    f"{candidate.get('query')} | dataset: {candidate.get('is_dataset')}"
+                ),
+                limitations=(
+                    "Resultado de la busqueda automatica de fuentes. El estado indica "
+                    "si la fuente solo fue localizada, si se pudo acceder, si se "
+                    "extrajeron datos o si se descarto. Una fuente no se da por "
+                    "verificada sin haber leido su contenido."
+                ),
+            ))
+    return evidences
+
 
 def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None) -> ResearchResult:
     """Execute a research investigation using the CrewAI agent.
@@ -262,6 +302,16 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
         except Exception as e:
             logger.warning(f"Competitor search tool failed: {e}")
             search_performed += "; competitor search had issues"
+
+        # Source discovery pass for the variables the brief still needs.
+        if brief.missing_variables:
+            try:
+                for candidate in discover_sources_for_brief(brief):
+                    evidences.append(candidate)
+                    search_performed += f"; fuente localizada: {candidate.source_url}"
+            except Exception as e:
+                logger.warning(f"Source discovery failed: {e}")
+                search_performed += "; busqueda de fuentes fallo"
 
         # Construct the result
         research_result = ResearchResult(

@@ -367,6 +367,43 @@ def _classify_price(match: "re.Match[str]", text: str) -> "tuple[Optional[float]
     return value, frequency
 
 
+def extract_prices(text: str) -> List[Dict[str, Any]]:
+    """Extract every published price found in a text.
+
+    Reuses the same regular expression and classification as the evidence
+    extraction, so a price found here and a price stored as evidence always
+    agree. Ranges ("50-70 EUR") are flagged instead of being silently
+    reduced to one of their bounds.
+
+    Returns a list of dicts with:
+    - value: the amount as a float
+    - unit: currency (all the matched patterns are euro denominated)
+    - frequency: 'monthly', 'annual', 'one-time' or '' when unknown
+    - fragment: the surrounding text
+    - is_range / range_from: set when the amount is the upper bound of a range
+    """
+    results: List[Dict[str, Any]] = []
+    if not text:
+        return results
+    for match in _PRICE_RE.finditer(text):
+        value, frequency = _classify_price(match, text)
+        if value is None:
+            continue
+        before = text[max(0, match.start() - 14):match.start()]
+        range_match = re.search(r"(\d+(?:[.,]\d{1,2})?)\s*[-–—]\s*$", before)
+        entry = {
+            "value": value,
+            "unit": "euros",
+            "frequency": frequency or "",
+            "fragment": text[max(0, match.start() - 60):match.end() + 60].strip(),
+            "is_range": bool(range_match),
+        }
+        if range_match:
+            entry["range_from"] = range_match.group(1)
+        results.append(entry)
+    return results
+
+
 def _extract_evidence_from_page(
     page: PageReadResult,
     business_type: str,

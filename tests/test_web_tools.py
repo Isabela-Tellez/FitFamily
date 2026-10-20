@@ -83,6 +83,39 @@ def test_search_web_deduplicates_urls():
         assert len(results) == 2
 
 
+def test_normalize_url_keeps_the_query_and_drops_tracking():
+    """Regression test: the URL normalisation must not raise.
+
+    It used to call urlencode() with a non existing 'query_fragment'
+    argument, which broke EVERY real search.
+    """
+    from src.tools.search_web import _normalize_url
+
+    assert _normalize_url("https://example.com/a") == "https://example.com/a"
+    assert _normalize_url("https://example.com/a?b=1") == "https://example.com/a?b=1"
+    assert _normalize_url("https://example.com/a?b=1#frag") == "https://example.com/a?b=1"
+    assert _normalize_url(
+        "https://example.com/a?utm_source=x&b=1"
+    ) == "https://example.com/a?b=1"
+    assert _normalize_url("") == ""
+
+
+def test_search_web_normalises_real_urls_without_raising():
+    """The whole search path must work with the real URL normalisation."""
+    mock_results = [
+        {"title": "Con tracking", "url": "https://example.com/1?utm_source=news", "snippet": "s"},
+        {"title": "Mismo con otro tracking", "url": "https://example.com/1?utm_medium=m", "snippet": "s"},
+        {"title": "Con query", "url": "https://example.com/2?page=2", "snippet": "s"},
+    ]
+    with patch("src.tools.search_web._get_search_provider", return_value="ddgs"), \
+         patch("src.tools.search_web._search_ddgs", return_value=mock_results):
+        results = search_web("test query", max_results=10)
+    # Las dos URLs con distinto tracking se deduplican.
+    assert len(results) == 2
+    assert results[0].url == "https://example.com/1?utm_source=news"
+    assert results[1].url == "https://example.com/2?page=2"
+
+
 def test_read_web_page_returns_page_read_result():
     """Test that read_web_page returns a PageReadResult."""
     mock_response = MagicMock()

@@ -474,6 +474,45 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 103 tests pasando.
 
+## Versión 1.2.0 — Registro de competidores oficial, busquador de fuentes reparado y descubrimiento de datasets (20/10/2026)
+
+### Hallazgo critico: el buscador de fuentes no funcionaba
+- Causa raiz: _normalize_url() en src/tools/search_web.py llamaba urlencode() con el argumento inexistente 'query_fragment', lo que lanzaba TypeError en CADA busqueda. El error se envolvia en RuntimeError y el agente recibia 'Search provider failed' sin ningun resultado.
+- Ademas, la query se reconstruia sin el interrogante, de modo que los parametros se perdian.
+- Los tests no lo detectaban porque todos mockeaban search_web. Se anaden 3 tests de regresion que usan la funcion real.
+- Efecto: hasta ahora ninguna busqueda web del modulo habia funcionado de verdad.
+
+### Registro de competidores (src/tools/competitor_registry.py, nuevo)
+- Une los tres recursos oficiales del Censo de Locales (Locales, Actividades y Locales con informacion de licencia) en registros Competitor con el identificador oficial del local.
+- 18 competidores de El Canaveral con direccion, CP, coordenadas, actividad declarada y licencia.
+- Procedencia por campo: cada bloque oficial lleva su propia Evidence con URL, fecha de consulta y limitaciones.
+- Reglas: coordenadas 0,0 o fuera del entorno UTM 30N de Madrid = no disponibles; licencia ausente = 'no disponible' (nunca 'denegada'); has_playroom en True/False solo con evidencia fiable, si no None; precios con su periodicidad publicada, sin convertir.
+- Enriquecimiento web: se busca por direccion oficial, la pagina solo se acepta si menciona la calle y la actividad declarada, y se descartan los anuncios de alquiler de vivienda (se detectan por senales multiples de vivienda).
+- to_dataframe() genera el DataFrame que consume el modulo de analisis (gym_name, monthly_price_eur, has_playroom y contexto).
+- Script reproducible: data/raw/extract_competitor_registry.py.
+
+### Descubrimiento de fuentes (src/tools/source_discovery.py, nuevo)
+- Convierte una variable pendiente en varias consultas: la literal, 'datos abiertos', 'estadistica' y una por organismo (site:ine.es, site:datos.madrid.es...).
+- Clasifica cada resultado como discovered, accessible, extracted, validated o rejected, con motivo explicito.
+- Distingue paginas informativas de datasets descargables (extensiones, /dataset/, /api/ y contenido).
+- Extrae tablas de CSV y de HTML para comprobar la cobertura y el periodo.
+- No marca una fuente como validada sin haber leido su contenido.
+
+### Integracion con el agente de investigacion
+- ResearchBrief incorpora missing_variables (opcional). Cuando se rellena, run_research hace una pasada de busqueda de fuentes y devuelve cada candidata como Evidence con URL, organismo, consulta, estado (discovered/accessible/extracted/validated/rejected) y motivo.
+- Una fuente nunca se presenta como verificada sin haber leido su contenido.
+
+### Contrato de datos (src/schemas.py)
+- Competitor incorpora campos opcionales: postal_code, latitude, longitude, census_section, license_status, license_type, license_date, has_playroom, verification_status y consulted_at.
+- Aditivo: los agentes de analisis y redaccion siguen funcionando sin cambios.
+
+### Documentacion
+- docs/pendiente-renta-ine.md: fase de renta (INE ADRH, operacion 30325) documentada y NO implementada.
+- data/sources.json, data/raw/README.md, docs/research-module.md y docs/auditoria-fuentes-datos.md actualizados.
+
+### Tests
+- tests/test_competitor_registry.py (26), tests/test_source_discovery.py (12) y 3 tests de regresion del buscador.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

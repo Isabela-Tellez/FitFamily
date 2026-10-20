@@ -98,6 +98,84 @@ class Competitor(BaseModel):
         default_factory=list,
         description="Evidence records that justify the competitor data.",
     )
+    postal_code: Optional[str] = Field(
+        default=None,
+        description="Postal code of the premises, when the source provides it.",
+    )
+    latitude: Optional[float] = Field(
+        default=None,
+        description=(
+            "Latitude in WGS84 decimal degrees (EPSG:4326). The municipal registry "
+            "publishes EPSG:25830 metres; the conversion is documented in the "
+            "evidence. None when the source has no usable coordinates."
+        ),
+    )
+    longitude: Optional[float] = Field(
+        default=None,
+        description="Longitude in WGS84 decimal degrees (EPSG:4326).",
+    )
+    census_section: Optional[str] = Field(
+        default=None,
+        description="Census section assigned to the premises by the registry.",
+    )
+    license_status: Optional[str] = Field(
+        default=None,
+        description=(
+            "Administrative status of the activity licence, verbatim from the "
+            "source. None means 'no information available', never 'denied'."
+        ),
+    )
+    license_type: Optional[str] = Field(
+        default=None,
+        description="Type of activity licence, verbatim from the source.",
+    )
+    license_date: Optional[str] = Field(
+        default=None,
+        description="Date declared in the licence record (source wording).",
+    )
+    has_playroom: Optional[bool] = Field(
+        default=None,
+        description=(
+            "True/False only with reliable evidence that the service is or is not "
+            "offered. None means unknown: the source does not mention it."
+        ),
+    )
+    verification_status: Optional[str] = Field(
+        default=None,
+        description=(
+            "Verification status of the official identity data: 'verified', "
+            "'unverified' or 'unavailable'. Commercial data (price, playroom) "
+            "carries its own evidence and limitation."
+        ),
+    )
+    consulted_at: Optional[str] = Field(
+        default=None,
+        description="ISO timestamp of the last retrieval of this record.",
+    )
+
+    @model_validator(mode="after")
+    def normalize_coordinates(self) -> "Competitor":
+        """Treat missing or implausible coordinates as unavailable.
+
+        The municipal registry uses 0,0 for premises without georeferenced
+        position, and only publishes EPSG:25830 metres for the rest. Values
+        outside the UTM 30N envelope of the Community of Madrid are rejected
+        so that they are never used for distances or clustering.
+        """
+        lat, lon = self.latitude, self.longitude
+        if lat is None or lon is None:
+            self.latitude = None
+            self.longitude = None
+            return self
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+            self.latitude = None
+            self.longitude = None
+            return self
+        # 0,0 and the Gulf of Guinea are the classic "no data" markers.
+        if abs(lat) < 1e-6 and abs(lon) < 1e-6:
+            self.latitude = None
+            self.longitude = None
+        return self
 
     @model_validator(mode="after")
     def normalize_services(self) -> "Competitor":
@@ -167,6 +245,14 @@ class ResearchBrief(BaseModel):
     assumed: bool = Field(
         default=False,
         description="Whether the brief contains assumed/placeholder data.",
+    )
+    missing_variables: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Variables that the research still needs and that are not covered by "
+            "the available sources. When present, the researcher runs a source "
+            "discovery pass and returns the candidates as evidences."
+        ),
     )
 
     @model_validator(mode="after")

@@ -126,7 +126,8 @@ def _normalize_url(url: str) -> str:
     # Quitar tracking well conocido
     for key in ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]:
         query.pop(key, None)
-    normalized = urlencode(query, query_fragment=parsed.fragment) if query else ""
+    query_string = urlencode(query)
+    normalized = f"?{query_string}" if query_string else ""
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}{normalized}"
 
 
