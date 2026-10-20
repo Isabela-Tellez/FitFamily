@@ -198,6 +198,11 @@ data/
 
 ## 👥 Consumo por Otros Módulos
 
+> **Nota para los consumidores:** `ResearchResult.evidences` ya incluye las evidencias
+> que lleva cada `Competitor`. Si concatenáis `competitor.evidences` a esa lista,
+> las cuentas salen duplicadas. Usad la lista global para contar y la de cada competidor
+> solo para agrupar por fuente.
+
 ### Para Isabella (Persona 5 - Streamlit/LangGraph):
 ```python
 from fitfamily.src.agents.researcher import run_research
