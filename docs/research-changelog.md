@@ -203,7 +203,7 @@
 
 ### Estado tras la corrección
 - `python -m src.mcp.client`: conecta, descubre 1 herramienta y devuelve estadísticas
-- Los datos siguen siendo placeholder: la integración funciona, el contenido está pendiente
+- Los datos siguen siendo placeholder: la integración funciona, el contenido está pendiente (actualizado en 1.1.2)
 
 ---
 

@@ -101,7 +101,7 @@ Este documento registra todas las modificaciones y creación de archivos durante
 ### `server.py` (20/10/2026)
 - **Archivo**: `src/mcp/server.py`
 - **Función pública**: `get_area_statistics(area_id, indicators)`
-- **Almacenamiento**: Diccionario `_STATISTICS_DATA` con indicadores placeholder
+- **Almacenamiento**: Diccionario `_STATISTICS_DATA` con indicadores reales y `null` documentados
 - **Endpoint MCP**:
   - Nombre: `get_area_statistics`
   - Parámetro obligatorio: `area_id`

@@ -47,7 +47,7 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - Cliente MCP que descubre e invoca herramientas del servidor
 - Comunicación a través de `stdio` (proceso local solo)
 - Sin Cloudflare ni servidores externos por defecto
-- Datos placeholder preparados para poblarse con fuentes reales
+- Datos reales poblados con procedencia por indicador (ver `data/sources.json`)
 
 ### 5. Modelos Pydantic Compartidos
 - `Evidence`: registra afirmaciones con fuente, valor, unidad, fragmento y limitaciones
