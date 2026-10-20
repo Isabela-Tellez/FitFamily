@@ -1,0 +1,28 @@
+# requirements.txt - Dependencias para FitFamily Módulo Persona 1
+# --------------------------------
+# Núcleo del módulo (obligatorias):
+# - pydantic: modelos y validación de datos
+# - mcp: SDK del Model Context Protocol (servidor y cliente)
+# - httpx: lectura de páginas web
+# - beautifulsoup4: extracción de texto HTML
+# - ddgs: búsqueda web (reemplaza a duckduckgo-search)
+# - crewai: marco de agentes AI
+#
+# Opcionales:
+# - tavily-python: búsqueda alternativa (requiere TAVILY_API_KEY)
+
+pydantic==2.12.5
+mcp==1.28.1
+httpx==0.28.1
+beautifulsoup4==4.14.3
+ddgs==9.14.4
+crewai==1.15.28
+tavily-python==0.8.5
+
+# Pruebas (no necesarias en producción)
+pytest==9.0.3
+
+# Notas:
+# - El paquete duckduckgo-search NO se incluye porque el código usa from ddgs import DDGS
+# - tavily-python es opcional: solo necesita TAVILY_API_KEY configurado en el entorno
+#   para usar Tavily como proveedor de búsqueda alternativa
