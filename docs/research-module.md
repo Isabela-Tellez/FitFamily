@@ -40,6 +40,7 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - `build_researcher()` define el rol, objetivo y *backstory* del agente
 - `build_research_task(brief, context)` genera la tarea con las reglas de la investigación
 - **La ejecución real es determinista**: `run_research()` usa las herramientas Python directamente, sin LLM ni clave OpenAI
+- `search_limits.max_results` del encargo se respeta (por defecto 5, máximo 20, el límite que aceptan las herramientas)
 - La orquestación completa con CrewAI + LLM queda como fase posterior (ver Limitaciones)
 
 ### 4. Protocolo MCP (Model Context Protocol)

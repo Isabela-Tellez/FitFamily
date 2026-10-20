@@ -429,6 +429,17 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 78 tests pasando.
 
+
+## Versión 1.1.10 — Se respetan los límites de búsqueda del encargo (20/10/2026)
+
+### Corrección
+- run_research() usaba un límite fijo de 5 resultados y solo mostraba search_limits dentro del texto de la tarea, sin aplicarlo.
+- Ahora resuelve_max_results() toma search_limits.max_results del ResearchBrief, con valor por defecto 5 y tope de 20 (el límite que aceptan search_web y competitor_search).
+- El valor se aplica tanto a la búsqueda inicial como a competitor_search.
+
+### Pruebas
+- Añadido tests/test_search_limits.py con 7 tests: valor por defecto, valor del encargo, tope, valores inválidos y comprobación de que el límite llega a las dos herramientas.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo
