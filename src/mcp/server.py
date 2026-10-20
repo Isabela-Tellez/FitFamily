@@ -26,9 +26,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "y Wikipedia (citando INE/Padrón). Los valores son observados, no estimados."
     ),
     "source": (
-        "Ayuntamiento de Madrid - Padrón Municipal de Habitantes "
-        "(https://datos.madrid.es/.../Padrón) y Wikipedia 'El Cañaveral' "
-        "(ed. 6 sep 2026, citando INE/Padrón)."
+        "Padrón Municipal de Habitantes (Ayuntamiento de Madrid, datos.madrid.es) "
+        "y Wikipedia 'El Cañaveral' (ed. 6 sep 2026, citando INE/Padrón). "
+        "URL padrón: https://datos.madrid.es/sites/v/index.jsp?vgnextoid=5deb7700f69e8410VgnVCM2000000c205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD"
     ),
     "geo_scope": "El Cañaveral, distrito de Vicálvaro, Madrid",
     "period": (
@@ -39,6 +39,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "population_total": {
             "value": 27014,
             "unit": "habitantes",
+            "reference_period": "agosto 2026",
+            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "Población empadronada en agosto de 2026 (Wikipedia, citando Padrón). "
                 "No equivale necesariamente a residentes efectivos; cifra en crecimiento "
@@ -48,19 +51,28 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "households_total": {
             "value": 9224,
             "unit": "hogares",
+            "reference_period": "1 de enero de 2026",
+            "source_url": "https://www.instagram.com/p/DeqmBpWIU4u/",
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "Hogares empadronados a 1 de enero de 2026, con media de 2,70 personas por vivienda "
-                "(Padrón, vía Instagram del barrio)."
+                "(Padrón Municipal, publicado por el barrio en Instagram)."
             ),
         },
         "average_household_size": {
             "value": 2.70,
             "unit": "personas por hogar",
-            "limitations": "Dato del Padrón a 1 de enero de 2026.",
+            "reference_period": "1 de enero de 2026",
+            "source_url": "https://www.instagram.com/p/DeqmBpWIU4u/",
+            "consulted_at": "2026-10-20",
+            "limitations": "Dato del Padrón a 1 de enero de 2026, publicado por el barrio en Instagram.",
         },
         "population_under_20_share": {
             "value": 25.46,
             "unit": "porcentaje",
+            "reference_period": "2021",
+            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "Porcentaje de población menor de 20 años según la pirámide de población de 2021. "
                 "Indicador de potencial de familias con hijos; no es un conteo de familias."
@@ -69,6 +81,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "businesses_open": {
             "value": 126,
             "unit": "negocios",
+            "reference_period": "1 de junio de 2025",
+            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "Negocios abiertos en El Cañaveral a 1 de junio de 2025 (Wikipedia, citando datos municipales). "
                 "Incluye todo tipo de actividad, no solo ocio/deporte."
@@ -77,6 +92,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "families_with_children": {
             "value": None,
             "unit": "familias",
+            "reference_period": None,
+            "source_url": None,
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "No se encontró un censo directo de familias con hijos. "
                 "Referencia indirecta: 25,46 % de la población es menor de 20 años (2021)."
@@ -85,6 +103,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "gyms_registered": {
             "value": None,
             "unit": "centros",
+            "reference_period": None,
+            "source_url": None,
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "No se encontró censo municipal publicado de centros deportivos. "
                 "Centros localizados manualmente en la web (no censo oficial): "
@@ -96,6 +117,9 @@ _STATISTICS_DATA: Dict[str, Any] = {
         "gyms_with_ludoteca": {
             "value": None,
             "unit": "centros",
+            "reference_period": None,
+            "source_url": None,
+            "consulted_at": "2026-10-20",
             "limitations": (
                 "No se encontró censo municipal. Ninguno de los centros localizados "
                 "publica ludoteca de forma verificable en su web; confirmar por contacto directo."

@@ -1,8 +1,18 @@
 # FitFamily - Registro de Cambios del Módulo Persona 1
 
-> **Fecha última actualización**: 22 de octubre de 2026  
+> **Fecha última actualización**: 20 de octubre de 2026
 > **Autor**: Juan (Persona 1 - Investigador, herramientas y MCP)  
 > **Proyecto**: FitFamily - IA multiagente para análisis de viabilidad de gimnasio con ludoteca  
+
+---
+
+## Nota sobre fechas y estado documental
+
+- Las fechas de las versiones 1.0.0 y 1.1.0 corresponden al desarrollo original del módulo (octubre de 2026) y se conservan como histórico.
+- La revisión, correcciones y poblado de datos de esta iteración se fechan el **20 de octubre de 2026**.
+- Los elementos listados en "Backlog" **no** están completados; solo se consideran cerrados los marcados con `[x]`.
+- Las afirmaciones de la versión 1.0.0 sobre una prueba real de MCP se corrigieron en 1.1.1 (`tests/test_mcp_integration.py`).
+- No se afirma la ejecución de CrewAI con LLM mientras no exista una clave de proveedor configurada.
 
 ---
 
