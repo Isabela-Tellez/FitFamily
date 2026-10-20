@@ -124,6 +124,61 @@ def test_read_web_page_blocks_private_ips():
             read_web_page(url)
 
 
+def test_is_private_ip_blocks_alternative_representations():
+    """Special-purpose and alternative IP forms must be classified as private."""
+    from src.tools.read_web_page import _is_private_ip
+
+    forbidden = [
+        "::ffff:127.0.0.1",      # IPv4-mapped IPv6 loopback
+        "::ffff:7f00:1",         # same, hex form
+        "::ffff:10.0.0.1",       # IPv4-mapped private
+        "255.255.255.255",       # limited broadcast
+        "224.0.0.1",             # multicast
+        "239.255.255.255",       # multicast
+        "240.0.0.1",             # reserved
+        "100.64.0.1",            # CGNAT / shared address space
+        "198.18.0.1",            # benchmarking
+        "fe80::1",               # IPv6 link-local
+        "fc00::1",               # IPv6 unique-local
+        "fd00::1",               # IPv6 unique-local
+        "::",                    # unspecified
+    ]
+    for host in forbidden:
+        assert _is_private_ip(host) is True, host
+
+
+def test_is_private_ip_allows_global_addresses():
+    """Public, globally routable addresses must not be classified as private."""
+    from src.tools.read_web_page import _is_private_ip
+
+    for host in ["93.184.216.34", "8.8.8.8", "1.1.1.1", "::ffff:93.184.216.34"]:
+        assert _is_private_ip(host) is False, host
+    # A hostname is not an IP literal; it is validated after DNS resolution.
+    assert _is_private_ip("example.com") is False
+
+
+def test_read_web_page_blocks_ipv4_mapped_ipv6_loopback():
+    """http://[::ffff:127.0.0.1]/ must not reach the loopback interface."""
+    import pytest
+    with pytest.raises(RuntimeError, match="denied|not allowed|blocked"):
+        read_web_page("http://[::ffff:127.0.0.1]/test")
+
+
+def test_read_web_page_blocks_broadcast_and_multicast():
+    """Broadcast and multicast destinations must be rejected."""
+    import pytest
+    for url in ["http://255.255.255.255/test", "http://224.0.0.1/test"]:
+        with pytest.raises(RuntimeError, match="denied|not allowed|blocked"):
+            read_web_page(url)
+
+
+def test_read_web_page_blocks_decimal_ip_representation():
+    """Decimal notation for 127.0.0.1 must be rejected (or fail to resolve)."""
+    import pytest
+    with pytest.raises(RuntimeError, match="denied|not allowed|blocked|resolve"):
+        read_web_page("http://2130706433/test")
+
+
 def test_read_web_page_blocks_dns_rebinding():
     """DNS resolution to a private IP must be blocked (TOCTOU mitigation)."""
     import pytest
@@ -156,6 +211,33 @@ def test_read_web_page_blocks_redirect_to_private():
     mock_client.__enter__ = MagicMock(return_value=mock_client)
     mock_client.__exit__ = MagicMock(return_value=False)
     mock_client.get.return_value = redirect_response
+
+    with patch("src.tools.read_web_page._resolve_host", return_value=["93.184.216.34"]), \
+         patch("src.tools.read_web_page.httpx.Client", return_value=mock_client):
+        with pytest.raises(RuntimeError, match="disallowed|denied|not allowed"):
+            read_web_page("https://example.com/start")
+
+
+def test_read_web_page_blocks_redirect_chain_to_private():
+    """A chain of public redirects ending in a private hop must be blocked."""
+    import pytest
+    from unittest.mock import patch, MagicMock
+
+    hop1 = MagicMock()
+    hop1.status_code = 302
+    hop1.headers = {"location": "https://example.com/hop2", "content-type": "text/html"}
+    hop1.url = "https://example.com/start"
+
+    hop2 = MagicMock()
+    hop2.status_code = 302
+    hop2.headers = {"location": "http://127.0.0.1/secret", "content-type": "text/html"}
+    hop2.url = "https://example.com/hop2"
+
+    responses = [hop1, hop2]
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.get.side_effect = lambda url, *a, **kw: responses.pop(0)
 
     with patch("src.tools.read_web_page._resolve_host", return_value=["93.184.216.34"]), \
          patch("src.tools.read_web_page.httpx.Client", return_value=mock_client):

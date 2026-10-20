@@ -26,6 +26,7 @@ from __future__ import annotations
 import logging
 import re
 import socket
+import ipaddress
 from datetime import datetime
 from typing import Optional, List
 from urllib.parse import urlsplit, urlunsplit, quote, unquote, urljoin
@@ -112,29 +113,39 @@ class PageReadResult(BaseModel):
 
 
 def _is_private_ip(host: str) -> bool:
-    """Check if the host appears to be a private/internal IP or hostname."""
+    """Check if a host is a private, special or otherwise forbidden destination.
+
+    IP literals are classified with the standard library ``ipaddress`` module,
+    which correctly handles every reserved range (loopback, private, link-local,
+    multicast, unspecified, reserved, CGNAT) and IPv4-mapped IPv6 addresses
+    such as ``::ffff:127.0.0.1`` — a form that a naive prefix check misses.
+    Hostnames that are not IP literals are checked against the known internal
+    name patterns; their resolved addresses are validated separately.
+    """
     if not host:
         return True
     host = host.strip().lower()
+    # Strip IPv6 brackets if present.
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+    # Block obvious internal hostnames.
     if host in {"localhost", "metadata", "metadata.google.internal",
-                "metadata.azure.com", "169.254.169.254"}:
+                "metadata.azure.com"}:
         return True
     if host.endswith(".internal") or host.endswith(".local"):
         return True
-    if host.startswith("[") and host.endswith("]"):
-        host = host[1:-1]
-    if host in {"::1", "::"} or host.startswith("fe80:") or host.startswith("fc") or host.startswith("fd"):
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        # Not an IP literal: it is a hostname, validated via DNS resolution.
+        return False
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
+        # ::ffff:127.0.0.1 reaches 127.0.0.1: classify it as its IPv4 form.
+        ip = ip.ipv4_mapped
+    if ip.is_multicast or ip.is_reserved or ip.is_unspecified:
         return True
-    private_prefixes = ("127.", "10.", "192.168.", "169.254.", "0.")
-    if any(host.startswith(p) for p in private_prefixes):
-        return True
-    if host.startswith("172."):
-        parts = host.split(".")
-        if len(parts) >= 2 and parts[1].isdigit():
-            second = int(parts[1])
-            if 16 <= second <= 31:
-                return True
-    return False
+    # Allowlist: only globally routable addresses are considered public.
+    return not ip.is_global
 
 
 def _resolve_host(host: str) -> List[str]:
