@@ -109,10 +109,36 @@ class PageReadResult(BaseModel):
 
 
 def _is_private_ip(host: str) -> bool:
-    """Check if the host appears to be a private/internal IP."""
-    # Simplified check for common private ranges
-    private_prefixes = ("127.", "10.", "192.168.", "172.16.", "172.31.")
-    return any(host.startswith(p) for p in private_prefixes)
+    """Check if the host appears to be a private/internal IP or hostname."""
+    if not host:
+        return True
+    host = host.strip().lower()
+    # Block obvious internal hostnames.
+    if host in {"localhost", "metadata", "metadata.google.internal",
+                "metadata.azure.com", "169.254.169.254"}:
+        return True
+    if host.endswith(".internal") or host.endswith(".local"):
+        return True
+    # Strip IPv6 brackets if present.
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+    # IPv6 loopback / link-local / unique-local.
+    if host in {"::1", "::"} or host.startswith("fe80:") or host.startswith("fc") or host.startswith("fd"):
+        return True
+    # IPv4 checks.
+    private_prefixes = (
+        "127.", "10.", "192.168.", "169.254.", "0.",
+    )
+    if any(host.startswith(p) for p in private_prefixes):
+        return True
+    # 172.16.0.0/12
+    if host.startswith("172."):
+        parts = host.split(".")
+        if len(parts) >= 2 and parts[1].isdigit():
+            second = int(parts[1])
+            if 16 <= second <= 31:
+                return True
+    return False
 
 
 def _sanitize_html(raw_html: str) -> str:
@@ -177,6 +203,14 @@ def read_web_page(url: str) -> PageReadResult:
                 f"Access to private IP address denied: {host}"
             )
 
+        # Normalize the URL so that spaces and unsafe characters in the path
+        # do not break the request. Query parameters are preserved.
+        from urllib.parse import urlsplit, urlunsplit, quote, unquote
+        split = urlsplit(url)
+        if not split.hostname:
+            raise ValueError("URL has no host.")
+        normalized_path = quote(unquote(split.path), safe="/%")
+        url = urlunsplit((split.scheme, split.netloc, normalized_path, split.query, split.fragment))
         # Make the HTTP request with timeout
         with httpx.Client(
             timeout=DEFAULT_TIMEOUT,

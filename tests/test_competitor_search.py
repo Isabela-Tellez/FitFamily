@@ -109,11 +109,45 @@ def test_competitor_search_handles_search_failure():
             pass
 
 
-def test_competitor_search_validates_input():
-    """Test that competitor_search validates input parameters."""
-    import pytest
-    with pytest.raises(ValueError):
-        competitor_search({"area": "", "business_type": "gimnasio"})
+def test_competitor_search_does_not_count_failed_pages_as_competitors():
+    mock_search_results = [
+        SearchResult(title="Gym A", url="https://gyma.com", snippet="Gym", provider="ddgs"),
+    ]
+    with patch("src.tools.competitor_search.search_web", return_value=mock_search_results), \
+         patch("src.tools.competitor_search.read_web_page", side_effect=RuntimeError("blocked")):
+        result = competitor_search({
+            "area": "El Cañaveral",
+            "business_type": "gimnasio con ludoteca",
+            "max_results": 3,
+        })
+
+    assert result["competitors"] == []
+    # The failed attempt is still recorded as evidence for traceability.
+    assert any(e.evidence_id.startswith("access_attempt_") for e in result["evidences"])
+
+
+def test_competitor_search_respects_max_results():
+    mock_search_results = [
+        SearchResult(title=f"Gym {i}", url=f"https://gym{i}.com", snippet="Gym", provider="ddgs")
+        for i in range(5)
+    ]
+    mock_page = MagicMock()
+    mock_page.has_content = True
+    mock_page.title = "Gym"
+    mock_page.body_text = "Gym with ludoteca."
+    mock_page.snippet = "Gym"
+    mock_page.final_url = "https://gym.example"
+    mock_page.warnings = []
+
+    with patch("src.tools.competitor_search.search_web", return_value=mock_search_results), \
+         patch("src.tools.competitor_search.read_web_page", return_value=mock_page):
+        result = competitor_search({
+            "area": "El Cañaveral",
+            "business_type": "gimnasio con ludoteca",
+            "max_results": 2,
+        })
+
+    assert len(result["competitors"]) <= 2
 
 
 # --- Price extraction tests ---
@@ -123,6 +157,7 @@ def test_parse_amount_supports_spanish_and_english_notation():
     assert _parse_amount("49.90") == 49.90
     assert _parse_amount("1.200") == 1200.0
     assert _parse_amount("1.200,50") == 1200.50
+    assert _parse_amount("1,200.50") == 1200.50
     assert _parse_amount("") is None
 
 

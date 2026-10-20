@@ -71,11 +71,14 @@ def test_get_area_statistics_empty_indicators_returns_all():
     assert len(stats["results"]) >= 4
 
 
-def test_get_area_statistics_rejects_empty_area():
-    """Empty area identifiers must be rejected."""
-    import pytest
-    with pytest.raises(ValueError):
-        get_area_statistics("   ", ["gyms_with_ludoteca"])
+def test_get_area_statistics_unknown_area_returns_nulls():
+    """An area without local data must return nulls, not El Cañaveral data."""
+    stats = get_area_statistics("valdebebas", ["population_total"])
+    assert stats["area_id"] == "valdebebas"
+    assert stats["geo_scope"] == "valdebebas"
+    entry = stats["results"]["population_total"]
+    assert entry["value"] is None
+    assert "no disponibles" in entry["limitations"].lower() or "no disponible" in entry["limitations"].lower()
 
 
 # --- Client tests (no subprocess) ---

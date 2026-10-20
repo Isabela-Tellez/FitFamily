@@ -243,6 +243,7 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 ### Datos MCP
 - Mezcla de datos oficiales (Padrón Municipal) y documentados (Wikipedia, medios locales)
 - Cada indicador lleva su propia limitación; los no disponibles siguen en `null`
+- Solicitar un área distinta de El Cañaveral devuelve `null` con limitación, en lugar de los datos de El Cañaveral
 - Para añadir o corregir datos: editar `_STATISTICS_DATA` en `src/mcp/server.py` y `data/sources.json`
 
 ### Transporte MCP
@@ -281,4 +282,4 @@ Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` e
 ---
 
 **Última actualización**: 20 de octubre de 2026
-**Versión**: 1.1.2 — Datos MCP poblados con fuentes verificables
+**Versión**: 1.1.3 — Robustez de MCP, precios y límites

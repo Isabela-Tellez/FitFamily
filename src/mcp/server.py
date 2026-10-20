@@ -166,11 +166,14 @@ def get_area_statistics(area_id: str, indicators: Optional[List[str]] = None) ->
         raise ValueError("area_id must be a non-empty string.")
 
     stripped_area = area_id.strip().lower()
+    # Normalize common variants.
+    canonical = stripped_area.replace(" ", "-").replace("_", "-")
+    is_supported = canonical in {"el-cañaveral", "el-canaveral", "canaveral"}
 
     # Load data
     data = _load_statistics()
     indicators_available = data.get("indicators", {})
-    geo_scope = data.get("geo_scope", area_id)
+    geo_scope = data.get("geo_scope", area_id) if is_supported else area_id.strip()
     period = data.get("period", "desconocido")
     source = data.get("source", "fuente desconocida")
 
@@ -179,22 +182,31 @@ def get_area_statistics(area_id: str, indicators: Optional[List[str]] = None) ->
     indicators_requested: List[str] = []
 
     if indicators:
-        # User specified which indicators they want
         indicators_requested = [ind.strip() for ind in indicators if ind.strip()]
-        for ind_name in indicators_requested:
-            if ind_name in indicators_available:
-                results[ind_name] = indicators_available[ind_name]
-            else:
-                results[ind_name] = {
-                    "value": None,
-                    "unit": None,
-                    "limitations": f"Indicador '{ind_name}' no disponible en los datos locales."
-                }
     else:
-        # Return all available indicators
         indicators_requested = list(indicators_available.keys())
-        for ind_name, ind_data in indicators_available.items():
-            results[ind_name] = ind_data
+
+    for ind_name in indicators_requested:
+        if not is_supported:
+            results[ind_name] = {
+                "value": None,
+                "unit": None,
+                "reference_period": None,
+                "source_url": None,
+                "consulted_at": None,
+                "limitations": (
+                    f"Datos no disponibles para '{area_id.strip()}'. "
+                    "El almacén actual solo cubre El Cañaveral (Vicálvaro, Madrid)."
+                ),
+            }
+        elif ind_name in indicators_available:
+            results[ind_name] = indicators_available[ind_name]
+        else:
+            results[ind_name] = {
+                "value": None,
+                "unit": None,
+                "limitations": f"Indicador '{ind_name}' no disponible en los datos locales."
+            }
 
     # Build response
     response: Dict[str, Any] = {

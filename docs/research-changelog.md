@@ -231,6 +231,31 @@
 - 43 tests pasando
 - Los datos reales conviven con los `null` declarados; no se ha inventado ningún valor
 - [x] Poblar `_STATISTICS_DATA` con fuentes municipales reales de Madrid/El Cañaveral (parcial: población, hogares, negocios y pirámide; gimnasios siguen en `null`)
+
+## Versión 1.1.3 — Robustez de MCP, precios y límites (20/10/2026)
+
+### Cambios Realizados
+
+#### MCP (src/mcp/server.py)
+- get_area_statistics ya no devuelve los datos de El Cañaveral para otras áreas: devuelve
+ull con limitación explícita y geo_scope ajustado al área solicitada.
+- Añadida procedencia por indicador (
+eference_period, source_url, consulted_at).
+
+#### Precios (src/tools/competitor_search.py)
+- _parse_amount ahora interpreta correctamente 1,200.50 (antes: 200.50) y otros formatos mixtos.
+- La regex de importes acepta separadores de miles por coma o punto.
+
+#### Límites y robustez (src/tools/competitor_search.py, src/tools/read_web_page.py)
+- max_results se respeta de verdad (antes se comprobaba contra una lista siempre vacía).
+- Las páginas inaccesibles se registran como evidencia pero no cuentan como competidores.
+- Endurecido el bloqueo de direcciones internas (SSRF): más rangos IPv4/IPv6, hostnames internos y metadata.
+- Normalización de URLs con espacios o caracteres no seguros en la ruta.
+
+#### Pruebas
+- Añadidos tests para área desconocida, respeto de max_results, páginas fallidas y formato 1,200.50.
+- Suite completa: 44 tests pasando.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

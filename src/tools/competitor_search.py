@@ -134,7 +134,7 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
     competitors_found: List[CompetitorSchema] = []
 
     for query in queries:
-        if len(competitors_found) >= max_results:
+        if len(seen_identifiers) >= max_results:
             logger.info(
                 f"Reached max_results limit ({max_results}), stopping search."
             )
@@ -148,7 +148,7 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
 
         # 4. Process each search result
         for sr in search_results:
-            if len(competitors_found) >= max_results:
+            if len(seen_identifiers) >= max_results:
                 break
 
             url = sr.url
@@ -204,7 +204,10 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
     competitors_by_key: Dict[str, CompetitorSchema] = {}
 
     for ev in all_evidences:
-        # Use source URL domain or claim as key for grouping
+        # Failed access attempts are recorded as evidence but must not become
+        # competitors (they contain no business data).
+        if ev.evidence_id.startswith("access_attempt_"):
+            continue
         key = _get_competitor_key(ev, business_type)
         if key not in competitors_by_key:
             competitors_by_key[key] = CompetitorSchema(
@@ -237,7 +240,7 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
                 comp.name = name_candidates[0]
 
     # 9. Convert to final format and ensure tariffs/services are reasonable
-    competitors_list = list(competitors_by_key.values())
+    competitors_list = list(competitors_by_key.values())[:max_results]
 
     # Normalize tariffs and services across all competitors
     for comp in competitors_list:
@@ -274,7 +277,7 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
 
 
 _PRICE_RE = re.compile(
-    r"(?P<amount>\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
+    r"(?P<amount>\d{1,3}(?:[.,\s]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
     r"\s*"
     r"(?P<unit>€|euros?|eur\b|mensual(?:es)?|/\s*mes|al\s+mes|"
     r"anual(?:es)?|/\s*a[ñn]o|al\s+a[ñn]o|"
@@ -286,21 +289,49 @@ _PRICE_RE = re.compile(
 def _parse_amount(raw: str) -> Optional[float]:
     """Parse an amount written in Spanish or English notation.
 
-    Handles ``49,90``, ``49.90``, ``1.200`` (thousands) and ``1.200,50``.
+    Handles ``49,90``, ``49.90``, ``1.200``, ``1.200,50`` and ``1,200.50``.
+    The last separator is treated as the decimal separator.
     """
     cleaned = raw.replace(" ", "").strip()
     if not cleaned:
         return None
 
-    if re.fullmatch(r"\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?", cleaned):
-        cleaned = cleaned.replace(".", "").replace(",", ".")
-    elif re.fullmatch(r"\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?", cleaned):
-        cleaned = cleaned.replace(",", "")
-    elif "," in cleaned:
-        cleaned = cleaned.replace(",", ".")
+    last_comma = cleaned.rfind(",")
+    last_dot = cleaned.rfind(".")
+
+    if last_comma == -1 and last_dot == -1:
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+
+    if last_comma > last_dot:
+        # Comma is the decimal separator (European).
+        int_part = cleaned[:last_comma].replace(".", "").replace(",", "")
+        dec_digits = "".join(ch for ch in cleaned[last_comma + 1:] if ch.isdigit())
+        normalized = f"{int_part}.{dec_digits}" if dec_digits else int_part
+    else:
+        # Dot is the last separator.
+        int_part = cleaned[:last_dot]
+        dec_part = cleaned[last_dot + 1:]
+        # A single dot followed by exactly 3 digits and a short integer part
+        # is a thousands separator in Spanish notation (1.200 -> 1200).
+        if (
+            cleaned.count(".") == 1
+            and cleaned.count(",") == 0
+            and len(dec_part) == 3
+            and dec_part.isdigit()
+            and int_part.isdigit()
+            and 1 <= len(int_part) <= 3
+        ):
+            normalized = int_part + dec_part
+        else:
+            int_part = int_part.replace(",", "").replace(".", "")
+            dec_digits = "".join(ch for ch in dec_part if ch.isdigit())
+            normalized = f"{int_part}.{dec_digits}" if dec_digits else int_part
 
     try:
-        return float(cleaned)
+        return float(normalized)
     except ValueError:
         return None
 
