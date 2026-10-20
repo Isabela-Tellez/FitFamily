@@ -6,11 +6,11 @@ El servidor MCP (`src/mcp/server.py`) publica una herramienta llamada `get_area_
 
 | Indicador | Valor | Período | Fuente |
 |---|---|---|---|
-| `population_total` | 27 014 hab. | agosto 2026 | Padrón Municipal (Ayuntamiento de Madrid), vía Wikipedia "El Cañaveral" (ed. 6 sep 2026) |
-| `households_total` | 9 224 hogares | enero 2026 | Padrón Municipal, publicado por el barrio en Instagram |
-| `average_household_size` | 2,70 pers./hogar | enero 2026 | Padrón Municipal, publicado por el barrio en Instagram |
-| `population_under_20_share` | 25,46 % | 2021 | Pirámide de población (Wikipedia, citando INE) |
-| `businesses_open` | 126 negocios | junio 2025 | Wikipedia "El Cañaveral" (citando datos municipales) |
+| `population_total` | 27 480 hab. | 1 oct 2026 | Padrón Municipal (datos.madrid.es, CSV oficial) |
+| `households_total` | `null` | — | Sin verificación primaria: 9.224 (ene 2026) es cifra secundaria (Instagram/Padrón) |
+| `average_household_size` | `null` | — | Sin verificación primaria: 2,70 (ene 2026) es cifra secundaria |
+| `population_under_20_share` | 28,29 % | 1 oct 2026 | Padrón Municipal (calculado de datos.madrid.es) |
+| `businesses_open` | 126 negocios | 1 jun 2025 | Wikipedia (secundaria, citando datos municipales) |
 | `families_with_children` | `null` | — | Sin censo directo; referencia indirecta: 25,46 % de la población es menor de 20 años |
 | `gyms_registered` | `null` | — | Sin censo municipal publicado; conteo manual no verificado |
 | `gyms_with_ludoteca` | `null` | — | Sin censo municipal; ningún centro localizado publica ludoteca de forma verificable |

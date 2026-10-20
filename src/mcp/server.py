@@ -22,59 +22,75 @@ logger = logging.getLogger(__name__)
 _STATISTICS_DATA: Dict[str, Any] = {
     "description": (
         "Estadísticas locales documentadas para El Cañaveral (distrito de Vicálvaro, Madrid). "
-        "Fuentes primarias: Padrón Municipal de Habitantes (Ayuntamiento de Madrid / datos.madrid.es) "
-        "y Wikipedia (citando INE/Padrón). Los valores son observados, no estimados."
+        "Población y pirámide de edad verificadas contra el Padrón Municipal (datos.madrid.es, "
+        "octubre 2026). Hogares y negocios proceden de fuentes secundarias no verificadas."
     ),
     "source": (
-        "Padrón Municipal de Habitantes (Ayuntamiento de Madrid, datos.madrid.es) "
-        "y Wikipedia 'El Cañaveral' (ed. 6 sep 2026, citando INE/Padrón). "
-        "URL padrón: https://datos.madrid.es/sites/v/index.jsp?vgnextoid=5deb7700f69e8410VgnVCM2000000c205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD"
+        "Padrón Municipal de Habitantes (Ayuntamiento de Madrid, datos.madrid.es), "
+        "actualizado el 6 de octubre de 2026, cobertura hasta el 30 de septiembre de 2026. "
+        "URL padrón: https://datos.madrid.es/dataset/200076-0-padron. "
+        "Verificación independiente: población sumada desde el CSV oficial (barrio 'EL CAÑAVERAL', "
+        "distrito 19 Vicálvaro)."
     ),
     "geo_scope": "El Cañaveral, distrito de Vicálvaro, Madrid",
     "period": (
-        "Población: agosto 2026; hogares: enero 2026; negocios: junio 2025; "
-        "pirámide de población: 2021"
+        "Población y pirámide: 1 de octubre de 2026; "
+        "hogares (no verificado): enero 2026; negocios (no verificado): junio 2025"
     ),
     "indicators": {
         "population_total": {
-            "value": 27014,
+            "value": 27480,
             "unit": "habitantes",
-            "reference_period": "agosto 2026",
-            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "reference_period": "1 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200076-0-padron",
             "consulted_at": "2026-10-20",
+            "verification_status": "verified",
             "limitations": (
-                "Población empadronada en agosto de 2026 (Wikipedia, citando Padrón). "
-                "No equivale necesariamente a residentes efectivos; cifra en crecimiento "
-                "(17 193 hab. en 2024 según INE)."
+                "Población empadronada a 1 de octubre de 2026, calculada sumando todas las "
+                "edades del barrio 'EL CAÑAVERAL' en el Padrón Municipal (datos.madrid.es, "
+                "archivo CSV). Cifra en crecimiento: 24.963 hab. en enero de 2026 "
+                "(Nuevosureste) y 17.193 hab. en 2024 (INE)."
             ),
         },
         "households_total": {
-            "value": 9224,
+            "value": None,
             "unit": "hogares",
-            "reference_period": "1 de enero de 2026",
-            "source_url": "https://www.instagram.com/p/DeqmBpWIU4u/",
+            "reference_period": None,
+            "source_url": None,
             "consulted_at": "2026-10-20",
+            "verification_status": "unverified",
             "limitations": (
-                "Hogares empadronados a 1 de enero de 2026, con media de 2,70 personas por vivienda "
-                "(Padrón Municipal, publicado por el barrio en Instagram)."
+                "Cifra secundaria no verificada: 9.224 hogares (enero 2026), publicada por el "
+                "barrio en Instagram citando el Padrón. No se pudo contrastar contra la fuente "
+                "primaria: el dataset oficial (datos.madrid.es/300438-0-hogares-tamano) solo cubre "
+                "hasta el 1 de enero de 2025 y se organiza por distrito y sección censal, no por "
+                "barrio. Para verificar: descargar el XLSX 2025 y agregar las secciones censales "
+                "correspondientes a El Cañaveral."
             ),
         },
         "average_household_size": {
-            "value": 2.70,
+            "value": None,
             "unit": "personas por hogar",
-            "reference_period": "1 de enero de 2026",
-            "source_url": "https://www.instagram.com/p/DeqmBpWIU4u/",
+            "reference_period": None,
+            "source_url": None,
             "consulted_at": "2026-10-20",
-            "limitations": "Dato del Padrón a 1 de enero de 2026, publicado por el barrio en Instagram.",
+            "verification_status": "unverified",
+            "limitations": (
+                "Cifra secundaria no verificada: 2,70 personas por hogar (enero 2026), publicada "
+                "por el barrio en Instagram citando el Padrón. Sin respaldo de fuente primaria "
+                "para 2026."
+            ),
         },
         "population_under_20_share": {
-            "value": 25.46,
+            "value": 28.29,
             "unit": "porcentaje",
-            "reference_period": "2021",
-            "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
+            "reference_period": "1 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200076-0-padron",
             "consulted_at": "2026-10-20",
+            "verification_status": "verified",
             "limitations": (
-                "Porcentaje de población menor de 20 años según la pirámide de población de 2021. "
+                "Porcentaje de población menor de 20 años calculado a partir del Padrón Municipal "
+                "(octubre 2026): 7.774 de 27.480 habitantes. "
                 "Indicador de potencial de familias con hijos; no es un conteo de familias."
             ),
         },
@@ -84,8 +100,10 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "reference_period": "1 de junio de 2025",
             "source_url": "https://es.wikipedia.org/wiki/El_Ca%C3%B1averal",
             "consulted_at": "2026-10-20",
+            "verification_status": "unverified",
             "limitations": (
-                "Negocios abiertos en El Cañaveral a 1 de junio de 2025 (Wikipedia, citando datos municipales). "
+                "Fuente secundaria: Wikipedia 'El Cañaveral' (ed. 6 sep 2026), citando datos "
+                "municipales. No se localizó el registro municipal original que respalde la cifra. "
                 "Incluye todo tipo de actividad, no solo ocio/deporte."
             ),
         },
@@ -95,9 +113,11 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "reference_period": None,
             "source_url": None,
             "consulted_at": "2026-10-20",
+            "verification_status": "unavailable",
             "limitations": (
                 "No se encontró un censo directo de familias con hijos. "
-                "Referencia indirecta: 25,46 % de la población es menor de 20 años (2021)."
+                "Referencia indirecta verificada: 28,29 % de la población es menor de 20 años "
+                "(Padrón municipal, octubre 2026)."
             ),
         },
         "gyms_registered": {
@@ -106,6 +126,7 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "reference_period": None,
             "source_url": None,
             "consulted_at": "2026-10-20",
+            "verification_status": "unavailable",
             "limitations": (
                 "No se encontró censo municipal publicado de centros deportivos. "
                 "Centros localizados manualmente en la web (no censo oficial): "
@@ -120,6 +141,7 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "reference_period": None,
             "source_url": None,
             "consulted_at": "2026-10-20",
+            "verification_status": "unavailable",
             "limitations": (
                 "No se encontró censo municipal. Ninguno de los centros localizados "
                 "publica ludoteca de forma verificable en su web; confirmar por contacto directo."

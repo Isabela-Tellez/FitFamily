@@ -241,9 +241,11 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - El proveedor DuckDuckGo puede bloquear búsquedas en ciertos regímenes
 
 ### Datos MCP
-- Mezcla de datos oficiales (Padrón Municipal) y documentados (Wikipedia, medios locales)
-- Cada indicador lleva su propia limitación; los no disponibles siguen en `null`
-- Solicitar un área distinta de El Cañaveral devuelve `null` con limitación, en lugar de los datos de El Cañaveral
+- Mezcla de datos verificados (Padrón Municipal, octubre 2026) y no verificados (fuentes secundarias)
+- Cada indicador lleva `verification_status`: `verified`, `unverified` o `unavailable`
+- Población (27.480) y pirámide de edad (28,29 %) verificadas contra el CSV oficial del Padrón
+- Hogares (9.224) y negocios (126) no verificados: se mantienen como `null` con explicación
+- Solicitar un área distinta de El Cañaveral devuelve `null` con limitación
 - Para añadir o corregir datos: editar `_STATISTICS_DATA` en `src/mcp/server.py` y `data/sources.json`
 
 ### Transporte MCP
@@ -282,4 +284,4 @@ Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` e
 ---
 
 **Última actualización**: 20 de octubre de 2026
-**Versión**: 1.1.3 — Robustez de MCP, precios y límites
+**Versión**: 1.1.4 — Auditoría de fuentes y trazabilidad

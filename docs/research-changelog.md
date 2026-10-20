@@ -256,6 +256,44 @@ eference_period, source_url, consulted_at).
 - Añadidos tests para área desconocida, respeto de max_results, páginas fallidas y formato 1,200.50.
 - Suite completa: 44 tests pasando.
 
+
+## Versión 1.1.4 — Auditoría de fuentes y trazabilidad (20/10/2026)
+
+### Hallazgos de la auditoría
+
+#### Población (verificada)
+- Valor anterior: 27.014 (agosto 2026, fuente secundaria Wikipedia).
+- Valor actual: 27.480 (1 de octubre de 2026, Padrón Municipal, datos.madrid.es).
+- Verificación independiente: suma directa de todas las edades del barrio "EL CAÑAVERAL" en el CSV oficial del Padrón (32.5 MB, distrito 19 Vicálvaro).
+- verification_status: verified.
+
+#### Pirámide de edad (verificada)
+- Valor anterior: 25,46 % menores de 20 años (2021, Wikipedia).
+- Valor actual: 28,29 % (octubre 2026, calculado del Padrón oficial).
+- verification_status: verified.
+
+#### Hogares (NO verificada -> null)
+- Cifra secundaria: 9.224 hogares (enero 2026), publicada por el barrio en Instagram citando el Padrón.
+- El dataset oficial de hogares (datos.madrid.es/300438-0-hogares-tamano) solo cubre hasta el 1 de enero de 2025 y se organiza por distrito y sección censal, no por barrio.
+- Acción: households_total y average_household_size pasan a null con verification_status: unverified y explicación.
+- La cifra secundaria se conserva en el texto de limitations para trazabilidad.
+
+#### Negocios abiertos (no verificada)
+- Valor: 126 (junio 2025, fuente secundaria Wikipedia). No se localizó registro municipal primario.
+- verification_status: unverified.
+
+#### Familias, gimnasios (no disponible)
+- Sin censo publicado. verification_status: unavailable.
+
+### Cambios en código
+- src/mcp/server.py: población y pirámide actualizadas a cifras verificadas; hogares y tamaño medio a null; añadido verification_status por indicador; procedencia por indicador.
+- data/sources.json: añadida fuente primaria (Padrón CSV); Instagram marcada como secundaria.
+- data/raw/README.md: tabla sincronizada con el estado real.
+- docs/*: actualizados.
+
+### Tests
+- Suite completa: 44 tests pasando (sin cambios en tests; solo datos y docs).
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

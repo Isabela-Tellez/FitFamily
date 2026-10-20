@@ -11,24 +11,14 @@
       "limitations": "Results may be blocked or limited by the search provider; does not guarantee access to all local businesses."
     },
     {
-      "id": "mcp_local_data",
-      "name": "Local Statistics (FitFamily module)",
-      "url": "n/a - local data store",
-      "type": "local_documentation",
-      "geo_scope": "El Cañaveral, Madrid",
-      "period": "2021-2026",
-      "use": "provide statistics via MCP get_area_statistics tool",
-      "limitations": "Mix of official data (padrón) and documented estimates; each indicator carries its own limitation. Real census-level data would require municipal sources."
-    },
-    {
-      "id": "padron_madrid",
-      "name": "Padrón Municipal de Habitantes - Ayuntamiento de Madrid",
-      "url": "https://datos.madrid.es/sites/v/index.jsp?vgnextoid=5deb7700f69e8410VgnVCM2000000c205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD",
+      "id": "padron_madrid_csv",
+      "name": "Padrón Municipal de Habitantes - Ayuntamiento de Madrid (CSV)",
+      "url": "https://datos.madrid.es/dataset/200076-0-padron",
       "type": "official_open_data",
-      "geo_scope": "El Cañaveral, Madrid",
-      "period": "2024-2026",
-      "use": "population and household counts for El Cañaveral",
-      "limitations": "Open data portal; figures may lag behind the latest padrón revision."
+      "geo_scope": "El Cañaveral, distrito de Vicálvaro, Madrid",
+      "period": "1 de octubre de 2026 (cobertura hasta 30 de septiembre de 2026)",
+      "use": "population_total y population_under_20_share (verificados por suma directa del CSV)",
+      "limitations": "Dataset mensual, actualizado el 6 de octubre de 2026. Los datos de hogares no están disponibles a nivel de barrio en este dataset."
     },
     {
       "id": "wikipedia_canaveral",
@@ -37,18 +27,28 @@
       "type": "secondary_source",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "ed. 6 sep 2026",
-      "use": "population, households, businesses, age pyramid and promotion counts",
-      "limitations": "Secondary source citing INE/Padrón and municipal data; verify against primary sources before quoting in the final report."
+      "use": "businesses_open (126, junio 2025) y contexto demográfico",
+      "limitations": "Fuente secundaria que cita datos municipales. No verificado contra registro primario."
     },
     {
-      "id": "nuevosureste_canaveral",
-      "name": "Nuevosureste - El Cañaveral",
-      "url": "https://nuevosureste.es/habitantes-canaveral-madrid-2023/",
-      "type": "local_media",
+      "id": "instagram_canaveral",
+      "name": "Publicación del barrio en Instagram (citando Padrón)",
+      "url": "https://www.instagram.com/p/DeqmBpWIU4u/",
+      "type": "secondary_source",
       "geo_scope": "El Cañaveral, Madrid",
-      "period": "2023",
-      "use": "household size and share of Vicálvaro population",
-      "limitations": "Local media; useful as cross-check, not as primary evidence."
+      "period": "enero 2026",
+      "use": "households_total (9.224) y average_household_size (2,70) — NO verificados",
+      "limitations": "Fuente secundaria. El dataset oficial de hogares (datos.madrid.es/300438-0-hogares-tamano) solo cubre hasta el 1 de enero de 2025 y se organiza por distrito y sección censal. Las cifras de 2026 no pudieron verificarse contra fuente primaria."
+    },
+    {
+      "id": "mcp_local_data",
+      "name": "Local Statistics (FitFamily module)",
+      "url": "n/a - local data store",
+      "type": "local_documentation",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "2025-2026",
+      "use": "provide statistics via MCP get_area_statistics tool",
+      "limitations": "Mezcla de datos verificados (Padrón municipal) y no verificados (fuentes secundarias). Cada indicador lleva verification_status."
     }
   ]
 }
