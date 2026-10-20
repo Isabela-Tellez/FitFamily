@@ -49,3 +49,26 @@ Estas fuentes secundarias respaldan las cifras comunicadas, pero no sustituyen l
 3. Actualizar el campo `limitations` con la fuente, el período y la fecha de consulta.
 4. Actualizar `data/sources.json` con la nueva fuente.
 5. Documentar el cambio en este archivo y en `docs/research-changelog.md`.
+
+## Integración reproducible del Censo de Locales
+
+El indicador `businesses_open` se puede actualizar de forma automatizada:
+
+```python
+from src.mcp.server import refresh_locales_count
+
+resultado = refresh_locales_count("el-cañaveral")
+print(resultado["status"], resultado.get("count"), resultado.get("consulted_at"))
+```
+
+- **Función pura (testeable sin red):** `parse_locales_csv(csv_text, barrio_name)`.
+- **Descarga explícita o bajo demanda:** la descarga ocurre solo al llamar a `refresh_locales_count()`, nunca en cada consulta MCP.
+- **Método de cálculo:** filtrar `desc_barrio_local == "El Cañaveral"` y `desc_situacion_local == "Abierto"`, y contar `id_local` únicos.
+- **Recurso:** https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv (85.2 MB, actualizado diariamente, CC BY 4.0).
+- **Caché local:** el CSV descargado se guarda en `data/raw/censo_locales.csv` (ignorado por git). Se regenera en cada actualización.
+- **Errores:** descarga fallida, CSV vacío, columnas cambiadas o barrio no encontrado devuelven `status: "error"` y **no** modifican el valor almacenado. Un fallo nunca se convierte en cero.
+- **Áreas soportadas:** actualmente solo El Cañaveral. La estructura admite ampliar el mapa `_SUPPORTED_LOCALES_AREAS` a otros barrios de Madrid.
+
+## Trazabilidad
+
+Cada indicador expone `value`, `unit`, `reference_period`, `source_url`, `consulted_at`, `verification_status` (`verified` / `unverified` / `unavailable`) y `limitations`. Los valores no disponibles se devuelven como `null` y nunca como cero.

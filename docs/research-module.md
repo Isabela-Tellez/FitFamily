@@ -48,6 +48,7 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - Comunicación a través de `stdio` (proceso local solo)
 - Sin Cloudflare ni servidores externos por defecto
 - Datos reales poblados con procedencia por indicador (ver `data/sources.json`)
+- `refresh_locales_count(area_id)`: actualización reproducible del Censo de Locales (descarga bajo demanda, sin red en las consultas MCP)
 
 ### 5. Modelos Pydantic Compartidos
 - `Evidence`: registra afirmaciones con fuente, valor, unidad, fragmento y limitaciones

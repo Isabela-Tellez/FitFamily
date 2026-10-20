@@ -49,3 +49,8 @@ pycache/
 # Credenciales y secretos
 *.env*
 secret*
+
+# Descargas grandes de fuentes oficiales (no versionar)
+data/raw/*.csv
+data/raw/*.xlsx
+data/raw/*.json.gz

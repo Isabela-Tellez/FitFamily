@@ -1,8 +1,8 @@
 # FitFamily - Registro de Cambios del Módulo Persona 1
 
 > **Fecha última actualización**: 20 de octubre de 2026
-> **Autor**: Juan (Persona 1 - Investigador, herramientas y MCP)  
-> **Proyecto**: FitFamily - IA multiagente para análisis de viabilidad de gimnasio con ludoteca  
+> **Autor**: Juan (Persona 1 - Investigador, herramientas y MCP)
+> **Proyecto**: FitFamily - IA multiagente para análisis de viabilidad de gimnasio con ludoteca
 
 ---
 
@@ -353,6 +353,34 @@ eference_period, source_url, consulted_at).
 
 ### Tests
 - Suite completa: 44 tests pasando (sin cambios en tests; solo datos y docs).
+
+
+## Versión 1.1.7 — Integración reproducible del Censo de Locales (20/10/2026)
+
+### Cambios Realizados
+
+#### Integración (src/mcp/server.py)
+- Añadidas funciones parse_locales_csv() y
+efresh_locales_count() para descarga y procesamiento reproducible del Censo de Locales.
+- Descarga explícita o bajo demanda (no en cada consulta MCP).
+- Procesamiento del CSV con validación de columnas, filtrado por barrio y conteo de identificadores únicos.
+- Errores de descarga, CSV vacío, columnas faltantes y barrio no encontrado tratados explícitamente (sin convertir fallos en cero).
+- Procedencia actualizada en el indicador usinesses_open tras la descarga.
+
+#### Caché local
+- El CSV descargado se guarda en data/raw/censo_locales.csv (gitignored).
+- Documentado en data/raw/README.md.
+
+#### Pruebas
+- Añadido 	ests/test_locales.py con 9 tests: parsing básico, CSV vacío, columnas faltantes, barrio no encontrado, filas malformadas, refresh con CSV, área no soportada, error de descarga, CSV vacío en refresh.
+- Todos usan un CSV pequeño inline; sin dependencia de red.
+
+#### Documentación
+- Creado docs/auditoria-fuentes-datos.md con la investigación de fuentes para hogares, cartografía y equipamientos.
+- data/sources.json actualizado con la fuente del Censo de Locales.
+
+### Tests
+- Suite completa: 61 tests pasando.
 
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión

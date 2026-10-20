@@ -15,6 +15,12 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool
 
+import csv
+import io
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+
 logger = logging.getLogger(__name__)
 
 # Module-level data store for statistics
@@ -249,6 +255,222 @@ def get_area_statistics(area_id: str, indicators: Optional[List[str]] = None) ->
     )
 
     return response
+
+
+# Add to src/mcp/server.py after _load_statistics function.
+# Insert the following functions.
+
+import csv
+import io
+import urllib.request
+from datetime import datetime, timezone
+
+_LOCALES_CSV_URL = "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv"
+_LOCALES_CACHE_PATH = None  # set lazily; see _locales_cache_path()
+
+def _locales_cache_path():
+    global _LOCALES_CACHE_PATH
+    if _LOCALES_CACHE_PATH is None:
+        from pathlib import Path
+        _LOCALES_CACHE_PATH = Path(__file__).resolve().parents[2] / "data" / "raw" / "censo_locales.csv"
+    return _LOCALES_CACHE_PATH
+
+# Canonical barrio names as they appear in the CSV (uppercase, normalized).
+_SUPPORTED_LOCALES_AREAS = {
+    "el-cañaveral": "EL CAÑAVERAL",
+    "el-canaveral": "EL CAÑAVERAL",
+    "canaveral": "EL CAÑAVERAL",
+}
+
+
+def _normalize_barrio_name(name: str) -> str:
+    return " ".join(name.strip().upper().split())
+
+
+def parse_locales_csv(csv_text: str, barrio_name: str = "EL CAÑAVERAL") -> dict:
+    """Parse the Censo de Locales CSV and count open premises for a barrio.
+
+    Pure function: no network, no side effects. Returns a dict with:
+    - status: "ok" or "error"
+    - count: number of unique open premises (or None on error)
+    - total_rows: total rows for the barrio
+    - situations: list of distinct situations found
+    - barrio_name: the barrio searched
+    - error: error message (only on error)
+    - consulted_at: ISO timestamp
+    """
+    result = {
+        "barrio_name": barrio_name,
+        "count": None,
+        "total_rows": 0,
+        "situations": [],
+        "consulted_at": datetime.now(timezone.utc).isoformat(),
+        "status": "ok",
+    }
+    if not csv_text or not csv_text.strip():
+        result["status"] = "error"
+        result["error"] = "CSV vacío o sin contenido."
+        return result
+
+    try:
+        reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
+    except Exception as e:
+        result["status"] = "error"
+        result["error"] = f"Error al parsear CSV: {e}"
+        return result
+
+    if reader.fieldnames is None:
+        result["status"] = "error"
+        result["error"] = "CSV sin cabecera."
+        return result
+
+    # Normalize field names (strip quotes/whitespace).
+    fields = {f.strip().strip('"'): f for f in reader.fieldnames}
+    barrio_field = None
+    sit_field = None
+    id_field = None
+    for candidate in ("desc_barrio_local", "desc_barrio", "barrio"):
+        if candidate in fields:
+            barrio_field = fields[candidate]
+            break
+    for candidate in ("desc_situacion_local", "desc_situacion", "situacion"):
+        if candidate in fields:
+            sit_field = fields[candidate]
+            break
+    for candidate in ("id_local", "id"):
+        if candidate in fields:
+            id_field = fields[candidate]
+            break
+
+    if not barrio_field or not sit_field or not id_field:
+        result["status"] = "error"
+        result["error"] = (
+            f"Columnas requeridas no encontradas. Disponibles: {list(reader.fieldnames)}"
+        )
+        return result
+
+    target = _normalize_barrio_name(barrio_name)
+    seen_ids = set()
+    situations = set()
+    total = 0
+    for row in reader:
+        try:
+            barrio = _normalize_barrio_name(row.get(barrio_field, "") or "")
+        except Exception:
+            continue
+        if barrio != target:
+            continue
+        total += 1
+        sit = (row.get(sit_field) or "").strip().strip('"')
+        situations.add(sit)
+        if sit.lower() == "abierto":
+            lid = (row.get(id_field) or "").strip().strip('"')
+            if lid:
+                seen_ids.add(lid)
+
+    result["total_rows"] = total
+    result["situations"] = sorted(situations)
+    result["count"] = len(seen_ids)
+    if total == 0:
+        result["status"] = "error"
+        result["error"] = f"Barrio '{barrio_name}' no encontrado en el CSV."
+    return result
+
+
+def refresh_locales_count(area_id: str = "el-cañaveral", csv_text: str = None,
+                         url: str = None, timeout: float = 60.0,
+                         store: dict = None) -> dict:
+    """Refresh the open-premises count for an area from the Censo de Locales.
+
+    - If csv_text is provided, parse it (useful for tests).
+    - Otherwise download from url (or the default URL).
+    - On success, update _STATISTICS_DATA and return status "ok".
+    - On failure, do NOT overwrite the existing value; return status "error"
+      (or "unsupported" for areas without data).
+    """
+    canonical = (area_id or "").strip().lower().replace(" ", "-").replace("_", "-")
+    barrio_name = _SUPPORTED_LOCALES_AREAS.get(canonical)
+    if barrio_name is None:
+        return {
+            "status": "unsupported",
+            "area_id": area_id,
+            "error": f"Área '{area_id}' no soportada para el Censo de Locales.",
+            "consulted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    if store is None:
+        store = _STATISTICS_DATA
+
+    consulted_at = datetime.now(timezone.utc).isoformat()
+    source_url = url or _LOCALES_CSV_URL
+
+    if csv_text is None:
+        try:
+            with urllib.request.urlopen(source_url, timeout=timeout) as response:
+                raw = response.read()
+            csv_text = raw.decode("utf-8-sig", errors="replace")
+        except Exception as e:
+            return {
+                "status": "error",
+                "area_id": area_id,
+                "source_url": source_url,
+                "consulted_at": consulted_at,
+                "error": f"Error al descargar el CSV: {e}",
+            }
+
+    parsed = parse_locales_csv(csv_text, barrio_name)
+    if parsed["status"] != "ok":
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "source_url": source_url,
+            "consulted_at": consulted_at,
+            "error": parsed.get("error", "Error al parsear el CSV."),
+        }
+
+    count = parsed["count"]
+    # Update the data store.
+    try:
+        indicator = store["indicators"].setdefault("businesses_open", {})
+        indicator["value"] = count
+        indicator["unit"] = "locales abiertos"
+        indicator["reference_period"] = f"descarga del {consulted_at[:10]}"
+        indicator["source_url"] = source_url
+        indicator["consulted_at"] = consulted_at
+        indicator["verification_status"] = "verified"
+        indicator["limitations"] = (
+            f"Locales con situación 'Abierto' en {barrio_name.title()} según el Censo de Locales "
+            f"del Ayuntamiento de Madrid (datos.madrid.es/200085-0-censo-locales, CSV, "
+            f"actualizado diariamente). Descargado el {consulted_at[:10]}. "
+            f"Total de filas para el barrio: {parsed['total_rows']}. "
+            f"'Locales' (premises) no equivale a 'negocios' (establecimientos)."
+        )
+    except Exception as e:
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "source_url": source_url,
+            "consulted_at": consulted_at,
+            "error": f"Error al actualizar el almacén de datos: {e}",
+        }
+
+    # Optionally cache the CSV locally.
+    try:
+        cache_path = _locales_cache_path()
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(csv_text, encoding="utf-8")
+    except Exception:
+        pass  # Caching is best-effort.
+
+    return {
+        "status": "ok",
+        "area_id": area_id,
+        "count": count,
+        "total_rows": parsed["total_rows"],
+        "situations": parsed["situations"],
+        "source_url": source_url,
+        "consulted_at": consulted_at,
+    }
 
 
 def run_mcp_server() -> None:
