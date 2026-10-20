@@ -316,6 +316,44 @@ eference_period, source_url, consulted_at).
 ### Tests
 - Suite completa: 49 tests pasando.
 
+
+## Versión 1.1.6 — Auditoría de fuentes primarias y estado de verificación (20/10/2026)
+
+### Hallazgos de la auditoría
+
+#### Población (verificada contra fuente primaria)
+- Valor: 27.480 habitantes (1 de octubre de 2026).
+- Fuente: Padrón Municipal de Habitantes, datos.madrid.es (dataset 200076-0-padron, CSV, 32.5 MB, actualizado 6 oct 2026).
+- Verificación independiente: suma directa de todas las edades del barrio "EL CAÑAVERAL" (distrito 19, Vicálvaro) en el CSV oficial.
+- verification_status: verified.
+
+#### Pirámide de edad (verificada)
+- Valor: 28,29 % menores de 20 años (octubre 2026).
+- Calculado del mismo CSV oficial: 7.774 de 27.480 habitantes.
+- verification_status: verified.
+
+#### Hogares (no verificable -> null)
+- Cifra secundaria: 9.224 hogares (enero 2026), publicada por el barrio en Instagram citando el Padrón.
+- El dataset oficial de hogares (datos.madrid.es/300438-0-hogares-tamano) solo cubre hasta el 1 de enero de 2025 y se organiza por distrito y sección censal, no por barrio.
+- Acción: households_total y average_household_size pasan a null con verification_status: unverified.
+- La cifra secundaria se conserva en limitations para trazabilidad.
+
+#### Negocios (no verificado)
+- Valor: 126 (junio 2025, Wikipedia citando datos municipales). No se localizó registro primario.
+- verification_status: unverified.
+
+#### Familias, gimnasios (no disponible)
+- Sin censo publicado. verification_status: unavailable.
+
+### Cambios en código
+- src/mcp/server.py: población y pirámide actualizadas a cifras verificadas; hogares y tamaño medio a null; añadido verification_status por indicador.
+- data/sources.json: añadida fuente primaria (Padrón CSV); Instagram marcada como secundaria.
+- data/raw/README.md: tabla sincronizada con el estado real.
+- docs/*: actualizados.
+
+### Tests
+- Suite completa: 44 tests pasando (sin cambios en tests; solo datos y docs).
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo
