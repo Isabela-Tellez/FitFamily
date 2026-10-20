@@ -106,16 +106,18 @@ Este documento registra todas las modificaciones y creación de archivos durante
   - Nombre: `get_area_statistics`
   - Parámetro obligatorio: `area_id`
   - Parámetro opcional: `indicators` (lista de strings)
-  - Lista de herramientas en `list_tools()`
-  - Manejo de `call_tool()` con validación de nombre
+  - `list_tools()` devuelve objetos `mcp.types.Tool` con `inputSchema` (requisito del SDK)
+  - `call_tool()` valida el nombre y devuelve un dict estructurado
 
-### `client.py` (20/10/2026)
+### `client.py` (20/10/2026, corregido 20/10/2026)
 - **Archivo**: `src/mcp/client.py`
 - **Funciones**:
-  - `connect_mcp()` → sesión `ClientSession` via `stdio_client`
-  - `list_mcp_tools(session)` → lista de `Tool` descriptors
+  - `mcp_server_params()` → lanza `sys.executable -m src.mcp.server` desde la raíz
+  - `connect_mcp()` → context manager asíncrono con `ClientSession` sobre `stdio_client`
+  - `list_mcp_tools(session)` → lista de `Tool` descubiertas
   - `call_area_statistics(session, area_id, indicators)` → resultado de la invocación
-- **Integración probada**: conexión, descubrimiento e invocación exitosa
+- **Corrección 1.1.1**: se sustituyó el `dict` por `StdioServerParameters` y se cambió la sesión devuelta por un `async with`, porque el transporte se cierra al salir del contexto
+- **Integración probada**: `tests/test_mcp_integration.py` arranca el servidor real y verifica conexión, descubrimiento e invocación
 
 ### `data/sources.json` (21/10/2026)
 - **Creado**: Catálogo de fuentes relevantes
@@ -143,6 +145,21 @@ Este documento registra todas las modificaciones y creación de archivos durante
 - Importaciones CrewAI adaptadas (herramientas usadas directamente, no pasadas al Agent)
 - Validaciones Pydantic corregidas (limitations como string vs lista)
 - Rutas de Python consistentes desde la raíz del repositorio
+
+### Corrección del transporte MCP (20/10/2026)
+- `server.py` devolvía `dict` en `list_tools()`; el SDK espera `mcp.types.Tool` (fallo `'dict' object has no attribute 'name'`)
+- `client.py` pasaba un `dict` a `stdio_client`; ahora usa `StdioServerParameters` (fallo `'dict' object has no attribute 'command'`)
+- La sesión se devolvía fuera del contexto `async with`, por lo que se cerraba antes de usarse; ahora `connect_mcp()` es un context manager
+- Añadida `tests/test_mcp_integration.py`, que arranca el servidor real por stdio
+- Verificación manual: `python -m src.mcp.client` conecta, descubre 1 herramienta y devuelve estadísticas
+
+### Corrección de la extracción de precios (20/10/2026)
+- `_extract_evidence_from_page()` usaba `findall` con un solo grupo y luego `price_patterns[0][0]`, que devuelve el primer carácter del importe en vez del número
+- Nueva regex con importes españoles e ingleses, parseo de separadores de miles y decimales
+- Se distingue cuota mensual de matrícula y se prefiere la mensual
+- Los precios se reflejan también en `Competitor.tariffs`
+- Añadidos 5 tests específicos de importes
+- Suite completa: **42 passed**
 
 ---
 

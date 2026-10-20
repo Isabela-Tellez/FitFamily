@@ -23,9 +23,10 @@ dict-like object validated by the `CompetitorSearchInput` Pydantic model.
 from __future__ import annotations
 
 import logging
+import re
 from typing import List, Dict, Any, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from src.schemas import Evidence, Competitor as CompetitorSchema
 from src.tools.search_web import search_web, SearchResult
@@ -55,13 +56,15 @@ class CompetitorSearchInput(BaseModel):
         description="Optional override for custom search queries.",
     )
 
-    @validator("area")
+    @field_validator("area")
+    @classmethod
     def validate_area_not_empty(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("Area must be a non-empty string.")
         return v.strip()
 
-    @validator("business_type")
+    @field_validator("business_type")
+    @classmethod
     def validate_business_type_not_empty(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("Business type must be a non-empty string.")
@@ -212,12 +215,22 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
         comp = competitors_by_key[key]
         comp.evidences.append(ev)
 
+        # Populate structured tariffs when the evidence contains a price
+        if ev.value is not None:
+            comp.tariffs.append(
+                {
+                    "value": ev.value,
+                    "unit": ev.unit or "euros",
+                    "condition": ev.claim,
+                    "frequency": ev.frequency or "",
+                }
+            )
+
         # Also try to populate name/location from evidence if empty
         if not comp.name and ev.claim:
             # Try to extract a name from the claim
-            import re as re_mod
             # Look for potential business names (capitalized phrases)
-            name_candidates = re_mod.findall(
+            name_candidates = re.findall(
                 r"\b[A-Z][a-zA-Záéíóúñ]+\s+[A-Z][a-zA-Záéíóúñ]+\b", ev.claim
             )
             if name_candidates and not comp.name:
@@ -260,6 +273,69 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+_PRICE_RE = re.compile(
+    r"(?P<amount>\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)"
+    r"\s*"
+    r"(?P<unit>€|euros?|eur\b|mensual(?:es)?|/\s*mes|al\s+mes|"
+    r"anual(?:es)?|/\s*a[ñn]o|al\s+a[ñn]o|"
+    r"matr[ií]cula|matriculaci[oó]n|inscripci[oó]n)",
+    re.IGNORECASE,
+)
+
+
+def _parse_amount(raw: str) -> Optional[float]:
+    """Parse an amount written in Spanish or English notation.
+
+    Handles ``49,90``, ``49.90``, ``1.200`` (thousands) and ``1.200,50``.
+    """
+    cleaned = raw.replace(" ", "").strip()
+    if not cleaned:
+        return None
+
+    if re.fullmatch(r"\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?", cleaned):
+        cleaned = cleaned.replace(".", "").replace(",", ".")
+    elif re.fullmatch(r"\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?", cleaned):
+        cleaned = cleaned.replace(",", "")
+    elif "," in cleaned:
+        cleaned = cleaned.replace(",", ".")
+
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def _classify_price(match: "re.Match[str]", text: str) -> "tuple[Optional[float], Optional[str]]":
+    """Return ``(value, frequency)`` for a price match.
+
+    Frequency is one of ``monthly``, ``one-time`` or ``None`` when the
+    surrounding text does not make it explicit.
+    """
+    value = _parse_amount(match.group("amount"))
+    token = match.group("unit").lower()
+
+    # Look only at the immediate surroundings to avoid mixing two prices.
+    head = text[max(0, match.start() - 18):match.start()].lower()
+    tail = text[match.end():match.end() + 12].lower()
+
+    if token.startswith(("matr", "inscrip")):
+        frequency = "one-time"
+    elif "mensual" in token or "mes" in token:
+        frequency = "monthly"
+    elif "anual" in token or "año" in token:
+        frequency = "annual"
+    elif re.search(r"(/\s*mes\b|\bal\s+mes\b|\bmensual)", head + " " + tail):
+        frequency = "monthly"
+    elif re.search(r"(/\s*a[ñn]o\b|\bal\s+a[ñn]o\b|\banual)", head + " " + tail):
+        frequency = "annual"
+    elif re.search(r"(matr[ií]cul|inscripci[oó]n)", head + " " + tail):
+        frequency = "one-time"
+    else:
+        frequency = None
+
+    return value, frequency
+
+
 def _extract_evidence_from_page(
     page: PageReadResult,
     business_type: str,
@@ -267,61 +343,59 @@ def _extract_evidence_from_page(
 ) -> Optional[Evidence]:
     """Extract an Evidence record from a page's content.
 
-    This is a helper that looks for pricing, service, and location
-    information relevant to the business type.
+    Looks for a published price and returns it with its source, the
+    surrounding snippet, and its payment frequency. Monthly prices are
+    preferred over one-off fees when both appear on the page.
     """
     if not page.body_text:
         return None
 
-    # Try to find price-related information
-    import re as re_mod
+    # Prefer a monthly fee; otherwise keep the first price and, as a last
+    # resort, a one-off fee (e.g. registration).
+    value: Optional[float] = None
+    frequency: Optional[str] = None
+    best_rank = -1
 
-    # Search for price patterns
-    price_patterns = re_mod.findall(
-        r"(\d+\.?\d*)\s*(?:euros?|€|euro|mensual|matrícula|matriculación|matricula)",
-        page.body_text,
-    )
+    for match in _PRICE_RE.finditer(page.body_text):
+        candidate_value, candidate_frequency = _classify_price(match, page.body_text)
+        if candidate_value is None:
+            continue
 
-    value = None
-    unit = None
-    frequency = ""
-
-    if price_patterns:
-        # Take the first meaningful price found
-        try:
-            value = float(price_patterns[0][0])
-            # Determine unit from context
-            context = price_patterns[0][1].lower()
-            if "€" in price_patterns[0] or "euros" in context:
-                unit = "euros"
-            elif "mensual" in context or "month" in context:
-                value = float(price_patterns[0][0])
-                unit = "euros"
-                frequency = "monthly"
-            elif "matrícula" in context or "inscripción" in context:
-                value = float(price_patterns[0][0])
-                unit = "euros"
-                frequency = "one-time"
-        except (ValueError, IndexError):
-            value = None
+        rank = 2 if candidate_frequency == "monthly" else 0 if candidate_frequency == "one-time" else 1
+        if rank > best_rank:
+            value = candidate_value
+            frequency = candidate_frequency
+            best_rank = rank
+            if rank == 2:
+                break
 
     # Determine geo_scope from URL if possible
     from urllib.parse import urlparse
     parsed = urlparse(url)
+    domain = parsed.netloc or url
     geo_scope = parsed.netloc or None
 
-    # Build limitations string
+    if value is not None:
+        claim = f"Precio publicado por {business_type} en {domain}: {value:g} euros"
+        if frequency == "monthly":
+            claim += " al mes"
+        elif frequency == "annual":
+            claim += " al año"
+        elif frequency == "one-time":
+            claim += " (pago único)"
+    else:
+        claim = f"Información sobre {business_type} encontrada en {domain}"
+
     limitations_str = (
         "Extracción automática; verifique la fuente original para datos completos."
-        if not value
-        else ""
     )
 
     evidence = Evidence(
         evidence_id=f"ev_{hash(url) % 10000:04d}",
-        claim=f"Información sobre {business_type} encontrada en {parsed.netloc or url}",
+        claim=claim,
         value=value,
-        unit=unit,
+        unit="euros" if value is not None else None,
+        frequency=frequency,
         source_url=url,
         snippet=page.body_text[:500].strip() if page.body_text else "",
         limitations=limitations_str,

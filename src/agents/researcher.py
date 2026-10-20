@@ -192,10 +192,17 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
         coverage_percentage = 0.0
         search_performed = f"Research for {brief.business_type} in {brief.location}"
 
+        # Use the study area (not only the city) to keep the search local
+        area_query = (
+            f"{brief.study_area}, {brief.location}"
+            if brief.study_area and brief.study_area.lower() not in brief.location.lower()
+            else brief.location
+        )
+
         # Use the search_web tool to find initial results
         try:
             search_results = search_web(
-                f"{brief.business_type} {brief.location}",
+                f"{brief.business_type} {area_query}",
                 max_results=5
             )
             search_performed = f"Web search performed: {len(search_results)} results found"
@@ -217,7 +224,7 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
         # Use the competitor_search tool
         try:
             comp_result = competitor_search({
-                "area": brief.location,
+                "area": area_query,
                 "business_type": brief.business_type,
                 "max_results": 5
             })

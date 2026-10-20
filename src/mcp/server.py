@@ -8,19 +8,12 @@ The server is designed to be run locally and discovered by the MCP client.
 
 from __future__ import annotations
 
-import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-
-from src.schemas import (
-    ResearchBrief,
-    Evidence,
-    Competitor,
-    ResearchResult,
-)
+from mcp.types import Tool
 
 logger = logging.getLogger(__name__)
 
@@ -153,17 +146,17 @@ def run_mcp_server() -> None:
     server = Server("fitfamily-research-mcp")
 
     @server.list_tools()
-    async def list_tools() -> list:
+    async def list_tools() -> List[Tool]:
         """List available tools published by this MCP server."""
         return [
-            {
-                "name": "get_area_statistics",
-                "description": (
+            Tool(
+                name="get_area_statistics",
+                description=(
                     "Estadísticas locales para un área geográfica específica. "
                     "Consulta datos documentados sobre población, familias, "
-                    "y centros deportivos con ludotela."
+                    "y centros deportivos con ludoteca."
                 ),
-                "input_schema": {
+                inputSchema={
                     "type": "object",
                     "properties": {
                         "area_id": {
@@ -178,7 +171,7 @@ def run_mcp_server() -> None:
                     },
                     "required": ["area_id"],
                 },
-            }
+            )
         ]
 
     @server.call_tool()

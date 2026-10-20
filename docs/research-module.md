@@ -37,15 +37,15 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 
 ### 3. Agente CrewAI
 - `run_research(brief, context) → ResearchResult`: Función pública del contrato
-- Agente con rol, objetivo y *backstory* definidos
-- Usa las herramientas registradas, no responde solo por LLM
-- Valida entradas y gestiona errores estructurados
-- Sin clave OpenAI requerida para operación básica
+- `build_researcher()` define el rol, objetivo y *backstory* del agente
+- `build_research_task(brief, context)` genera la tarea con las reglas de la investigación
+- **La ejecución real es determinista**: `run_research()` usa las herramientas Python directamente, sin LLM ni clave OpenAI
+- La orquestación completa con CrewAI + LLM queda como fase posterior (ver Limitaciones)
 
 ### 4. Protocolo MCP (Model Context Protocol)
 - `get_area_statistics(area_id, indicators)`: Herramienta publicada localmente
 - Cliente MCP que descubre e invoca herramientas del servidor
-- Comunicación través de `stdio` (proceso local solo)
+- Comunicación a través de `stdio` (proceso local solo)
 - Sin Cloudflare ni servidores externos por defecto
 - Datos placeholder preparados para poblarse con fuentes reales
 
@@ -64,9 +64,10 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 python -m pip install -r requirements.txt
 ```
 **Nota sobre dependencias:**
-- El codigo utiliza ddgs (no duckduckgo-search, que es el nombre anterior del paquete).
-- 	avily-python es opcional: solo se necesita si se configura TAVILY_API_KEY en el entorno.
-- crewai trae muchas dependencias transitivas; solo las anteriores son estrictamente necesarias.
+- El código utiliza `ddgs` (no `duckduckgo-search`, que es el nombre anterior del paquete).
+- `tavily-python` es opcional: solo se necesita si se configura `TAVILY_API_KEY` en el entorno.
+- `mcp` es el SDK oficial del protocolo, necesario para el servidor y el cliente locales.
+- `pytest` solo es necesario para ejecutar la suite de pruebas.
 
 
 
@@ -105,6 +106,53 @@ print(f"Cobertura: {result.coverage_percentage}%")
 
 **Con conexión a Internet**: `search_web` y `read_web_page` realizarán búsquedas y lecturas reales.
 
+---
+
+## 🔌 Uso del MCP
+
+El cliente abre una sesión contra el servidor local y la mantiene abierta dentro de un
+contexto asíncrono. La sesión **no puede devolverse fuera del `async with`**: al salir
+del contexto se cierra el subproceso del servidor.
+
+```python
+import asyncio
+from src.mcp.client import connect_mcp, list_mcp_tools, call_area_statistics
+
+async def main():
+    async with connect_mcp() as session:          # arranca el servidor por stdio
+        tools = await list_mcp_tools(session)     # descubre get_area_statistics
+        print([t.name for t in tools])
+
+        stats = await call_area_statistics(
+            session,
+            area_id="el-cañaveral",
+            indicators=["gyms_with_ludoteca", "population_total"],
+        )
+        print(stats["results"])
+
+asyncio.run(main())
+```
+
+Prueba de integración real (arranca el servidor y verifica la llamada):
+
+```bash
+python -m src.mcp.client
+```
+
+---
+
+## 🧪 Pruebas
+
+```bash
+python -m pytest -q
+```
+
+- `tests/test_mcp.py`: pruebas unitarias de la función y del cliente (sin subproceso).
+- `tests/test_mcp_integration.py`: prueba real extremo a extremo por `stdio`.
+- El resto de archivos cubren schemas, herramientas web y el agente.
+
+---
+
 ## Semántica de coverage_percentage
 
 El campo `coverage_percentage` en `ResearchResult` representa la **cobertura de respuestas generadas mediante análisis LLM**, NO el volumen de datos recogidos.
@@ -136,7 +184,7 @@ src/
 │   └── competitor_search.py # competitor_search(params)
 └── mcp/
     ├── server.py           # get_area_statistics(area_id, indicators)
-    └── client.py           # connect_mcp(), list_mcp_tools(), call_area_statistics()
+    └── client.py           # connect_mcp() (context manager), list_mcp_tools(), call_area_statistics()
 
 data/
 ├── sources.json           # Catálogo de fuentes
@@ -167,13 +215,13 @@ result = run_research(brief, context=some_context)
 ### Para Gema (Persona 3 - Redacción de Informes):
 ```python
 from fitfamily.src.schemas import Evidence, Competitor, ResearchResult
-# Los modelos son estándard y pueden ser serializados a JSON/CSV
+# Los modelos son estándar y pueden ser serializados a JSON/CSV
 ```
 
 ### Para María (Persona 4 - Revisor Crítico):
 ```python
 from fitfamily.src.schemas import ResearchResult
-# Validar resultados, checker rutas de revisión
+# Validar resultados y rutas de revisión
 ```
 
 ### Para Laura (Persona 2 - Análisis Financiero):
@@ -189,16 +237,29 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 ## ⚠️ Limitaciones y Consideraciones
 
 ### Bloqueadas por el Entorno
-- `search_web` y `read_web_page` requieren Internet para datos reales; fallan gracefuly offline
+- `search_web` y `read_web_page` requieren Internet para datos reales; offline fallan de forma controlada
 - El proveedor DuckDuckGo puede bloquear búsquedas en ciertos regímenes
 
 ### Datos MCP
 - Los indicadores actuales son *placeholder* (valores `null` con limitaciones documentadas)
 - Para datos reales: poblar `_STATISTICS_DATA` en `src/mcp/server.py` con fuentes municipales de Madrid/El Cañaveral
+- Que un dato sea `null` es una respuesta válida: significa "no disponible en las fuentes consultadas", no un error del módulo
+
+### Transporte MCP
+- El servidor y el cliente usan el SDK oficial (`mcp`) y se comunican por `stdio` con un subproceso local
+- La sesión debe usarse dentro de `async with connect_mcp() as session:`
+- La prueba `tests/test_mcp_integration.py` arranca el servidor real y verifica la llamada
 
 ### Sin LLM Requerido
-- `run_research()` funciona sin clave OpenAI usando herramientas sintéticas/deterministas
+- `run_research()` funciona sin clave OpenAI usando herramientas reales y deterministas
 - Con LLM disponible, el agente utilizaría las herramientas para recopilar datos reales
+
+### CrewAI: estado y decisión de diseño
+- `build_researcher()` y `build_research_task()` están implementados y devuelven objetos CrewAI válidos
+- `run_research()` **no ejecuta un `Crew`**: recopila datos con las herramientas deterministas para no depender de una clave LLM y para que el resultado sea reproducible
+- Conectar las herramientas al agente requiere envolverlas como `BaseTool` y disponer de un proveedor LLM configurado
+- Esa conexión es una fase posterior, no un bug: el valor actual está en los datos verificables, no en el texto generado
+- Si se activa un LLM, las preguntas del brief podrían analizarse y `coverage_percentage` dejaría de ser 0.0
 
 ---
 
@@ -209,7 +270,7 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - **Ramas relacionadas**: 
   - `src/` → responsabilidad exclusiva de Persona 1
   - No modificar archivos fuera de `src/mcp/`, `src/agents/`, `src/tools/`, `src/schemas/`
-- **¿Dudas?**: Revisar `IMPLEMENTATION_SUMMARY.md` para el historial completo de cambios
+- **¿Dudas?**: Revisar `docs/research-changelog.md` para el historial completo de cambios
 
 ---
 
@@ -219,5 +280,5 @@ Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` e
 
 ---
 
-**Ú actualización**: 22 de octubre de 2026  
-**Versión**: 1.0.0 — Implementación inicial completa
+**Última actualización**: 20 de octubre de 2026
+**Versión**: 1.1.1 — Corrección del transporte MCP

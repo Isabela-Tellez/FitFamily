@@ -32,6 +32,13 @@ class Evidence(BaseModel):
         default=None,
         description="Unit of measurement for the value, if applicable.",
     )
+    frequency: Optional[str] = Field(
+        default=None,
+        description=(
+            "Payment frequency when the value is a price: "
+            "'monthly', 'one-time', 'annual', or None if unknown."
+        ),
+    )
     source_url: Optional[str] = Field(
         default=None,
         description="URL or document where the evidence was found.",

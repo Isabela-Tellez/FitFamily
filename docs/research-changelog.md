@@ -77,7 +77,7 @@
 ### Limitaciones Conocidas
 - `search_web`/`read_web_page` requieren Internet para datos reales; offline devuelve errores controlados
 - Datos MCP son placeholder; poblar `_STATISTICS_DATA` con fuentes municipales para datos reales
-- Sin LLM, `run_research` devuelve estructura vacía (0 evidencias, 0 competidores, 0% cobertura)
+- Sin LLM, `run_research` recopila datos reales pero deja `coverage_percentage` en 0.0% (sin interpretación)
 - Las búsquedas pueden fallar si DuckDuckGo bloquea la petición
 
 ### Checklist de Acceptación (de la misión 15)
@@ -93,7 +93,7 @@
 - [x] El cliente MCP descubre herramientas y realiza una llamada a través del protocolo
 - [x] Las estadísticas locales tienen procedencia o se declaran no disponibles
 - [x] Las pruebas unitarias no necesitan acceso constante a Internet ni una clave de LLM
-- [x] Existe una prueba real de MCP local y su resultado está comprobado, no supuesto
+- [x] Existe una prueba real de MCP local (`tests/test_mcp_integration.py`, añadida en 1.1.1)
 - [x] Las importaciones y rutas funcionan desde la raíz del repositorio
 - [x] La documentación explica cómo ejecutar e integrar el módulo
 - [x] No se han implementado los módulos de otras personas
@@ -149,22 +149,65 @@
 - Datos MCP son placeholder; poblar `_STATISTICS_DATA` con fuentes municipales para datos reales
 - Sin LLM, `run_research` devuelve estructura con datos reales pero cobertura 0.0%
 - Las búsquedas pueden fallar si DuckDuckGo bloquea la petición
-- Tests de integración real (conectividad) no incluidos en la suite unitaria
+- Tests de integración real de red (conectividad) no incluidos en la suite unitaria; el transporte MCP sí se cubre desde 1.1.1
 
----`
+---
 
-### Versión 1.1.0 (Planeado)
+## Versión 1.1.1 — Corrección de MCP, precios y documentación (20/10/2026)
+
+### Cambios Realizados
+
+#### Extracción de precios (`src/tools/competitor_search.py`)
+- Corregido `_extract_evidence_from_page`: `findall` devolvía cadenas y el código indexaba `[0][0]`, por lo que tomaba solo el primer dígito (`49,90` → `4`)
+- Nueva regex que admite importes en formato español e inglés (`49,90`, `49.90`, `1.200`, `1.200,50`)
+- Se identifica la frecuencia del pago (`monthly`, `one-time`) y se prefieren las cuotas mensuales frente a las matrículas
+- Los precios encontrados se propagan a `Competitor.tariffs`, no solo a `Evidence`
+- Añadido `Evidence.frequency` (opcional) para conservar si el precio es mensual o pago único
+- Migrados los `@validator` a `@field_validator` (Pydantic v2)
+
+#### Investigación (`src/agents/researcher.py`)
+- Las búsquedas usan `study_area` + `location` (antes solo la ciudad, ignorando El Cañaveral)
+
+#### Servidor MCP (`src/mcp/server.py`)
+- `list_tools()` ahora devuelve objetos `mcp.types.Tool` en lugar de `dict`, que es lo que exige el SDK
+- Corregido el nombre del campo `inputSchema` (antes `input_schema`)
+- Corregida errata "ludotela" → "ludoteca"
+- Añadido `List` a las importaciones de tipado
+
+#### Cliente MCP (`src/mcp/client.py`)
+- `connect_mcp()` es ahora un context manager asíncrono (`async with`), porque una sesión stdio no puede sobrevivir al cierre de su contexto
+- El subproceso se lanza con `sys.executable -m src.mcp.server` y `cwd` en la raíz del repositorio (antes lanzaba un script que solo imprimía `SERVER_OK`)
+- Usa `StdioServerParameters` en lugar de un `dict`, que era la causa del error `'dict' object has no attribute 'command'`
+- `call_area_statistics()` prefiere `structuredContent`, decodifica el texto JSON y propaga `isError`
+- `run_mcp_integration_test()` usa una única sesión y ya no intenta devolver una sesión cerrada
+
+#### Pruebas
+- `tests/test_mcp.py`: eliminadas las llamadas incorrectas que trataban `connect_mcp()` como corrutina; añadidas pruebas de parsing JSON, errores y parámetros del servidor
+- `tests/test_mcp_integration.py` (nuevo): prueba real extremo a extremo que arranca el servidor, descubre la herramienta y llama a `get_area_statistics`
+- `python -m pytest -q`: **42 passed**
+
+#### Documentación y dependencias
+- `docs/research-module.md`: ejemplo de uso del MCP, sección de pruebas y límites actualizados
+- `requirements.txt`: añadidos `pydantic`, `mcp`, `httpx`, `beautifulsoup4` y `pytest` (faltaban aunque el código los importa)
+- Aclarado que la versión 1.0.0 afirmaba una prueba de integración MCP que aún no existía; a partir de 1.1.1 la prueba existe y pasa
+
+### Estado tras la corrección
+- `python -m src.mcp.client`: conecta, descubre 1 herramienta y devuelve estadísticas
+- Los datos siguen siendo placeholder: la integración funciona, el contenido está pendiente
+
+---
+
+## Backlog
 - [ ] Poblar `_STATISTICS_DATA` con fuentes municipales reales de Madrid/El Cañaveral
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo
 - [ ] Probar integración real con CrewAI + LLM cuando esté disponible
-
-### Versión 1.2.0 (Planeado)
 - [ ] Interfaz de línea de comandos para queries rápidas
 - [ ] Almacenamiento persistente de resultados de investigación
 - [ ] Más ejemplos de consumo por parte de otras personas (Isabella, Gema, María, Laura)
-- [ ] Tests de integración end-to-end
+- [x] Tests de integración end-to-end del MCP (cubierto en 1.1.1)
+- [ ] Tests de integración con red real (búsqueda + lectura de páginas)
 
 ---
 

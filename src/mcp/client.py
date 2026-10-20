@@ -1,87 +1,104 @@
 """MCP client for the FitFamily research module.
 
-Connects to the local MCP server, discovers available tools,
+Connects to the local MCP server over stdio, discovers available tools,
 and invokes `get_area_statistics` to verify the protocol works.
 
 Responsibilities:
-- connect_mcp(): Connect to the local MCP server.
-- list_mcp_tools(): Discover available tools.
-- call_area_statistics(): Invoke get_area_statistics through the protocol.
+- `connect_mcp()`: async context manager that keeps a local MCP session open.
+- `list_mcp_tools()`: discover available tools.
+- `call_area_statistics()`: invoke get_area_statistics through the protocol.
+
+The stdio transport is tied to the lifetime of the session, so the session
+must be used inside `async with connect_mcp() as session:`. A session cannot
+be created and returned from a plain coroutine: closing the context manager
+also closes the server subprocess.
 """
 
 from __future__ import annotations
 
 import asyncio
-import logging
 import json
-from typing import Dict, Any, List, Optional
+import logging
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, AsyncIterator, Dict, List, Optional
 
-from mcp.client.session import ClientSession
+from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from mcp.types import Tool, TextContent
-
-from src.schemas import ResearchResult
+from mcp.types import Tool
 
 logger = logging.getLogger(__name__)
 
+# Repository root: src/mcp/client.py -> src/mcp -> src -> root
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-async def connect_mcp() -> Optional[ClientSession]:
-    """Connect to the local MCP server via stdio.
 
-    Returns:
-        A connected ClientSession instance, or None if connection fails.
+def mcp_server_params() -> StdioServerParameters:
+    """Build the stdio parameters used to launch the local MCP server.
+
+    The server is started as a Python module from the repository root so
+    that `from src.schemas import ...` resolves correctly in the subprocess.
     """
+    return StdioServerParameters(
+        command=sys.executable,
+        args=["-m", "src.mcp.server"],
+        cwd=str(PROJECT_ROOT),
+        env=None,
+    )
+
+
+@asynccontextmanager
+async def connect_mcp() -> AsyncIterator[ClientSession]:
+    """Open a session against the local MCP server via stdio.
+
+    Usage:
+        async with connect_mcp() as session:
+            tools = await list_mcp_tools(session)
+
+    Yields:
+        An initialized ClientSession, valid only inside the context.
+
+    Raises:
+        RuntimeError: If the server cannot be started or initialized.
+    """
+    params = mcp_server_params()
+    logger.info(
+        "Starting local MCP server: %s %s (cwd=%s)",
+        params.command,
+        " ".join(params.args),
+        params.cwd,
+    )
+
     try:
-        # Configure stdio parameters for local server
-        params = {
-            "command": "python",
-            "args": [
-                "-c",
-                (
-                    "import sys\n"
-                    "sys.path.insert(0, '.')\n"
-                    "from src.mcp.server import run_mcp_server\n"
-                    "# Just verify the server module can be imported\n"
-                    "print('SERVER_OK')\n"
-                ),
-            ],
-            "env": None,
-        }
-
-        # Create a stdio client transport
-        async with stdio_client(params) as (read, write):
-            # Create session
-            session = ClientSession(read, write)
-
-            # Initialize the session
-            await session.initialize()
-
-            logger.info("Connected to MCP server successfully")
-            return session
-
+        async with stdio_client(params) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                logger.info("Connected to MCP server successfully")
+                yield session
     except Exception as e:
-        logger.error(f"Failed to connect to MCP server: {e}")
-        return None
+        logger.error("MCP session failed: %s", e)
+        raise RuntimeError(f"Could not start or initialize MCP server: {e}") from e
 
 
 async def list_mcp_tools(session: ClientSession) -> List[Tool]:
     """List available tools from the MCP server.
 
     Args:
-        session: An connected ClientSession.
+        session: An initialized ClientSession.
 
     Returns:
-        List of available Tool descriptors.
+        List of available Tool descriptors (empty list on failure).
     """
     try:
         result = await session.list_tools()
         tools = result.tools if hasattr(result, "tools") else []
-        logger.info(f"Found {len(tools)} tools on MCP server")
+        logger.info("Found %d tools on MCP server", len(tools))
         for tool in tools:
-            logger.info(f"  - {tool.name}: {tool.description[:60]}...")
+            logger.info("  - %s: %s...", tool.name, (tool.description or "")[:60])
         return tools
     except Exception as e:
-        logger.error(f"Failed to list tools: {e}")
+        logger.error("Failed to list tools: %s", e)
         return []
 
 
@@ -93,57 +110,63 @@ async def call_area_statistics(
     """Invoke get_area_statistics through the MCP protocol.
 
     Args:
-        session: An connected ClientSession.
+        session: An initialized ClientSession.
         area_id: Identifier for the area.
         indicators: Optional list of indicator names.
 
     Returns:
-        The result dictionary from get_area_statistics.
+        The result dictionary from get_area_statistics, or a dict with an
+        `error` key if the call fails.
     """
+    arguments: Dict[str, Any] = {"area_id": area_id}
+    if indicators:
+        arguments["indicators"] = indicators
+
     try:
-        # Call the tool
         result = await session.call_tool(
             name="get_area_statistics",
-            arguments={
-                "area_id": area_id,
-                "indicators": indicators or [],
-            },
+            arguments=arguments,
         )
 
-        # Extract text from the result
-        # The result is a ToolResult with content
-        if result.content and len(result.content) > 0:
-            # Try to get the text content
-            content = result.content[0]
-            if hasattr(content, "text"):
-                text = content.text
-                # Try to parse as JSON
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError:
-                    return {"raw_text": text}
-            elif hasattr(content, "name"):
-                return {"name": content.name, "text": str(content.text)[:200]}
+        if getattr(result, "isError", False):
+            message = _first_text(result) or "unknown MCP tool error"
+            logger.error("get_area_statistics returned an error: %s", message)
+            return {"error": message}
 
-        # Fallback: return what we have
-        return {"raw_result": str(result)[:200]}
+        # Prefer structured content when the SDK provides it.
+        structured = getattr(result, "structuredContent", None)
+        if isinstance(structured, dict) and structured:
+            return structured
+
+        text = _first_text(result)
+        if text:
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                return {"raw_text": text}
+
+        return {"raw_result": str(result)[:500]}
 
     except Exception as e:
-        logger.error(f"Failed to call get_area_statistics: {e}")
+        logger.error("Failed to call get_area_statistics: %s", e)
         return {"error": str(e)}
 
 
-async def run_mcp_integration_test() -> Dict[str, Any]:
-    """Run a full MCP integration test.
+def _first_text(result: Any) -> Optional[str]:
+    """Return the first text block of a CallToolResult, if any."""
+    for content in getattr(result, "content", None) or []:
+        text = getattr(content, "text", None)
+        if text:
+            return text
+    return None
 
-    This function:
-    1. Connects to the local MCP server
-    2. Lists available tools
-    3. Calls get_area_statistics
-    4. Returns the results
+
+async def run_mcp_integration_test() -> Dict[str, Any]:
+    """Run a full MCP integration test against the real local server.
 
     Returns:
-        Dictionary with test results.
+        Dictionary with the connection status, discovered tools, and the
+        result of calling `get_area_statistics`.
     """
     result: Dict[str, Any] = {
         "connected": False,
@@ -152,69 +175,56 @@ async def run_mcp_integration_test() -> Dict[str, Any]:
         "error": None,
     }
 
-    # Step 1: Connect to MCP server
-    session = await connect_mcp()
-    if session is None:
-        result["error"] = "Could not connect to MCP server"
-        return result
+    try:
+        async with connect_mcp() as session:
+            result["connected"] = True
 
-    result["connected"] = True
+            tools = await list_mcp_tools(session)
+            result["tools_found"] = len(tools)
+            tool_names = [t.name for t in tools]
+            if "get_area_statistics" not in tool_names:
+                result["error"] = "get_area_statistics tool not found on server"
+                return result
 
-    # Step 2: List tools
-    tools = await list_mcp_tools(session)
-    result["tools_found"] = len(tools) if tools else 0
-
-    # Check if get_area_statistics is available
-    tool_names = [t.name for t in tools] if tools else []
-    if "get_area_statistics" not in tool_names:
-        result["error"] = "get_area_statistics tool not found on server"
-        return result
-
-    # Step 3: Call get_area_statistics
-    stats_result = await call_area_statistics(
-        session,
-        area_id="el-cañaveral",
-        indicators=["gyms_with_ludoteca", "population_total"],
-    )
-    result["area_statistics_call"] = stats_result
+            result["area_statistics_call"] = await call_area_statistics(
+                session,
+                area_id="el-cañaveral",
+                indicators=["gyms_with_ludoteca", "population_total"],
+            )
+    except Exception as e:
+        result["error"] = str(e)
 
     return result
 
 
-def main():
+def main() -> None:
     """Synchronous entry point for running the MCP integration test."""
-    try:
-        # Run the async test
-        test_result = asyncio.run(run_mcp_integration_test())
+    test_result = asyncio.run(run_mcp_integration_test())
 
-        print("=" * 60)
-        print("MCP INTEGRATION TEST RESULTS")
-        print("=" * 60)
-        print(f"Connected to MCP server: {test_result['connected']}")
-        print(f"Tools found: {test_result['tools_found']}")
-        print()
+    print("=" * 60)
+    print("MCP INTEGRATION TEST RESULTS")
+    print("=" * 60)
+    print(f"Connected to MCP server: {test_result['connected']}")
+    print(f"Tools found: {test_result['tools_found']}")
+    print()
 
-        if test_result["area_statistics_call"]:
-            stats = test_result["area_statistics_call"]
-            print("get_area_statistics result:")
-            print(f"  area_id: {stats.get('area_id')}")
-            print(f"  indicators_requested: {stats.get('indicators_requested')}")
-            print(f"  results count: {len(stats.get('results', {}))}")
-            print(f"  source: {stats.get('source')}")
-            print(f"  geo_scope: {stats.get('geo_scope')}")
-            print(f"  period: {stats.get('period')}")
-            print()
-            if "error" in stats:
-                print(f"  ERROR: {stats['error']}")
-        else:
-            print(f"Error: {test_result.get('error', 'Unknown error')}")
+    stats = test_result["area_statistics_call"]
+    if stats:
+        print("get_area_statistics result:")
+        print(f"  area_id: {stats.get('area_id')}")
+        print(f"  indicators_requested: {stats.get('indicators_requested')}")
+        print(f"  results count: {len(stats.get('results', {}))}")
+        print(f"  source: {stats.get('source')}")
+        print(f"  geo_scope: {stats.get('geo_scope')}")
+        print(f"  period: {stats.get('period')}")
+        if "error" in stats:
+            print(f"  ERROR: {stats['error']}")
+    elif test_result["error"]:
+        print(f"Error: {test_result['error']}")
+    else:
+        print("No statistics returned.")
 
-        print("=" * 60)
-
-    except Exception as e:
-        print(f"MCP integration test failed with exception: {e}")
-        import traceback
-        traceback.print_exc()
+    print("=" * 60)
 
 
 if __name__ == "__main__":
