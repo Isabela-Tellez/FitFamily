@@ -194,7 +194,11 @@ class ResearchResult(BaseModel):
 
     evidences: List[Evidence] = Field(
         default_factory=list,
-        description="All evidence gathered during the investigation.",
+        description=(
+            "All evidence gathered during the investigation. It already includes the "
+            "evidences attached to each competitor, so consumers must not append "
+            "competitor.evidences again or they will be counted twice."
+        ),
     )
     competitors: List[Competitor] = Field(
         default_factory=list,

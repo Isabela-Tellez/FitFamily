@@ -146,6 +146,28 @@ def build_research_task(brief: ResearchBrief, context: Optional[Dict[str, Any]] 
     return task
 
 
+DEFAULT_MAX_RESULTS = 5
+MAX_RESULTS_LIMIT = 20
+
+
+def resolve_max_results(search_limits: Optional[Dict[str, Any]]) -> int:
+    """Resolve how many results a search may return, from the brief limits.
+
+    ``ResearchBrief.search_limits`` may declare ``max_results``. Values are
+    clamped to the range accepted by the tools (1-20) and fall back to
+    ``DEFAULT_MAX_RESULTS`` when absent or invalid.
+    """
+    if isinstance(search_limits, dict):
+        raw = search_limits.get("max_results")
+        if isinstance(raw, bool):
+            raw = None
+        if isinstance(raw, int) and raw >= 1:
+            return min(raw, MAX_RESULTS_LIMIT)
+        if isinstance(raw, float) and raw >= 1:
+            return min(int(raw), MAX_RESULTS_LIMIT)
+    return DEFAULT_MAX_RESULTS
+
+
 def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None) -> ResearchResult:
     """Execute a research investigation using the CrewAI agent.
 
@@ -199,11 +221,15 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
             else brief.location
         )
 
+        # Honour the limits declared in the brief (search_limits.max_results),
+        # falling back to a default and capping at the maximum the tools accept.
+        max_results = resolve_max_results(brief.search_limits)
+
         # Use the search_web tool to find initial results
         try:
             search_results = search_web(
                 f"{brief.business_type} {area_query}",
-                max_results=5
+                max_results=max_results
             )
             search_performed = f"Web search performed: {len(search_results)} results found"
             # Create evidences from search results
@@ -226,7 +252,7 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
             comp_result = competitor_search({
                 "area": area_query,
                 "business_type": brief.business_type,
-                "max_results": 5
+                "max_results": max_results
             })
             competitors = comp_result.get("competitors", [])
             # Add any new evidences from the competitor search

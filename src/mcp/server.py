@@ -148,24 +148,88 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "consulted_at": "2026-10-20",
             "verification_status": "unavailable",
             "limitations": (
-                "No se encontró un censo directo de familias con hijos. "
-                "Referencia indirecta verificada: 28,29 % de la población es menor de 20 años "
-                "(Padrón municipal, octubre 2026)."
+                "Ninguna fuente oficial define ni publica 'familias con hijos' a nivel de "
+                "barrio: el Padrón Municipal mide hogares, no familias. La aproximación "
+                "más cercana es households_with_minors (hogares con al menos un menor), "
+                "que además es un mínimo. Referencia indirecta adicional: 28,29 % de la "
+                "población es menor de 20 años (Padrón, octubre 2026)."
+            ),
+        },
+        "households_with_minors": {
+            "value": 3071,
+            "unit": "hogares",
+            "reference_period": "1 de enero de 2025",
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+            "consulted_at": "2026-10-20",
+            "verification_status": "verified",
+            "limitations": (
+                "Hogares con al menos un menor según la composición del hogar oficial "
+                "(Padrón a 1 de enero de 2025), agregada sobre las 9 secciones censales del "
+                "barrio. Es un MÍNIMO: se excluyen las categorías 'con o sin menores' "
+                "(662 hogares), que no permiten atribuir la presencia de menores. "
+                "'Hogares con menores' no es sinónimo de 'familias con hijos'."
             ),
         },
         "gyms_registered": {
-            "value": None,
-            "unit": "centros",
-            "reference_period": None,
-            "source_url": None,
+            "value": 9,
+            "unit": "locales abiertos",
+            "reference_period": "20 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
             "consulted_at": "2026-10-20",
-            "verification_status": "unavailable",
+            "verification_status": "verified",
             "limitations": (
-                "No se encontró censo municipal publicado de centros deportivos. "
-                "Centros localizados manualmente en la web (no censo oficial): "
-                "9F Cañaveral, Énergie Fitness, One More Cañaveral, Nine Fitness, "
-                "Winfit, Sano Center, Brooklyn Fitboxing, Silva Training Center "
-                "(y Dreamfit en Valdebernardo, limítrofe)."
+                "Locales ABIERTOS en El Cañaveral con epígrafe de actividad económica "
+                "declarado '931008 - ACTIVIDADES DE LOS GIMNASIOS', según el fichero de "
+                "Actividades del Censo de Locales. Registro administrativo: puede contener "
+                "inconsistencias. No es un censo de gimnasios privados, sino de locales con "
+                "esa actividad declarada."
+                " El fichero de Actividades recoge 229 de los 234 locales abiertos del "
+                "fichero de Locales: 5 locales no tienen actividad económica declarada."
+            ),
+        },
+        "sports_recreation_venues": {
+            "value": 4,
+            "unit": "locales abiertos",
+            "reference_period": "20 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+            "consulted_at": "2026-10-20",
+            "verification_status": "verified",
+            "limitations": (
+                "Locales ABIERTOS con epígrafe '855002 - ENSEÑANZA NO REGLADA (DEPORTIVA Y "
+                "RECREATIVA, CULTURAL, CLASES DE REGIMEN NO REGULADO)' en El Cañaveral. "
+                "Actividad deportiva o recreativa declarada, no necesariamente un gimnasio."
+                " El fichero de Actividades recoge 229 de los 234 locales abiertos del "
+                "fichero de Locales: 5 locales no tienen actividad económica declarada."
+            ),
+        },
+        "childrens_play_venues": {
+            "value": 3,
+            "unit": "locales abiertos",
+            "reference_period": "20 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+            "consulted_at": "2026-10-20",
+            "verification_status": "verified",
+            "limitations": (
+                "Locales ABIERTOS con epígrafe '932001/932002 - CENTROS DE JUEGOS O "
+                "CELEBRACIONES INFANTILES (CON O SIN COCINA)' en El Cañaveral. Es la "
+                "oferta de ocio infantil más próxima a una ludoteca, pero el epígrafe no "
+                "garantiza que el local.offerca ludoteca."
+                " El fichero de Actividades recoge 229 de los 234 locales abiertos del "
+                "fichero de Locales: 5 locales no tienen actividad económica declarada."
+            ),
+        },
+        "community_pools": {
+            "value": 3,
+            "unit": "locales abiertos",
+            "reference_period": "20 de octubre de 2026",
+            "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+            "consulted_at": "2026-10-20",
+            "verification_status": "verified",
+            "limitations": (
+                "Locales ABIERTOS con epígrafe '931010 - PISCINAS DE COMUNIDADES DE "
+                "VECINOS DE TEMPORADA' en El Cañaveral."
+                " El fichero de Actividades recoge 229 de los 234 locales abiertos del "
+                "fichero de Locales: 5 locales no tienen actividad económica declarada."
             ),
         },
         "gyms_with_ludoteca": {
@@ -176,8 +240,12 @@ _STATISTICS_DATA: Dict[str, Any] = {
             "consulted_at": "2026-10-20",
             "verification_status": "unavailable",
             "limitations": (
-                "No se encontró censo municipal. Ninguno de los centros localizados "
-                "publica ludoteca de forma verificable en su web; confirmar por contacto directo."
+                "No existe un epígrafe de actividad económica que combine gimnasio y "
+                "ludoteca, por lo que no se puede derivar del Censo de Locales. Los 9 "
+                "locales con epígrafe 'Actividades de los gimnasios' y los 3 de 'Centros de "
+                "juegos o celebraciones infantiles' son categorías distintas y un mismo "
+                "local podría estar en ambas. Confirmar centro a centro por contacto "
+                "directo."
             ),
         },
     },
@@ -349,8 +417,11 @@ def parse_locales_csv(csv_text: str, barrio_name: str = "EL CAÑAVERAL") -> dict
         result["error"] = "CSV sin cabecera."
         return result
 
-    # Normalize field names (strip quotes/whitespace).
-    fields = {f.strip().strip('"'): f for f in reader.fieldnames}
+    # Normalize field names (strip quotes, whitespace and a possible BOM).
+    fields = {
+        (f or "").lstrip("﻿").strip().strip('"'): f
+        for f in reader.fieldnames
+    }
     barrio_field = None
     sit_field = None
     id_field = None
@@ -520,6 +591,20 @@ _BARRIO_CODES = {
     "el-canaveral": 194,
     "canaveral": 194,
 }
+
+
+def _sections_cache_path() -> str:
+    """Return the local path of the official sections cartography (downloading it once)."""
+    import os
+    import urllib.request
+
+    cache_dir = Path(__file__).resolve().parents[2] / "data" / "raw" / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    path = cache_dir / "Secciones_Censales.zip"
+    if not path.exists() or path.stat().st_size == 0:
+        with urllib.request.urlopen(_SECCIONES_SHP_URL, timeout=300) as resp:
+            path.write_bytes(resp.read())
+    return str(path)
 
 
 def parse_households_rows(rows, section_codes) -> dict:
@@ -757,6 +842,411 @@ def refresh_households(area_id: str = "el-cañaveral", rows=None, section_codes=
         "average_household_size": average,
         "sections": sorted(parsed["sections"]),
         "reference_period": _HOGARES_REFERENCE_PERIOD,
+        "consulted_at": consulted_at,
+    }
+
+# ── Equipamientos y ocio (Censo de Locales, fichero de Actividades) ──────
+# El fichero de "Actividades" asocia a cada local el epígrafe de actividad
+# económica declarado. Permite contar equipamientos por tipo con fuente
+# oficial, no mediante búsqueda web ni conteo manual.
+
+_ACTIVIDADES_CSV_URL = (
+    "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/"
+    "200085-5-censo-locales/download/200085-5-censo-locales.csv"
+)
+
+# Epígrafe económico -> indicador del módulo.
+_EPIGRAPH_INDICATORS = {
+    "931008": "gyms_registered",            # ACTIVIDADES DE LOS GIMNASIOS
+    "855002": "sports_recreation_venues",    # ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA)
+    "931010": "community_pools",             # PISCINAS DE COMUNIDADES DE VECINOS
+    "932001": "childrens_play_venues",       # CENTROS DE JUEGOS O CELEBRACIONES INFANTILES CON COCINA
+    "932002": "childrens_play_venues",       # CENTROS DE JUEGOS O CELEBRACIONES INFANTILES SIN COCINA
+}
+
+_EPIGRAPH_LABELS = {
+    "931008": "Actividades de los gimnasios",
+    "855002": "Ensenanza no reglada (deportiva y recreativa)",
+    "931010": "Piscinas de comunidades de vecinos",
+    "932001": "Centros de juegos o celebraciones infantiles con cocina",
+    "932002": "Centros de juegos o celebraciones infantiles sin cocina",
+}
+
+
+def parse_actividades_csv(csv_text: str, barrio_name: str = "EL CAÑAVERAL") -> dict:
+    """Count open premises per economic epigraph for a barrio.
+
+    Pure function: no network, no I/O. Counts distinct premises (id_local)
+    whose declared situation is "Abierto", grouped by epigraph code.
+    """
+    result = {
+        "status": "ok",
+        "barrio_name": barrio_name,
+        "counts": {},
+        "total_open_premises": 0,
+        "rows_for_barrio": 0,
+        "consulted_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if not csv_text or not csv_text.strip():
+        result["status"] = "error"
+        result["error"] = "CSV vacío o sin contenido."
+        return result
+
+    reader = csv.DictReader(io.StringIO(csv_text), delimiter=";")
+    if reader.fieldnames is None:
+        result["status"] = "error"
+        result["error"] = "CSV sin cabecera."
+        return result
+
+    fields = {
+        (f or "").lstrip("﻿").strip().strip('"'): f
+        for f in reader.fieldnames
+    }
+    barrio_field = fields.get("desc_barrio_local")
+    sit_field = fields.get("desc_situacion_local")
+    id_field = fields.get("id_local")
+    epi_field = fields.get("id_epigrafe")
+    if not all([barrio_field, sit_field, id_field, epi_field]):
+        result["status"] = "error"
+        result["error"] = (
+            f"Columnas requeridas no encontradas. Disponibles: {list(reader.fieldnames)}"
+        )
+        return result
+
+    target = _normalize_barrio_name(barrio_name)
+    by_epigraph = {}
+    open_premises = set()
+    rows = 0
+    for row in reader:
+        barrio = _normalize_barrio_name(row.get(barrio_field, "") or "")
+        if barrio != target:
+            continue
+        rows += 1
+        if (row.get(sit_field) or "").strip().strip('"').lower() != "abierto":
+            continue
+        local_id = (row.get(id_field) or "").strip().strip('"')
+        epigraph = (row.get(epi_field) or "").strip().strip('"')
+        if not local_id or not epigraph:
+            continue
+        by_epigraph.setdefault(epigraph, set()).add(local_id)
+        open_premises.add(local_id)
+
+    result["rows_for_barrio"] = rows
+    result["total_open_premises"] = len(open_premises)
+    result["counts"] = {code: len(ids) for code, ids in by_epigraph.items()}
+    if rows == 0:
+        result["status"] = "error"
+        result["error"] = f"Barrio '{barrio_name}' no encontrado en el CSV."
+    return result
+
+
+def refresh_gyms_count(area_id: str = "el-cañaveral", csv_text: str = None,
+                       url: str = None, timeout: float = 300.0,
+                       store: dict = None) -> dict:
+    """Refresh the equipment/ocio indicators from the Censo de Locales.
+
+    - If csv_text is provided it is parsed directly (used by the unit tests).
+    - Otherwise the official "Actividades" CSV is downloaded.
+    On failure the stored values are NOT modified.
+    """
+    canonical = (area_id or "").strip().lower().replace(" ", "-").replace("_", "-")
+    barrio_name = _SUPPORTED_LOCALES_AREAS.get(canonical)
+    if barrio_name is None:
+        return {
+            "status": "unsupported",
+            "area_id": area_id,
+            "error": f"Área '{area_id}' no soportada para el Censo de Locales.",
+            "consulted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    consulted_at = datetime.now(timezone.utc).isoformat()
+    source_url = url or _ACTIVIDADES_CSV_URL
+
+    if csv_text is None:
+        try:
+            with urllib.request.urlopen(source_url, timeout=timeout) as response:
+                csv_text = response.read().decode("utf-8-sig", errors="replace")
+        except Exception as e:
+            return {
+                "status": "error",
+                "area_id": area_id,
+                "source_url": source_url,
+                "consulted_at": consulted_at,
+                "error": f"Error al descargar el CSV de actividades: {e}",
+            }
+
+    parsed = parse_actividades_csv(csv_text, barrio_name)
+    if parsed["status"] != "ok":
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "source_url": source_url,
+            "consulted_at": consulted_at,
+            "error": parsed.get("error", "Error al parsear el CSV de actividades."),
+        }
+
+    counts = parsed["counts"]
+    if store is None:
+        store = _STATISTICS_DATA
+
+    try:
+        indicators = store["indicators"]
+        for indicator_name in sorted(set(_EPIGRAPH_INDICATORS.values())):
+            codes = sorted(c for c, i in _EPIGRAPH_INDICATORS.items() if i == indicator_name)
+            # Varios epígrafes pueden alimentar el mismo indicador: se suman.
+            value = sum(counts.get(code, 0) for code in codes)
+            labels = "; ".join(_EPIGRAPH_LABELS[c] for c in codes)
+            indicators[indicator_name] = {
+                "value": value,
+                "unit": "locales abiertos",
+                "reference_period": f"descarga del {consulted_at[:10]}",
+                "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+                "consulted_at": consulted_at,
+                "verification_status": "verified",
+                "limitations": (
+                    f"Locales ABIERTOS en {barrio_name.title()} cuyo epígrafe de actividad "
+                    f"económica declarado es '{labels}' (epígrafe {', '.join(codes)}), según el "
+                    f"fichero de Actividades del Censo de Locales. Registro administrativo: "
+                    f"puede contener inconsistencias. No es un censo de gimnasios privados, "
+                    f"sino de locales con esa actividad declarada."
+                ),
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "source_url": source_url,
+            "consulted_at": consulted_at,
+            "error": f"Error al actualizar el almacén de datos: {e}",
+        }
+
+    return {
+        "status": "ok",
+        "area_id": area_id,
+        "consulted_at": consulted_at,
+        "total_open_premises": parsed["total_open_premises"],
+        "counts_by_epigraph": counts,
+        "indicators": {
+            name: sum(counts.get(c, 0) for c, i in _EPIGRAPH_INDICATORS.items() if i == name)
+            for name in sorted(set(_EPIGRAPH_INDICATORS.values()))
+        },
+    }
+
+
+# ── Hogares con menores (composición del hogar) ───────────────────────────
+# El mismo fichero oficial de hogares incluye la composición de los hogares
+# por tipo, sección a sección. Las categorías donde la presencia de menores
+# es explícita permiten un conteo verificable; las categorías "con o sin
+# menores" no se pueden atribuir, por lo que el resultado es un MÍNIMO.
+
+
+def parse_household_composition_rows(rows, section_codes) -> dict:
+    """Count households with minors, using the official composition sheet.
+
+    Pure function. ``rows`` are the raw rows of the "Composicion del hogar"
+    sheet. Only the categories where the presence of minors is explicit are
+    counted; categories labelled "con o sin menores" are excluded because
+    they cannot be attributed, so the result is a lower bound.
+    """
+    wanted = {int(c) for c in section_codes}
+    result = {
+        "status": "ok",
+        "households_with_minors": None,
+        "households_total": None,
+        "ambiguous_households": None,
+        "without_minors_households": None,
+        "sections": {},
+        "reference_period": _HOGARES_REFERENCE_PERIOD,
+    }
+
+    # 1) Locate the header row: "Total" + "Composicion del hogar (tipo)".
+    header_idx = None
+    for i, r in enumerate(rows):
+        if len(r) > 3 and r[2] == "Total" and r[3] is not None and "Composici" in str(r[3]):
+            header_idx = i
+            break
+    if header_idx is None or header_idx + 1 >= len(rows):
+        result["status"] = "error"
+        result["error"] = "No se encontró la fila de categorías de composición del hogar."
+        return result
+
+    # 2) The categories are in the row right under the header.
+    labels = rows[header_idx + 1]
+    with_minors_cols = []
+    ambiguous_cols = []        # "con o sin menores": no se puede atribuir
+    without_minors_cols = []  # "sin menores": se sabe que NO tienen
+    for j in range(3, len(labels)):
+        label = labels[j]
+        if not isinstance(label, str):
+            continue
+        low = label.lower()
+        if "menor" not in low:
+            continue
+        if "con o sin menores" in low:
+            ambiguous_cols.append(j)
+        elif "sin menores" in low:
+            without_minors_cols.append(j)
+        else:
+            with_minors_cols.append(j)
+
+    if not with_minors_cols:
+        result["status"] = "error"
+        result["error"] = "No se encontraron categorías de hogar con menores."
+        return result
+
+    # 3) Aggregate the requested sections.
+    total = 0
+    with_minors = 0
+    ambiguous = 0
+    without_minors = 0
+    found = set()
+    for r in rows[header_idx + 2:]:
+        code = r[1] if len(r) > 1 else None
+        if not isinstance(code, int) or code not in wanted:
+            continue
+        found.add(code)
+        row_total = r[2] if len(r) > 2 else 0
+        if isinstance(row_total, (int, float)):
+            total += row_total
+        minor_sum = 0
+        for j in with_minors_cols:
+            v = r[j] if j < len(r) else 0
+            if isinstance(v, (int, float)):
+                minor_sum += v
+        with_minors += minor_sum
+        for j in ambiguous_cols:
+            v = r[j] if j < len(r) else 0
+            if isinstance(v, (int, float)):
+                ambiguous += v
+        for j in without_minors_cols:
+            v = r[j] if j < len(r) else 0
+            if isinstance(v, (int, float)):
+                without_minors += v
+        result["sections"][code] = {"households": row_total, "with_minors": minor_sum}
+
+    result["households_total"] = int(total)
+    result["households_with_minors"] = int(with_minors)
+    result["ambiguous_households"] = int(ambiguous)
+    result["without_minors_households"] = int(without_minors)
+    result["missing_sections"] = sorted(wanted - found)
+    if result["missing_sections"]:
+        result["status"] = "error"
+        result["error"] = (
+            f"Secciones ausentes en el fichero de hogares: {result['missing_sections']}."
+        )
+    return result
+
+
+def _read_household_composition_sheet(path):
+    """Read the 'Composicion del hogar' sheet of the official workbook."""
+    try:
+        import openpyxl
+    except ImportError as e:
+        raise RuntimeError(
+            "openpyxl no está instalado; es necesario solo para regenerar el "
+            "fichero de hogares (herramienta offline, no dependencia del servidor MCP)."
+        ) from e
+
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    sheet = None
+    for name in wb.sheetnames:
+        if "composici" in name.lower():
+            sheet = wb[name]
+            break
+    if sheet is None:
+        sheet = wb[wb.sheetnames[0]]
+    return list(sheet.iter_rows(values_only=True))
+
+
+def refresh_households_with_minors(area_id: str = "el-cañaveral", rows=None,
+                                    section_codes=None, store: dict = None,
+                                    xlsx_path: str = None) -> dict:
+    """Refresh the households-with-minors indicator from official data.
+
+    - If rows and section_codes are provided the aggregation is pure (tests).
+    - Otherwise the official workbook and cartography are read/downloaded.
+    On failure the stored values are NOT modified.
+    """
+    canonical = (area_id or "").strip().lower().replace(" ", "-").replace("_", "-")
+    barrio_code = _BARRIO_CODES.get(canonical)
+    if barrio_code is None:
+        return {
+            "status": "unsupported",
+            "area_id": area_id,
+            "error": f"Área '{area_id}' sin código de barrio oficial conocido.",
+            "consulted_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    consulted_at = datetime.now(timezone.utc).isoformat()
+
+    if rows is None or section_codes is None:
+        try:
+            import os
+            import tempfile
+            import urllib.request
+
+            tmp = tempfile.mkdtemp(prefix="fitfamily_composicion_")
+            if xlsx_path is None:
+                xlsx_path = os.path.join(tmp, "hogares.xlsx")
+                with urllib.request.urlopen(_HOGARES_XLSX_URL, timeout=300) as resp:
+                    data = resp.read()
+                with open(xlsx_path, "wb") as fh:
+                    fh.write(data)
+            sections_zip = _sections_cache_path()
+            section_codes = _read_sections_for_barrio(sections_zip, barrio_code)
+            rows = _read_household_composition_sheet(xlsx_path)
+        except Exception as e:
+            return {
+                "status": "error",
+                "area_id": area_id,
+                "consulted_at": consulted_at,
+                "error": f"Error al preparar los datos de composición: {e}",
+            }
+
+    parsed = parse_household_composition_rows(rows, section_codes)
+    if parsed["status"] != "ok":
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "consulted_at": consulted_at,
+            "error": parsed.get("error", "Error al agregar la composición de hogares."),
+        }
+
+    if store is None:
+        store = _STATISTICS_DATA
+
+    try:
+        store["indicators"]["households_with_minors"] = {
+            "value": parsed["households_with_minors"],
+            "unit": "hogares",
+            "reference_period": _HOGARES_REFERENCE_PERIOD,
+            "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+            "consulted_at": consulted_at,
+            "verification_status": "verified",
+            "limitations": (
+                "Hogares con al menos un menor según la composición del hogar oficial "
+                f"(Padrón a {_HOGARES_REFERENCE_PERIOD}), agregado sobre las 9 secciones "
+                "censales del barrio. Es un MÍNIMO verificable: se excluyen las categorías "
+                f"'con o sin menores' ({parsed['ambiguous_households']} hogares), que no "
+                "permiten atribuir la presencia de menores. Las categorías explícitamente "
+                f"'sin menores' ({parsed['without_minors_households']} hogares) quedan "
+                "descartadas. 'Hogares con menores' no es sinónimo de 'familias con hijos'."
+            ),
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "area_id": area_id,
+            "consulted_at": consulted_at,
+            "error": f"Error al actualizar el almacén de datos: {e}",
+        }
+
+    return {
+        "status": "ok",
+        "area_id": area_id,
+        "households_with_minors": parsed["households_with_minors"],
+        "households_total": parsed["households_total"],
+        "ambiguous_households": parsed["ambiguous_households"],
         "consulted_at": consulted_at,
     }
 
