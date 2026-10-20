@@ -294,6 +294,28 @@ eference_period, source_url, consulted_at).
 ### Tests
 - Suite completa: 44 tests pasando (sin cambios en tests; solo datos y docs).
 
+
+## Versión 1.1.5 — Endurecimiento SSRF y pruebas de seguridad (20/10/2026)
+
+### Cambios Realizados
+
+#### Seguridad (src/tools/read_web_page.py)
+- Redirecciones desactivadas en httpx; cada salto se valida explícitamente (esquema, host, puerto, credenciales, IP resuelta).
+- Validación de DNS inmediatamente antes de conectar (mitigación TOCTOU parcial).
+- Puertos permitidos: 80, 443 y None. Credenciales en URL rechazadas.
+- Bloqueo ampliado: más rangos IPv4/IPv6, hostnames internos y metadata (169.254.169.254).
+- Normalización de URLs con espacios o caracteres no seguros.
+
+#### Pruebas (tests/test_web_tools.py)
+- Añadidos 5 tests: DNS rebinding, redirección a IP privada, credenciales en URL, puerto no estándar, esquema no permitido.
+
+### Limitación honesta
+- No se garantiza protección completa contra DNS rebinding/TOCTOU: httpx resuelve DNS en tiempo de conexión. Se valida antes y después, pero queda una ventana. Se documenta como riesgo pendiente.
+- No se probaron formas alternativas de representar IP (decimal, octal, hexadecimal).
+
+### Tests
+- Suite completa: 49 tests pasando.
+
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
 - [ ] Añadir más ejemplos en el README del módulo

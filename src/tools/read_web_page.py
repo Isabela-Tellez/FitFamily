@@ -25,9 +25,11 @@ from __future__ import annotations
 
 import logging
 import re
+import socket
 import time
 from datetime import datetime
 from typing import Optional, List
+from urllib.parse import urlsplit, urlunsplit, quote, unquote, urljoin
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field, model_validator
@@ -39,6 +41,9 @@ logger = logging.getLogger(__name__)
 MAX_RESPONSE_SIZE = 5 * 1024 * 1024  # 5MB max
 DEFAULT_TIMEOUT = 30.0  # seconds
 MAX_SNIPPET_LENGTH = 500  # max characters for a support snippet
+MAX_REDIRECTS = 5
+ALLOWED_SCHEMES = {"http", "https"}
+ALLOWED_PORTS = {None, 80, 443}
 
 
 class PageReadResult(BaseModel):
@@ -141,6 +146,63 @@ def _is_private_ip(host: str) -> bool:
     return False
 
 
+def _resolve_host(host: str) -> List[str]:
+    """Resolve a hostname to IP addresses.
+
+    Raises RuntimeError if resolution fails.
+    """
+    try:
+        infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
+    except socket.gaierror as e:
+        raise RuntimeError(f"Could not resolve host: {host} ({e})") from e
+    ips = {info[4][0] for info in infos}
+    if not ips:
+        raise RuntimeError(f"Could not resolve host: {host}")
+    return list(ips)
+
+
+def _validate_destination(url: str) -> str:
+    """Validate a URL's scheme, host, port, credentials and resolved IPs.
+
+    Returns the normalized URL. Raises ValueError/RuntimeError on any
+    disallowed destination. Each call re-resolves DNS, which narrows (but
+    does not fully eliminate) the TOCTOU window.
+    """
+    if not url or not isinstance(url, str):
+        raise ValueError("URL must be a non-empty string.")
+
+    split = urlsplit(url)
+    if split.scheme not in ALLOWED_SCHEMES:
+        raise ValueError(
+            f"URL must use http:// or https:// scheme, got: {url}"
+        )
+
+    host = split.hostname
+    if not host:
+        raise ValueError(f"URL has no host: {url}")
+
+    if split.username or split.password:
+        raise ValueError("Credentials in URL are not allowed.")
+
+    port = split.port
+    if port not in ALLOWED_PORTS:
+        raise RuntimeError(f"Port not allowed: {port}")
+
+    if _is_private_ip(host):
+        raise RuntimeError(f"Access to private/internal host denied: {host}")
+
+    # Normalize the path (percent-encode unsafe characters).
+    normalized_path = quote(unquote(split.path), safe="/%")
+    normalized_url = urlunsplit((split.scheme, split.netloc, normalized_path, split.query, split.fragment))
+
+    # Resolve and validate every IP the host points to.
+    for ip in _resolve_host(host):
+        if _is_private_ip(ip):
+            raise RuntimeError(f"Resolved IP not allowed: {ip}")
+
+    return normalized_url
+
+
 def _sanitize_html(raw_html: str) -> str:
     """Remove scripts and styles, extract visible text."""
     if not raw_html:
@@ -169,6 +231,8 @@ def _sanitize_html(raw_html: str) -> str:
 def read_web_page(url: str) -> PageReadResult:
     """Read a web page and return structured content.
 
+    Redirects are followed manually, validating each destination.
+
     Args:
         url: The HTTP/HTTPS URL to read.
 
@@ -179,45 +243,55 @@ def read_web_page(url: str) -> PageReadResult:
         ValueError: If the URL scheme is not http or https.
         RuntimeError: If the page cannot be accessed or is not valid HTML.
     """
-    # Validate URL scheme
-    if not url or not isinstance(url, str):
-        raise ValueError("URL must be a non-empty string.")
-
-    url_lower = url.lower()
-    if not url_lower.startswith(("http://", "https://")):
-        raise ValueError(
-            f"URL must start with http:// or https://, got: {url}"
-        )
+    # Validate the initial destination.
+    try:
+        current_url = _validate_destination(url)
+    except (ValueError, RuntimeError) as e:
+        logger.error(f"URL validation failed for {url}: {e}")
+        raise
 
     logger.info(f"Reading web page: {url}")
 
     try:
-        # Parse URL to check host
-        from urllib.parse import urlparse
-        parsed = urlparse(url)
-        host = parsed.hostname or ""
+        final_url = current_url
+        response = None
+        redirects = 0
 
-        # Block private/internal IPs
-        if _is_private_ip(host):
-            raise RuntimeError(
-                f"Access to private IP address denied: {host}"
-            )
+        while True:
+            # Re-validate DNS right before connecting (mitigates rebinding).
+            split = urlsplit(current_url)
+            for ip in _resolve_host(split.hostname):
+                if _is_private_ip(ip):
+                    raise RuntimeError(f"Resolved IP not allowed: {ip}")
 
-        # Normalize the URL so that spaces and unsafe characters in the path
-        # do not break the request. Query parameters are preserved.
-        from urllib.parse import urlsplit, urlunsplit, quote, unquote
-        split = urlsplit(url)
-        if not split.hostname:
-            raise ValueError("URL has no host.")
-        normalized_path = quote(unquote(split.path), safe="/%")
-        url = urlunsplit((split.scheme, split.netloc, normalized_path, split.query, split.fragment))
-        # Make the HTTP request with timeout
-        with httpx.Client(
-            timeout=DEFAULT_TIMEOUT,
-            follow_redirects=True,
-            max_redirects=5,
-        ) as client:
-            response = client.get(url, follow_redirects=True)
+            with httpx.Client(
+                timeout=DEFAULT_TIMEOUT,
+                follow_redirects=False,
+                max_redirects=0,
+            ) as client:
+                response = client.get(current_url)
+
+            if response.status_code in (301, 302, 303, 307, 308):
+                location = response.headers.get("location")
+                if not location:
+                    break
+                next_url = urljoin(current_url, location)
+                # Validate the redirect destination before following.
+                try:
+                    next_url = _validate_destination(next_url)
+                except (ValueError, RuntimeError) as e:
+                    logger.error(f"Redirect blocked: {e}")
+                    raise RuntimeError(f"Redirect to disallowed destination: {e}") from e
+                redirects += 1
+                if redirects > MAX_REDIRECTS:
+                    raise RuntimeError(f"Too many redirects (>{MAX_REDIRECTS})")
+                current_url = next_url
+                continue
+            final_url = current_url
+            break
+
+        if response is None:
+            raise RuntimeError("No response received")
 
         # Check content type
         content_type = response.headers.get("content-type", "")
@@ -240,8 +314,7 @@ def read_web_page(url: str) -> PageReadResult:
 
         # Process HTML content
         status = str(response.status_code)
-        # httpx.response.url is already a URL object; convert to string
-        final_url = str(response.url) if response.url else url
+        final_url = str(response.url) if response.url else final_url
 
         if status == "200" and "text/html" in content_type.lower():
             body_text = _sanitize_html(response.text)
@@ -308,6 +381,8 @@ def read_web_page(url: str) -> PageReadResult:
             f"HTTP error accessing {url}: {e}. "
             "The page may be blocked, unavailable, or the URL is incorrect."
         ) from e
+    except (ValueError, RuntimeError):
+        raise
     except Exception as e:
         logger.error(f"Unexpected error reading {url}: {e}")
         raise RuntimeError(

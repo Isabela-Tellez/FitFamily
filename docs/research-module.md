@@ -253,6 +253,13 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 - La sesión debe usarse dentro de `async with connect_mcp() as session:`
 - La prueba `tests/test_mcp_integration.py` arranca el servidor real y verifica la llamada
 
+### Seguridad web (SSRF)
+- Validación de esquema, host, puerto y credenciales antes de la petición
+- Resolución DNS validada inmediatamente antes de conectar
+- Redirecciones gestionadas manualmente, validando cada destino
+- Bloqueo de IP privadas, loopback, link-local, multicast, hostnames internos y metadata
+- Limitación conocida: no se garantiza protección completa contra DNS rebinding (TOCTOU); httpx resuelve DNS en tiempo de conexión. Se documenta como riesgo pendiente.
+
 ### Sin LLM Requerido
 - `run_research()` funciona sin clave OpenAI usando herramientas reales y deterministas
 - Con LLM disponible, el agente utilizaría las herramientas para recopilar datos reales
@@ -284,4 +291,4 @@ Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` e
 ---
 
 **Última actualización**: 20 de octubre de 2026
-**Versión**: 1.1.4 — Auditoría de fuentes y trazabilidad
+**Versión**: 1.1.5 — Endurecimiento SSRF y pruebas de seguridad
