@@ -153,6 +153,13 @@ Este documento registra todas las modificaciones y creación de archivos durante
 - Añadida `tests/test_mcp_integration.py`, que arranca el servidor real por stdio
 - Verificación manual: `python -m src.mcp.client` conecta, descubre 1 herramienta y devuelve estadísticas
 
+### Registro de competidores y descubrimiento de fuentes (20/10/2026)
+- `src/tools/competitor_registry.py`: une Locales, Actividades y Locales con licencia del Censo de Locales en registros `Competitor` con el identificador oficial del local. Reglas: coordenadas `0,0` o fuera del entorno UTM 30N de Madrid = no disponibles; licencia ausente = "no disponible"; `has_playroom` solo con evidencia fiable; precios con su periodicidad sin convertirla.
+- `src/tools/source_discovery.py`: convierte una variable pendiente en varias consultas y clasifica cada candidata como `discovered`, `accessible`, `extracted`, `validated` o `rejected`.
+- `src/tools/search_web.py`: corregido `_normalize_url()`, que rompía todas las búsquedas por un argumento inexistente en `urlencode()`.
+- `src/tools/competitor_search.py`: `extract_prices()` público, reutilizando la regex existente y detectando rangos.
+- `data/raw/extract_competitor_registry.py`: script offline que genera el registro y su DataFrame.
+
 ### Corrección de la extracción de precios (20/10/2026)
 - `_extract_evidence_from_page()` usaba `findall` con un solo grupo y luego `price_patterns[0][0]`, que devuelve el primer carácter del importe en vez del número
 - Nueva regex con importes españoles e ingleses, parseo de separadores de miles y decimales

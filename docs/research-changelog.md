@@ -511,7 +511,11 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 - data/sources.json, data/raw/README.md, docs/research-module.md y docs/auditoria-fuentes-datos.md actualizados.
 
 ### Tests
-- tests/test_competitor_registry.py (26), tests/test_source_discovery.py (12) y 3 tests de regresion del buscador.
+- tests/test_competitor_registry.py (30), tests/test_source_discovery.py (13) y 3 tests de regresion del buscador.
+- Suite completa de la rama `fix/respect-search-limits`: **153 tests**.
+
+### Nota de integracion
+- Estos cambios se integraron en la rama `fix/respect-search-limits` (PR #5, abierto contra `dev`), no en un PR aparte.
 
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión

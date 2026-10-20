@@ -58,6 +58,15 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - `ResearchResult`: resultado estructurado con evidencias, competidores y cobertura
 
 ### 6. Registro de competidores (oficial)
+- `src/tools/source_discovery.py` convierte una variable pendiente en varias consultas
+  (literal, "datos abiertos", "estadística" y una por organismo con `site:`), clasifica
+  cada resultado como `discovered`, `accessible`, `extracted`, `validated` o `rejected` con
+  motivo explícito, y distingue páginas informativas de datasets descargables.
+- `ResearchBrief.missing_variables` (opcional) dispara esa pasada en `run_research()`: las
+  candidatas vuelven como `Evidence` con URL, organismo, consulta y estado.
+- Una fuente nunca se presenta como verificada sin haber leído su contenido.
+- Fase documentada y pendiente: renta por sección censal (INE ADRH, operación 30325) en
+  `docs/pendiente-renta-ine.md`.
 - `src/tools/competitor_registry.py` une los tres recursos del Censo de Locales del
   Ayuntamiento (locales, actividades y licencias) en registros de `Competitor` con el
   identificador oficial del local.
@@ -194,19 +203,32 @@ El módulo NO afirma haber ejecutado un flujo de CrewAI cuando realiza la recopi
 src/
 ├── schemas.py              # Modelos Pydantic compartidos
 ├── agents/
-│   └── researcher.py       # Agente CrewAI y run_research()
+│   └── researcher.py       # Agente CrewAI, run_research() y descubrimiento de fuentes
 ├── tools/
 │   ├── search_web.py       # search_web(query, max_results)
 │   ├── read_web_page.py    # read_web_page(url)
-│   └── competitor_search.py # competitor_search(params)
-└── mcp/
-    ├── server.py           # get_area_statistics(area_id, indicators)
-    └── client.py           # connect_mcp() (context manager), list_mcp_tools(), call_area_statistics()
+│   ├── competitor_search.py # competitor_search(params)
+│   ├── competitor_registry.py # Registro de competidores sobre el Censo de Locales
+│   └── source_discovery.py # Descubrimiento de fuentes por variable pendiente
+├── mcp/
+│   ├── server.py           # get_area_statistics(area_id, indicators)
+│   └── client.py           # connect_mcp() (context manager), list_mcp_tools(), call_area_statistics()
 
 data/
 ├── sources.json           # Catálogo de fuentes
+├── processed/             # Artefactos generados (registro de competidores)
 └── raw/
-    └── README.md          # Documentación de datos locales
+    ├── README.md          # Documentación de datos locales
+    ├── extract_censo_locales.py
+    ├── extract_households.py
+    └── extract_competitor_registry.py
+
+docs/
+├── research-module.md
+├── research-implementation.md
+├── research-changelog.md
+├── auditoria-fuentes-datos.md   # Investigación de fuentes por indicador
+└── pendiente-renta-ine.md       # Fase de renta (INE ADRH) documentada, no implementada
 ```
 
 ---
