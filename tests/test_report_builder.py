@@ -138,3 +138,30 @@ def test_build_report_rejects_missing_reference():
     ):
         with pytest.raises(ValueError, match="missing_1"):
             build_report(brief, ResearchResult())
+
+def test_build_report_markdown_includes_research_data():
+    """La investigación llega al documento con sus referencias."""
+    from src.reporting.report_builder import build_report_markdown
+    from src.schemas import ResearchBrief
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+    )
+    evidence = Evidence(
+        evidence_id="price_1",
+        claim="Cuota mensual publicada de 45 euros.",
+        value=45,
+        unit="euros",
+        frequency="monthly",
+        source_url="https://example.com/tarifas",
+    )
+    research = ResearchResult(evidences=[evidence])
+
+    markdown = build_report_markdown(brief, research)
+
+    assert "# Estudio de mercado:" in markdown
+    assert "Cuota mensual publicada de 45 euros." in markdown
+    assert "**Evidencias:** price_1" in markdown
+    assert "https://example.com/tarifas" in markdown

@@ -70,3 +70,18 @@ def build_report(
     validate_report_references(draft, research_result)
 
     return draft
+
+def build_report_markdown(
+    brief: ResearchBrief,
+    research_result: ResearchResult,
+) -> str:
+    """
+    Genera un borrador, valida sus referencias y devuelve su Markdown.
+
+    No escribe archivos ni sustituye la revisión o aprobación humana.
+    """
+    from src.reporting.markdown_renderer import render_report_markdown
+
+    draft = build_report(brief, research_result)
+
+    return render_report_markdown(draft)
