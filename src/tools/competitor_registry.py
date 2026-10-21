@@ -35,7 +35,7 @@ import logging
 import re
 import unicodedata
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
 from urllib.parse import urlsplit
 
 from src.schemas import Competitor, Evidence
@@ -588,6 +588,33 @@ def _street_text(competitor: Competitor) -> str:
     return " ".join(words)
 
 
+_STREET_NUMBER_RE = re.compile(r"(?<!\d)(\d{1,4})\s*([A-Za-z])?\s*$")
+
+
+def _street_number(competitor: Competitor) -> Optional[str]:
+    """House number of the official address, if the registry publishes one.
+
+    The number is the last token before the postal code, for example
+    ``CALLE CERRO DEL CAMPO 44, 28052`` -> ``44``. ``None`` means the
+    registry has no usable number (``S/N``, ``BIS`` without digits...).
+    """
+    if not competitor.location:
+        return None
+    street = competitor.location.split(",")[0].strip()
+    match = _STREET_NUMBER_RE.search(street)
+    return match.group(1) if match else None
+
+
+def _street_without_number(competitor: Competitor) -> str:
+    """Street name without the house number nor the street type."""
+    if not competitor.location:
+        return ""
+    street = competitor.location.split(",")[0]
+    street = _STREET_NUMBER_RE.sub("", street).strip()
+    words = [w for w in street.split() if _normalize_text(w) not in _STREET_TYPE_WORDS]
+    return " ".join(words)
+
+
 def _address_tokens(competitor: Competitor) -> List[str]:
     """Street tokens used to bind a web page to a premises."""
     normalized = _normalize_text(_street_text(competitor))
@@ -601,30 +628,157 @@ def _address_tokens(competitor: Competitor) -> List[str]:
     return [" ".join(short)] if short else []
 
 
+def _number_appears(window: str, number: str) -> bool:
+    """True when ``number`` appears in the window as a street number.
+
+    A range such as ``42-46`` contains 44, so a page that publishes the whole
+    building range is still bound to the premises. Longer numbers (postal
+    codes, phone numbers) are never matched in part.
+    """
+    wanted = int(number)
+    for match in re.finditer(
+        r"(?<!\d)(\d{1,4})(?:\s*[-\u2013\u2014/]\s*(\d{1,4}))?(?!\d)", window
+    ):
+        low = int(match.group(1))
+        high = int(match.group(2)) if match.group(2) else low
+        if low <= wanted <= high:
+            return True
+    return False
+
+
 def _page_matches_address(body_text: str, competitor: Competitor) -> bool:
-    """True when the page text mentions the street of the premises."""
+    """True when the page is tied to the exact official address.
+
+    The street name is not enough: the house number must appear next to it.
+    Otherwise a page for number 46 on the same street would be taken as the
+    premises at number 44. When the registry publishes no number, only the
+    street can be checked.
+    """
     normalized = _normalize_text(body_text)
     tokens = _address_tokens(competitor)
     if not tokens:
         return False
-    return all(token in normalized for token in tokens)
+    if not all(token in normalized for token in tokens):
+        return False
+
+    number = _street_number(competitor)
+    if number is None:
+        return True
+
+    phrase = _normalize_text(_street_without_number(competitor))
+    phrase_start = normalized.find(phrase) if phrase else -1
+    if phrase_start >= 0:
+        start = phrase_start + len(phrase)
+    else:
+        # Abbreviated street ("Cerro Campo 44"): use the last street token.
+        first = min(normalized.find(token) for token in tokens)
+        start = normalized.find(tokens[-1], first) + len(tokens[-1])
+    return _number_appears(normalized[start:start + 45], number)
+
+
+# Negation markers that turn a mention into "the service is not offered".
+_NEGATION_PREFIXES = (
+    "no dispone de", "no disponemos de", "no dispone", "no disponemos",
+    "no cuenta con", "no contamos con", "no cuenta", "no contamos",
+    "no tiene", "no tenemos", "no hay", "no ofrece", "no ofrecemos",
+    "no incluye", "no incluimos", "no existe", "no se ofrece",
+    "no se dispone", "carece de", "carente de", "ausencia de", "falta de",
+    "ningun", "ninguna", "sin",
+)
+
+_NEGATION_SUFFIXES = (
+    "no disponible", "no incluida", "no incluido", "no se ofrece",
+    "no existe", "cerrada", "cerrado", "suspendida", "suspendido",
+)
+
+# If one of these appears between the negation and the term, the negation
+# refers to another element of the sentence ("no hay sauna y sí ludoteca").
+_NEGATION_BREAKERS = (" pero ", " sino ", " aunque ", " y ", ",", ";", ".")
+
+
+def _is_negated(normalized: str, index: int, length: int) -> bool:
+    """True when the mention at ``index`` is explicitly negated."""
+    before = normalized[max(0, index - 45):index]
+    before = (
+        before.replace("sin embargo", " ").replace("sin duda", " ").replace("no solo", " ")
+    )
+    after = normalized[index + length:index + length + 30]
+    for prefix in _NEGATION_PREFIXES:
+        position = before.rfind(prefix)
+        if position < 0:
+            continue
+        # "sin" inside "sinergia" is not a negation.
+        if position > 0 and before[position - 1].isalnum():
+            continue
+        end = position + len(prefix)
+        if end < len(before) and before[end].isalnum():
+            continue
+        between = before[end:]
+        if any(breaker in between for breaker in _NEGATION_BREAKERS):
+            continue
+        # "no dispone de una ludoteca": at most a few words between.
+        if len(between.split()) <= 4:
+            return True
+    return any(suffix in after for suffix in _NEGATION_SUFFIXES)
+
+
+def _normalize_with_offsets(value: str) -> Tuple[str, List[int]]:
+    """Normalize the text and keep, for each output char, its source index.
+
+    Needed to return the real snippet from the original page when accents or
+    line breaks make the normalized text shorter than the original one.
+    """
+    chars: List[str] = []
+    offsets: List[int] = []
+    pending_space = False
+    for position, char in enumerate(value):
+        decomposed = unicodedata.normalize("NFKD", char)
+        base = "".join(c for c in decomposed if not unicodedata.combining(c))
+        for piece in base.lower():
+            if piece.isspace():
+                pending_space = True
+                continue
+            if pending_space and chars:
+                chars.append(" ")
+                offsets.append(position)
+            pending_space = False
+            chars.append(piece)
+            offsets.append(position)
+    return "".join(chars), offsets
 
 
 def detect_playroom(body_text: str) -> Optional[Dict[str, str]]:
     """Look for explicit references to a playroom / children area.
 
     Returns a dict with the matched term and the surrounding fragment, or
-    ``None`` when the page does not mention it (the answer stays *unknown*).
+    ``None`` when there is no positive mention. A negated mention ("no
+    dispone de ludoteca", "sin sala infantil", "ludoteca no disponible")
+    is not evidence that the service is offered, so it never returns a match.
+
+    The answer stays *unknown* rather than *False* because a page can negate
+    the service of another subject (the neighbourhood, another centre), and
+    the module does not guess.
     """
     if not body_text:
         return None
-    normalized = _normalize_text(body_text)
+    normalized, offsets = _normalize_with_offsets(body_text)
     for term in PLAYROOM_TERMS:
-        if term in normalized:
-            index = normalized.find(term)
-            start = max(0, index - 120)
-            end = min(len(body_text), index + len(term) + 120)
-            return {"term": term, "fragment": body_text[start:end].strip()}
+        needle = _normalize_text(term)
+        if not needle:
+            continue
+        start = 0
+        while True:
+            index = normalized.find(needle, start)
+            if index < 0:
+                break
+            start = index + len(needle)
+            if _is_negated(normalized, index, len(needle)):
+                continue
+            source_start = offsets[index]
+            source_end = offsets[min(index + len(needle) - 1, len(offsets) - 1)] + 1
+            low = max(0, source_start - 120)
+            high = min(len(body_text), source_end + 120)
+            return {"term": term, "fragment": body_text[low:high].strip()}
     return None
 
 

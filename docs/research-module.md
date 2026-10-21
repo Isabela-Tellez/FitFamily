@@ -57,7 +57,7 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - `ResearchBrief`: encargo de investigación con tipo, ubicación, área y preguntas
 - `ResearchResult`: resultado estructurado con evidencias, competidores y cobertura
 
-### 6. Registro de competidores (oficial)
+### 6. Descubrimiento de fuentes
 - `src/tools/source_discovery.py` convierte una variable pendiente en varias consultas
   (literal, "datos abiertos", "estadística" y una por organismo con `site:`), clasifica
   cada resultado como `discovered`, `accessible`, `extracted`, `validated` o `rejected` con
@@ -67,6 +67,7 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - Una fuente nunca se presenta como verificada sin haber leído su contenido.
 - Fase documentada y pendiente: renta por sección censal (INE ADRH, operación 30325) en
   `docs/pendiente-renta-ine.md`.
+### 7. Registro de competidores (oficial)
 - `src/tools/competitor_registry.py` une los tres recursos del Censo de Locales del
   Ayuntamiento (locales, actividades y licencias) en registros de `Competitor` con el
   identificador oficial del local.
@@ -75,8 +76,12 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
 - Coordenadas `0,0` o fuera del entorno UTM 30N de Madrid se tratan como **no
   disponibles** y no se usan para distancias ni clustering.
 - Una licencia ausente significa "no hay información", nunca "denegada".
+- La web del establecimiento solo se vincula si coinciden la calle **y el número**
+  oficial. Un rango publicado que incluya el número (`42-46` para el 44) se acepta; si
+  el censo no publica número, solo se puede comprobar la calle.
 - `has_playroom` es `True`/`False` solo con evidencia fiable; si no, queda `None`
-  (desconocido).
+  (desconocido). Una mención negada ("no dispone de ludoteca", "sin sala infantil",
+  "ludoteca no disponible") no cuenta como oferta y **no** se registra como `True`.
 - `to_dataframe()` produce el DataFrame que consume el módulo de análisis de mercado
   (`gym_name`, `monthly_price_eur`, `has_playroom` y contexto adicional).
 - Script reproducible: `python data/raw/extract_competitor_registry.py`.

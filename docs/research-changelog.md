@@ -474,6 +474,24 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 103 tests pasando.
 
+## Versión 1.2.1 - Correcciones de la revisión (20/10/2026)
+
+### Ludoteca negada
+- `detect_playroom()` daba por hecho el servicio cuando la página decía "no dispone de
+  ludoteca", "sin sala infantil" o "ludoteca no disponible". Ahora las menciones negadas
+  se descartan (con corte de cláusula: una negación de otro servicio no oculta una
+  ludoteca real) y el valor queda `None`, nunca `True`.
+
+### Dirección exacta
+- `_page_matches_address()` comprobaba solo la calle, así que una página del número 46
+  podía aportar precios al local del número 44. Ahora exige también el número oficial
+  junto a la calle; se acepta un rango que lo incluya (`42-46` -> 44) y, si el censo no
+  publica número, se mantiene la comprobación por calle.
+
+### Tests
+- 6 tests nuevos (negaciones, corte de cláusula, otro número, sin número y rango).
+- Suite completa: **159 tests**.
+
 ## Versión 1.2.0 — Registro de competidores oficial, busquador de fuentes reparado y descubrimiento de datasets (20/10/2026)
 
 ### Hallazgo critico: el buscador de fuentes no funcionaba

@@ -192,6 +192,25 @@ def test_playroom_detection_returns_true_false_or_unknown():
     assert detect_playroom("Gimnasio con salas de máquinas y sauna") is None
 
 
+def test_a_negated_playroom_is_not_a_positive_mention():
+    """'No dispone de ludoteca' must never be read as offering the service."""
+    assert detect_playroom("El gimnasio no dispone de ludoteca") is None
+    assert detect_playroom("No contamos con zona infantil") is None
+    assert detect_playroom("No hay sala infantil en el centro") is None
+    assert detect_playroom("Sin ludoteca") is None
+    assert detect_playroom("Ludoteca no disponible") is None
+    assert detect_playroom("Carece de area de juegos") is None
+
+
+def test_the_negation_stops_at_the_end_of_the_clause():
+    """A negation of another service does not hide a real playroom."""
+    assert detect_playroom("No disponemos de sauna, pero tenemos ludoteca")
+    assert detect_playroom("Sin embargo, contamos con ludoteca infantil")
+    assert detect_playroom("No solo hay ludoteca: también zona infantil")
+    # 'sin' inside another word is not a negation.
+    assert detect_playroom("Sinergia con ludoteca para socios")
+
+
 def test_has_playroom_is_unknown_without_evidence():
     registry = _registry()
     assert all(c.has_playroom is None for c in registry["competitors"])
@@ -247,6 +266,77 @@ def test_web_enrichment_rejects_a_page_from_another_establishment():
                                           read_callable=fake_read)
     assert enriched.tariffs == []
     assert enriched.has_playroom is None
+
+
+def test_web_enrichment_rejects_another_number_on_the_same_street():
+    """Number 46 is a different establishment than number 44."""
+    competitor = _registry()["competitors"][0]
+    body = ("Gimnasio Ejemplo, calle Cerro del Campo 46, El Cañaveral. "
+            "Cuota mensual 39,90 euros.")
+
+    def fake_search(query, max_results=4):
+        return [_FakeResult("https://otro-numero.example")]
+
+    def fake_read(url):
+        return _FakePage(body)
+
+    enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
+                                          read_callable=fake_read)
+    assert enriched.tariffs == []
+    assert not [e for e in enriched.evidences if e.evidence_id.startswith("web_price_")]
+
+
+def test_web_enrichment_rejects_a_street_without_house_number():
+    """Without the number the page cannot be tied to the premises."""
+    competitor = _registry()["competitors"][0]
+    body = ("Gimnasio Ejemplo, calle Cerro del Campo, El Cañaveral. "
+            "Cuota mensual 39,90 euros.")
+
+    def fake_search(query, max_results=4):
+        return [_FakeResult("https://sin-numero.example")]
+
+    def fake_read(url):
+        return _FakePage(body)
+
+    enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
+                                          read_callable=fake_read)
+    assert enriched.tariffs == []
+
+
+def test_web_enrichment_accepts_a_range_that_includes_the_premises():
+    """A page publishing '42-46' covers the premises at number 44."""
+    competitor = _registry()["competitors"][0]
+    body = ("Gimnasio Ejemplo, calle Cerro del Campo 42-46, El Cañaveral. "
+            "Cuota mensual 49,90 euros.")
+
+    def fake_search(query, max_results=4):
+        return [_FakeResult("https://gym.example")]
+
+    def fake_read(url):
+        return _FakePage(body)
+
+    enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
+                                          read_callable=fake_read)
+    assert [t for t in enriched.tariffs if t.get("frequency") == "monthly"]
+
+
+def test_a_negated_playroom_on_the_page_does_not_mark_the_service():
+    competitor = _registry()["competitors"][0]
+    body = ("Gimnasio Ejemplo, calle Cerro del Campo 44, El Cañaveral. "
+            "Cuota mensual 49,90 euros. No dispone de ludoteca.")
+
+    def fake_search(query, max_results=4):
+        return [_FakeResult("https://gym.example")]
+
+    def fake_read(url):
+        return _FakePage(body)
+
+    enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
+                                          read_callable=fake_read)
+    assert enriched.has_playroom is None
+    assert not [e for e in enriched.evidences if e.evidence_id.startswith("web_playroom_")]
+    # The price is still usable: the page is the right establishment.
+    assert [t for t in enriched.tariffs if t.get("frequency") == "monthly"]
 
 
 # --- compatibilidad con los agentes existentes ---
