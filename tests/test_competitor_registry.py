@@ -4,6 +4,9 @@ All tests use inline CSV samples: no network access and no cached files.
 """
 import sys
 import os
+
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.schemas import Competitor
@@ -75,7 +78,6 @@ def test_registry_ignores_other_barrios_and_closed_premises():
 
 
 def test_registry_rejects_unknown_area():
-    import pytest
     with pytest.raises(ValueError, match="sin nombre oficial"):
         build_competitor_registry(area_id="nowhere", locales_rows=read_census_rows(LOCALES_CSV))
 
@@ -128,6 +130,10 @@ def test_zero_coordinates_are_treated_as_unavailable():
 
 
 def test_valid_coordinates_are_converted_to_wgs84():
+    pytest.importorskip(
+        "pyproj",
+        reason="pyproj es opcional; sin él las coordenadas quedan sin convertir",
+    )
     registry = _registry()
     competitor = registry["competitors"][0]
     assert competitor.latitude is not None
