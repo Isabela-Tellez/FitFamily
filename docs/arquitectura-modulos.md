@@ -19,7 +19,7 @@ MCP (proceso local)
    python -m src.mcp.client ──► connect_mcp() / list_mcp_tools() / call_area_statistics()
 ```
 
-El pipeline de investigación y el borrador están conectados. El análisis de mercado y la exportación del informe todavía no forman parte de un flujo automático.
+El borrador puede consumir directamente un `ResearchResult`, pero no hay un orquestador que encadene investigación, análisis y salida. El análisis de mercado y la exportación del informe todavía no forman parte de un flujo automático.
 
 ## Módulos implementados
 
