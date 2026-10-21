@@ -282,8 +282,9 @@ class ResearchResult(BaseModel):
         default_factory=list,
         description=(
             "All evidence gathered during the investigation. It already includes the "
-            "evidences attached to each competitor, so consumers must not append "
-            "competitor.evidences again or they will be counted twice."
+            "evidences attached to each competitor. A consumer that also iterates "
+            "competitor.evidences (as the writer does defensively) must deduplicate by "
+            "evidence id or source URL to avoid counting them twice."
         ),
     )
     competitors: List[Competitor] = Field(

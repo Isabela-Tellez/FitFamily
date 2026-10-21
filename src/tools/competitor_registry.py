@@ -77,7 +77,6 @@ PLAYROOM_TERMS = (
     "espacio infantil",
     "area infantil",
     "area de juegos",
-    "parque infantil",
     "childcare",
     "kids club",
     "club infantil",
@@ -222,13 +221,16 @@ def read_census_rows(source: Any) -> Iterator[Dict[str, str]]:
         return
     mapping = {}
     for name in reader.fieldnames:
-        clean = (name or "").lstrip("﻿").strip().strip('"')
+        clean = (name or "").lstrip("﻿").strip()
         mapping[clean] = name
     for raw in reader:
         row = {}
         for clean, original in mapping.items():
             value = raw.get(original)
-            row[clean] = (value or "").strip().strip('"') if isinstance(value, str) else ""
+            # csv already removes the outer quotes. Stripping '"' here would
+            # destroy legitimate quotes inside a value, such as the official
+            # street name 'MARIO MORENO "CANTINFLAS"'.
+            row[clean] = value.strip() if isinstance(value, str) else ""
         yield row
 
 
@@ -361,17 +363,35 @@ def parse_activity_records(rows: Iterable[Dict[str, str]]) -> List[Dict[str, str
 
 
 def parse_license_records(rows: Iterable[Dict[str, str]]) -> Dict[str, Dict[str, str]]:
-    """Extract the licence information of every local, keyed by local id."""
+    """Extract the licence information of every local, keyed by local id.
+
+    A premises can have several licence records. Keeping the last row of the
+    file would show an arbitrary one, sometimes an old denied or ineffective
+    licence. The most recent reference year (and, inside it, the most recent
+    date) is kept instead. This is a presentation rule: it does not turn the
+    licence into proof that the business is open or closed.
+    """
     records: Dict[str, Dict[str, str]] = {}
+    keys: Dict[str, tuple] = {}
     for row in rows:
         local_id = row.get("id_local", "")
         if not local_id:
             continue
+        date = (row.get("Fecha_Dec_Lic", "") or "").strip()
+        reference = row.get("ref_licencia", "") or ""
+        match = re.search(r"/(\d{4})/", reference)
+        year = int(match.group(1)) if match else 0
+        if not year and re.match(r"\d{4}", date):
+            year = int(date[:4])
+        key = (year, date)
+        if local_id in records and key < keys[local_id]:
+            continue
+        keys[local_id] = key
         records[local_id] = {
-            "ref_licencia": row.get("ref_licencia", ""),
+            "ref_licencia": reference,
             "tipo_licencia": row.get("desc_tipo_licencia", ""),
             "situacion_licencia": row.get("desc_tipo_situacion_licencia", ""),
-            "fecha_licencia": row.get("Fecha_Dec_Lic", ""),
+            "fecha_licencia": date,
         }
     return records
 
@@ -532,7 +552,8 @@ def build_competitor_registry(
                 geo_scope=barrio,
                 limitations=(
                     "Una situación administrativa no acredita que el negocio esté abierto ni "
-                    "cerrado, ni que la actividad esté en curso."
+                    "cerrado, ni que la actividad esté en curso. Si el local tiene varias "
+                    "licencias, se muestra la referencia más reciente."
                 ),
             ))
         else:
@@ -700,6 +721,33 @@ _NEGATION_PREFIXES = (
     "ningun", "ninguna", "sin",
 )
 
+# Identity negations ("no es una ludoteca") are checked separately and only
+# accept a very short distance to the term. Otherwise a sentence such as
+# "no es un secreto que tenemos ludoteca" would be read as a negation.
+_IDENTITY_NEGATION_PREFIXES = (
+    "no es una", "no es un", "no es la", "no es el",
+    "no somos una", "no somos un",
+    "no se trata de una", "no se trata de un",
+    "no constituye una", "no constituye un",
+)
+
+# Mentions of a playroom that belong to another business or to the public
+# administration, not to the establishment being analysed.
+_OTHER_BUSINESS_MARKERS = (
+    "de al lado", "otro gimnasio", "otra empresa", "otro centro",
+    "otros gimnasios", "otras empresas", "otros centros", "enfrente",
+    "la competencia", "a diferencia de", "gimnasio cercano", "centro cercano",
+)
+
+_SELF_MARKERS = (
+    "nuestro", "nuestra", "nuestros", "nuestras", "nosotros", "nosotras",
+    "contamos", "disponemos", "tenemos", "ofrecemos", "incluimos",
+)
+
+_PUBLIC_PLAYROOM_MARKERS = (
+    "municipal", "publica", "publico", "del ayuntamiento", "de la junta",
+)
+
 _NEGATION_SUFFIXES = (
     "no disponible", "no incluida", "no incluido", "no se ofrece",
     "no existe", "cerrada", "cerrado", "suspendida", "suspendido",
@@ -714,7 +762,18 @@ def _is_negated(normalized: str, index: int, length: int) -> bool:
     """True when the mention at ``index`` is explicitly negated."""
     before = normalized[max(0, index - 70):index]
     before = (
-        before.replace("sin embargo", " ").replace("sin duda", " ").replace("no solo", " ")
+        before.replace("sin embargo", " ")
+        .replace("sin duda", " ")
+        .replace("no es solo", " ")
+        .replace("no es solamente", " ")
+        .replace("no es unicamente", " ")
+        .replace("no es una simple", " ")
+        .replace("no es un simple", " ")
+        .replace("no somos una simple", " ")
+        .replace("no somos un simple", " ")
+        .replace("no se trata de una simple", " ")
+        .replace("no se trata de un simple", " ")
+        .replace("no solo", " ")
     )
     after = normalized[index + length:index + length + 30]
     for prefix in _NEGATION_PREFIXES:
@@ -733,7 +792,40 @@ def _is_negated(normalized: str, index: int, length: int) -> bool:
         # "no dispone de una ludoteca": at most a few words between.
         if len(between.split()) <= 6:
             return True
+    for prefix in _IDENTITY_NEGATION_PREFIXES:
+        position = before.rfind(prefix)
+        if position < 0:
+            continue
+        if position > 0 and before[position - 1].isalnum():
+            continue
+        end = position + len(prefix)
+        if end < len(before) and before[end].isalnum():
+            continue
+        between = before[end:]
+        if any(breaker in between for breaker in _NEGATION_BREAKERS):
+            continue
+        # Only an article or a short adjective can sit between the identity
+        # negation and the term.
+        if len(between.split()) <= 2:
+            return True
     return any(suffix in after for suffix in _NEGATION_SUFFIXES)
+
+
+def _refers_to_another_business(normalized: str, index: int, length: int) -> bool:
+    """True when the mention belongs to another business or the administration.
+
+    The window before the term usually carries its subject. When it names
+    another establishment and the sentence does not speak in first person,
+    the mention is not evidence about the competitor. A public playroom
+    ("ludoteca municipal") is not the establishment's service either.
+    """
+    before = normalized[max(0, index - 90):index]
+    after = normalized[index + length:index + length + 30]
+    if any(marker in after for marker in _PUBLIC_PLAYROOM_MARKERS):
+        return True
+    if not any(marker in before for marker in _OTHER_BUSINESS_MARKERS):
+        return False
+    return not any(marker in before for marker in _SELF_MARKERS)
 
 
 def _normalize_with_offsets(value: str) -> Tuple[str, List[int]]:
@@ -771,7 +863,8 @@ def detect_playroom(body_text: str) -> Optional[Dict[str, str]]:
 
     The answer stays *unknown* rather than *False* because a page can negate
     the service of another subject (the neighbourhood, another centre), and
-    the module does not guess.
+    the module does not guess. Mentions about another business or about a
+    public playroom ("ludoteca municipal") are not evidence either.
     """
     if not body_text:
         return None
@@ -787,6 +880,8 @@ def detect_playroom(body_text: str) -> Optional[Dict[str, str]]:
                 break
             start = index + len(needle)
             if _is_negated(normalized, index, len(needle)):
+                continue
+            if _refers_to_another_business(normalized, index, len(needle)):
                 continue
             source_start = offsets[index]
             source_end = offsets[min(index + len(needle) - 1, len(offsets) - 1)] + 1

@@ -44,6 +44,7 @@ from src.schemas import (
 from src.tools.search_web import search_web
 from src.tools.read_web_page import read_web_page
 from src.tools.competitor_search import competitor_search
+from src.tools.evidence_ids import stable_evidence_id
 
 logger = logging.getLogger(__name__)
 
@@ -184,14 +185,20 @@ def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
     """Look for the sources that could provide the variables the brief misses.
 
     Each candidate is returned as an :class:`Evidence` with its URL, the
-    organism and the reason why it was kept or discarded, so the result is
-    traceable and no source is presented as verified without having been read.
+    organism and the reason why it was kept or discarded. A failed query has no
+    URL but is still recorded, so network errors and empty responses remain
+    traceable instead of silently disappearing.
     """
     from src.tools.source_discovery import discover_sources
 
     max_results = resolve_max_results(brief.search_limits)
     evidences: List[Evidence] = []
-    for variable in dict.fromkeys(brief.missing_variables):
+    seen_variables = set()
+    for variable in brief.missing_variables:
+        normalized_variable = " ".join(variable.lower().split())
+        if not normalized_variable or normalized_variable in seen_variables:
+            continue
+        seen_variables.add(normalized_variable)
         slug = _variable_slug(variable)
         candidates = discover_sources(
             variable,
@@ -199,17 +206,21 @@ def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
             max_results_per_query=max_results,
         )
         for index, candidate in enumerate(candidates):
-            if not candidate.get("url"):
-                continue
+            url = candidate.get("url")
             state = candidate.get("state", "discovered")
+            identifier = url or candidate.get("query") or f"sin-fuente-{index}"
             evidences.append(Evidence(
-                evidence_id=f"source_{slug}_{index:03d}",
+                evidence_id=stable_evidence_id(
+                    f"source_{slug}",
+                    normalized_variable,
+                    identifier,
+                ),
                 claim=(
                     f"Fuente localizada para la variable '{variable}': "
-                    f"{candidate.get('title') or candidate['url']} "
+                    f"{candidate.get('title') or url or candidate.get('query') or 'sin fuente'} "
                     f"[{state}] {candidate.get('reason', '')}".strip()
                 ),
-                source_url=candidate.get("url"),
+                source_url=url,
                 snippet=(
                     f"organismo: {candidate.get('organism')} | consulta: "
                     f"{candidate.get('query')} | dataset: {candidate.get('is_dataset')}"
@@ -218,7 +229,8 @@ def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
                     "Resultado de la busqueda automatica de fuentes. El estado indica "
                     "si la fuente solo fue localizada, si se pudo acceder, si se "
                     "extrajeron datos o si se descarto. Una fuente no se da por "
-                    "verificada sin haber leido su contenido."
+                    "verificada sin haber leido su contenido. Si no hay URL, la "
+                    "consulta no devolvio resultados o fallo la red."
                 ),
             ))
     return evidences
@@ -292,7 +304,10 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
             from src.schemas import Evidence as E
             for i, sr in enumerate(search_results):
                 ev = E(
-                    evidence_id=f"search_{i:03d}",
+                    evidence_id=stable_evidence_id(
+                        "search",
+                        sr.url or f"result-{i}",
+                    ),
                     claim=f"Search result: {sr.title or 'Untitled'}",
                     source_url=sr.url,
                     snippet=sr.snippet or "",

@@ -83,6 +83,19 @@ def test_check_variable_requires_the_key_terms():
     assert "no menciona" in ko["reason"]
     # Whole words: "rentabilidad" is not the variable "renta".
     assert check_variable("Informe de rentabilidad del sector", "renta media")["covered"] is False
+    # A partial match ("barrio" without "renta") is not enough.
+    assert check_variable("Rentabilidad y barrios de Madrid", "renta media por barrio")["covered"] is False
+
+
+def test_check_variable_handles_accents_and_plurals():
+    assert check_variable("Población por barrios", "poblacion por barrio")["covered"] is True
+    assert check_variable("Rentas medias por barrios", "renta media por barrio")["covered"] is True
+    assert check_variable(
+        "Secciones censales y población", "poblacion por seccion censal"
+    )["covered"] is True
+    assert check_variable(
+        "Renta neta media por sección censal", "renta neta media por seccion censal"
+    )["covered"] is True
 
 
 def test_discover_sources_marks_states_and_keeps_traceability():
@@ -252,3 +265,112 @@ def test_discovery_respects_brief_limits_and_produces_stable_ids():
     assert captured["max_results"] == 3
     assert [e.evidence_id for e in first] == [e.evidence_id for e in second]
     assert first[0].evidence_id.startswith("source_poblacion_por_barrio_")
+
+
+def test_same_slug_variables_get_distinct_ids_and_case_duplicates_are_skipped():
+    """Two variables can share a slug; their ids must not collide."""
+    from src.schemas import ResearchBrief
+    from src.agents.researcher import discover_sources_for_brief
+
+    candidates = [{
+        "url": "https://datos.madrid.es/dataset/300557-0-poblacion-distrito-barrio",
+        "title": "Poblacion por distrito y barrio",
+        "query": "renta media",
+        "organism": "datos.madrid.es",
+        "variable": "renta media",
+        "state": "validated",
+        "reason": "Contiene los terminos clave de la variable.",
+        "is_dataset": True,
+        "matched_terms": ["renta"],
+    }]
+    calls = []
+
+    def fake_discover(variable, area=None, max_results_per_query=None):
+        calls.append(variable)
+        return candidates
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+        missing_variables=["Renta media", "renta-media", "renta media"],
+    )
+    with patch("src.tools.source_discovery.discover_sources", side_effect=fake_discover):
+        first = discover_sources_for_brief(brief)
+        second = discover_sources_for_brief(brief)
+
+    # "renta media" is the same variable as "Renta media", so it is not
+    # searched twice; "renta-media" is a different spelling and is kept.
+    assert calls == ["Renta media", "renta-media", "Renta media", "renta-media"]
+    assert len(first) == len(second) == 2
+    assert len({e.evidence_id for e in first}) == 2
+    assert [e.evidence_id for e in first] == [e.evidence_id for e in second]
+    assert all(e.evidence_id.startswith("source_renta_media_") for e in first)
+
+
+def test_end_to_end_discovery_records_validated_inaccessible_and_failed_sources():
+    """run_research -> discover_sources -> evidences, without network access."""
+    from src.schemas import ResearchBrief
+    from src.agents.researcher import run_research
+
+    valid_url = "https://datos.madrid.es/dataset/renta-barrio"
+    inaccessible_url = "https://datos.madrid.es/dataset/renta-caida"
+    limits = []
+
+    def fake_source_search(query, max_results=5):
+        limits.append(max_results)
+        if query.startswith("datos abiertos"):
+            raise RuntimeError("network down")
+        if query.startswith("renta media por barrio"):
+            return [
+                _Result(valid_url, "Renta media por barrio"),
+                _Result(inaccessible_url, "Renta caida"),
+            ]
+        return []
+
+    def fake_read(url):
+        if url == inaccessible_url:
+            raise RuntimeError("HTTP 503")
+        return _Page(
+            "Renta media por barrio de El Cañaveral. Barrio analizado: 28.000 euros."
+        )
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+        missing_variables=["renta media por barrio"],
+        search_limits={"max_results": 2},
+    )
+    with patch("src.agents.researcher.search_web", return_value=[]), \
+         patch(
+             "src.agents.researcher.competitor_search",
+             return_value={"competitors": [], "evidences": []},
+         ), \
+         patch("src.tools.source_discovery.search_web", side_effect=fake_source_search), \
+         patch("src.tools.read_web_page.read_web_page", side_effect=fake_read):
+        first = run_research(brief)
+        second = run_research(brief)
+
+    sources = [e for e in first.evidences if e.evidence_id.startswith("source_")]
+    ids = [e.evidence_id for e in sources]
+    second_ids = [
+        e.evidence_id for e in second.evidences
+        if e.evidence_id.startswith("source_")
+    ]
+    assert limits and all(limit == 2 for limit in limits)
+    assert len(ids) == len(set(ids))
+    assert ids == second_ids
+
+    by_url = {e.source_url: e for e in sources if e.source_url}
+    assert "validated" in by_url[valid_url].claim
+    assert "No se pudo acceder" in by_url[inaccessible_url].claim
+    assert by_url[inaccessible_url].limitations
+
+    without_url = [e for e in sources if e.source_url is None]
+    assert any("network down" in e.claim for e in without_url)
+    assert any("no devolvio resultados" in e.claim for e in without_url)
+    assert all(
+        e.source_url is None or e.source_url.startswith("https://")
+        for e in sources
+    )

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-20T17:07:30.289573+00:00",
+  "generated_at": "2026-10-21T08:14:31.943655+00:00",
   "source": "Censo de Locales y Actividades del Ayuntamiento de Madrid",
   "license": "CC BY 4.0 - Ayuntamiento de Madrid",
   "competitors": [
     {
       "identifier": "270562257",
       "name": "PISCINA C/ MARIO  MORENO CANTINFLAS",
-      "location": "CALLE MARIO MORENO \"CANTINFLAS 64, 28052",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 64, 28052",
       "services": [
         "Piscinas de comunidades de vecinos"
       ],
@@ -14,13 +14,13 @@
       "evidences": [
         {
           "evidence_id": "census_local_270562257",
-          "claim": "Local 270562257 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS 64, 28052'.",
+          "claim": "Local 270562257 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 64, 28052'.",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
-          "snippet": "rotulo=PISCINA C/ MARIO  MORENO CANTINFLAS | via=MARIO MORENO \"CANTINFLAS | num=000064 | cp=28052 | utm=(0.0, 0.0)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "snippet": "rotulo=PISCINA C/ MARIO  MORENO CANTINFLAS | via=MARIO MORENO \"CANTINFLAS\" | num=000064 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -32,7 +32,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -46,7 +46,7 @@
           "snippet": "ref=500/2016/12050 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2016-09-06 01:00:00",
           "date_observed": "2016-09-06 01:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -58,7 +58,7 @@
       "license_date": "2016-09-06 01:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270567440",
@@ -77,7 +77,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=PISCINA COMUNIDAD PROPIETARIOS VICTORIANO GRANIZO 1-35 | via=CONCEJAL VICTORINO GRANIZO | num=000001 | cp=28052 | utm=(0.0, 0.0)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -89,7 +89,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -103,7 +103,7 @@
           "snippet": "ref=500/2018/09274 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2018-08-24 01:00:00",
           "date_observed": "2018-08-24 01:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -115,12 +115,12 @@
       "license_date": "2018-08-24 01:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270571346",
       "name": "PISCINA COM PROP RESIDENCIAL BREMEN",
-      "location": "CALLE MARIO MORENO \"CANTINFLAS 28, 28052",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 28, 28052",
       "services": [
         "Piscinas de comunidades de vecinos"
       ],
@@ -128,13 +128,13 @@
       "evidences": [
         {
           "evidence_id": "census_local_270571346",
-          "claim": "Local 270571346 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS 28, 28052'.",
+          "claim": "Local 270571346 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 28, 28052'.",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
-          "snippet": "rotulo=PISCINA COM PROP RESIDENCIAL BREMEN | via=MARIO MORENO \"CANTINFLAS | num=000028 | cp=28052 | utm=(0.0, 0.0)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "snippet": "rotulo=PISCINA COM PROP RESIDENCIAL BREMEN | via=MARIO MORENO \"CANTINFLAS\" | num=000028 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -146,7 +146,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -160,7 +160,7 @@
           "snippet": "ref=500/2020/00694 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2020-01-29 00:00:00",
           "date_observed": "2020-01-29 00:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -172,7 +172,7 @@
       "license_date": "2020-01-29 00:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270574138",
@@ -191,7 +191,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=S/R | via=CAÑADA DE VICALVARO A SAN FERNANDO | num=000226 | cp=28052 | utm=(453068.21088307496, 4473238.26453264)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -203,33 +203,33 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
         {
           "evidence_id": "census_license_270574138",
-          "claim": "Licencia de actividad: Declaración Responsable — En tramitación (ref. 500/2021/06751), fecha 2021-09-17 01:00:00",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2026/04718)",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
-          "snippet": "ref=500/2021/06751 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2021-09-17 01:00:00",
-          "date_observed": "2021-09-17 01:00:00",
+          "snippet": "ref=350/2026/04718 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
       "latitude": 40.4084377,
       "longitude": -3.5531202,
       "census_section": "19055",
-      "license_status": "En tramitación",
+      "license_status": "Presentada (pendiente de comprobación)",
       "license_type": "Declaración Responsable",
-      "license_date": "2021-09-17 01:00:00",
+      "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270575273",
@@ -248,7 +248,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=DIVERMUN2 C.B | via=ALTO DEL ESPARRAGAL | num=000202 | cp=28052 | utm=(451988.94406217017, 4472629.974058928)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -260,33 +260,33 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "932001=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES CON COCINA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
         {
           "evidence_id": "census_license_270575273",
-          "claim": "Licencia de actividad: Declaración Responsable — En tramitación (ref. 500/2022/01593), fecha 2022-02-28 00:00:00",
+          "claim": "Licencia de actividad: Transmisión de licencia Urbanística — Transmisión de Licencia Denegada (ref. 350/2026/10333)",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
-          "snippet": "ref=500/2022/01593 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2022-02-28 00:00:00",
-          "date_observed": "2022-02-28 00:00:00",
+          "snippet": "ref=350/2026/10333 | tipo=Transmisión de licencia Urbanística | situacion=Transmisión de Licencia Denegada | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
       "latitude": 40.4028963,
       "longitude": -3.5657936,
       "census_section": "19052",
-      "license_status": "En tramitación",
-      "license_type": "Declaración Responsable",
-      "license_date": "2022-02-28 00:00:00",
+      "license_status": "Transmisión de Licencia Denegada",
+      "license_type": "Transmisión de licencia Urbanística",
+      "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270576853",
@@ -305,7 +305,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=MI LUGAR FAVORITO (CENTRO DE REGREO INFANTIL) | via=FRANCISCO GRANDE COVIAN | num=000016 | cp=28052 | utm=(452109.6248658027, 4472543.033508594)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -317,33 +317,33 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "932002=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES SIN COCINA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
         {
           "evidence_id": "census_license_270576853",
-          "claim": "Licencia de actividad: tipo no indicado — En tramitación (ref. 500/2022/06998), fecha 2022-09-15 00:00:00",
+          "claim": "Licencia de actividad: Declaración Responsable — Ineficaz o sin efectos (ref. 350/2025/00827), fecha 2025-03-17 00:00:00",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
-          "snippet": "ref=500/2022/06998 | tipo= | situacion=En tramitación | fecha=2022-09-15 00:00:00",
-          "date_observed": "2022-09-15 00:00:00",
+          "snippet": "ref=350/2025/00827 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2025-03-17 00:00:00",
+          "date_observed": "2025-03-17 00:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
       "latitude": 40.40212,
       "longitude": -3.5643649,
       "census_section": "19058",
-      "license_status": "En tramitación",
-      "license_type": null,
-      "license_date": "2022-09-15 00:00:00",
+      "license_status": "Ineficaz o sin efectos",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-03-17 00:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270576995",
@@ -354,36 +354,7 @@
         "Actividades de los gimnasios",
         "DESPACHO DE FISIOTERAPEUTAS"
       ],
-      "tariffs": [
-        {
-          "value": 36.99,
-          "unit": "euros",
-          "condition": "Centro One More Cañaveral - Vicálvaro | fruta de esta y otras 2023 opciones de bienestar desde solo 36,99 € al mes Comprueba si tienes acceso Explora el plan Silver Má",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/"
-        },
-        {
-          "value": 22.99,
-          "unit": "euros",
-          "condition": "Centro One More Cañaveral - Vicálvaro | ejor se adapta a tu estilo de vida y a tu presupuesto Basic 22,99 € al mes Más de 1118 gimnasios y estudios 54 apps de bienesta",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/"
-        },
-        {
-          "value": 66.99,
-          "unit": "euros",
-          "condition": "Centro One More Cañaveral - Vicálvaro | Más de 2023 gimnasios y estudios 56 apps de bienestar Gold 66,99 € al mes Más de 3910 gimnasios y estudios 58 apps de bienesta",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/"
-        },
-        {
-          "value": 109.99,
-          "unit": "euros",
-          "condition": "Centro One More Cañaveral - Vicálvaro | bike • Step aerobics • Zumba + 43 Desde el plan Platinum • 109,99 € al mes Exclusivo en Wellhub O2 Centro Wellness Manuel Becer",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/"
-        }
-      ],
+      "tariffs": [],
       "evidences": [
         {
           "evidence_id": "census_local_270576995",
@@ -393,7 +364,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=GIMNASIO SERENAL | via=ALTO DEL ESPARRAGAL | num=000204 | cp=28052 | utm=(451950.46883498394, 4472652.515471834)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -405,81 +376,33 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "869008=DESPACHO DE FISIOTERAPEUTAS; 855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA); 931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
         {
           "evidence_id": "census_license_270576995",
-          "claim": "Licencia de actividad: tipo no indicado — Denegada (ref. 500/2022/06773), fecha 2023-02-22 00:00:00",
+          "claim": "Licencia de actividad: Declaración Responsable — Inspeccionada favorable (ref. 350/2024/28192), fecha 2025-08-26 00:00:00",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
-          "snippet": "ref=500/2022/06773 | tipo= | situacion=Denegada | fecha=2023-02-22 00:00:00",
-          "date_observed": "2023-02-22 00:00:00",
+          "snippet": "ref=350/2024/28192 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-08-26 00:00:00",
+          "date_observed": "2025-08-26 00:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
-        },
-        {
-          "evidence_id": "web_price_270576995_3",
-          "claim": "Precio publicado en la web del establecimiento: 36.99 euros (monthly)",
-          "value": 36.99,
-          "unit": "euros",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/",
-          "snippet": "Centro One More Cañaveral - Vicálvaro | fruta de esta y otras 2023 opciones de bienestar desde solo 36,99 € al mes Comprueba si tienes acceso Explora el plan Silver Má",
-          "date_observed": "2026-10-20T17:06:56.987457+00:00",
-          "geo_scope": "28052",
-          "limitations": "Precio anunciado por el establecimiento en su web. No es un precio registrado ni verificado con factura. La periodicidad se transcribe tal como aparece; no se convierte a otra periodicidad."
-        },
-        {
-          "evidence_id": "web_price_270576995_4",
-          "claim": "Precio publicado en la web del establecimiento: 22.99 euros (monthly)",
-          "value": 22.99,
-          "unit": "euros",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/",
-          "snippet": "Centro One More Cañaveral - Vicálvaro | ejor se adapta a tu estilo de vida y a tu presupuesto Basic 22,99 € al mes Más de 1118 gimnasios y estudios 54 apps de bienesta",
-          "date_observed": "2026-10-20T17:06:56.987457+00:00",
-          "geo_scope": "28052",
-          "limitations": "Precio anunciado por el establecimiento en su web. No es un precio registrado ni verificado con factura. La periodicidad se transcribe tal como aparece; no se convierte a otra periodicidad."
-        },
-        {
-          "evidence_id": "web_price_270576995_5",
-          "claim": "Precio publicado en la web del establecimiento: 66.99 euros (monthly)",
-          "value": 66.99,
-          "unit": "euros",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/",
-          "snippet": "Centro One More Cañaveral - Vicálvaro | Más de 2023 gimnasios y estudios 56 apps de bienestar Gold 66,99 € al mes Más de 3910 gimnasios y estudios 58 apps de bienesta",
-          "date_observed": "2026-10-20T17:06:56.987457+00:00",
-          "geo_scope": "28052",
-          "limitations": "Precio anunciado por el establecimiento en su web. No es un precio registrado ni verificado con factura. La periodicidad se transcribe tal como aparece; no se convierte a otra periodicidad."
-        },
-        {
-          "evidence_id": "web_price_270576995_6",
-          "claim": "Precio publicado en la web del establecimiento: 109.99 euros (monthly)",
-          "value": 109.99,
-          "unit": "euros",
-          "frequency": "monthly",
-          "source_url": "https://wellhub.com/es-es/search/partners/centro-one-more-canaveral/",
-          "snippet": "Centro One More Cañaveral - Vicálvaro | bike • Step aerobics • Zumba + 43 Desde el plan Platinum • 109,99 € al mes Exclusivo en Wellhub O2 Centro Wellness Manuel Becer",
-          "date_observed": "2026-10-20T17:06:56.987457+00:00",
-          "geo_scope": "28052",
-          "limitations": "Precio anunciado por el establecimiento en su web. No es un precio registrado ni verificado con factura. La periodicidad se transcribe tal como aparece; no se convierte a otra periodicidad."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
       "latitude": 40.4030971,
       "longitude": -3.5662487,
       "census_section": "19052",
-      "license_status": "Denegada",
-      "license_type": null,
-      "license_date": "2023-02-22 00:00:00",
+      "license_status": "Inspeccionada favorable",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-08-26 00:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:56.987457+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270577181",
@@ -488,15 +411,7 @@
       "services": [
         "Ensenanza no reglada (deportiva y recreativa)"
       ],
-      "tariffs": [
-        {
-          "value": 43.95,
-          "unit": "euros",
-          "condition": "énergie Fitness El Cañaveral | Madrid | Gimnasio Multiexperiencia | Trabaja con Nosotros Contacto Abre tu Club INSCRÍBETE desde 43,95€ énergie Fitness El Cañaveral C. Cerro del Campo, 42-46, MAD",
-          "frequency": "",
-          "source_url": "https://energiefitness.es/gym/el-canaveral-madrid"
-        }
-      ],
+      "tariffs": [],
       "evidences": [
         {
           "evidence_id": "census_local_270577181",
@@ -506,7 +421,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=ENERGIE FITNESS | via=CERRO DEL CAMPO | num=000046 | cp=28052 | utm=(453261.7358767251, 4472822.499167725)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -518,7 +433,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -532,19 +447,7 @@
           "snippet": "ref=350/2023/01612 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2025-02-19 00:00:00",
           "date_observed": "2025-02-19 00:00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
-        },
-        {
-          "evidence_id": "web_price_270577181_3",
-          "claim": "Precio publicado en la web del establecimiento: 43.95 euros",
-          "value": 43.95,
-          "unit": "euros",
-          "frequency": null,
-          "source_url": "https://energiefitness.es/gym/el-canaveral-madrid",
-          "snippet": "énergie Fitness El Cañaveral | Madrid | Gimnasio Multiexperiencia | Trabaja con Nosotros Contacto Abre tu Club INSCRÍBETE desde 43,95€ énergie Fitness El Cañaveral C. Cerro del Campo, 42-46, MAD",
-          "date_observed": "2026-10-20T17:06:59.687099+00:00",
-          "geo_scope": "28052",
-          "limitations": "Precio anunciado por el establecimiento en su web. No es un precio registrado ni verificado con factura. La periodicidad se transcribe tal como aparece; no se convierte a otra periodicidad."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -556,7 +459,7 @@
       "license_date": "2025-02-19 00:00:00",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:59.687099+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270577182",
@@ -575,7 +478,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=GIMNASIO | via=CERRO DEL CAMPO | num=000044 | cp=28052 | utm=(453265.1631750065, 4472862.919398019)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -587,7 +490,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -599,9 +502,9 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "ref=350/2025/11808 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -613,7 +516,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:07:03.604808+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270578977",
@@ -632,7 +535,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=GIMNASIO DIVERSABOX | via=MAYORAZGO DE DUARTE | num=000283 | cp=28052 | utm=(453131.3963512826, 4473256.941562104)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -644,7 +547,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -656,9 +559,9 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "ref=350/2024/07850 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -670,7 +573,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:07:05.458607+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270579042",
@@ -690,7 +593,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=S/R | via=MIGUEL DELIBES | num=000047 | cp=28052 | utm=(452435.72046101076, 4472935.130524934)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -702,7 +605,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS; 869007=FISIOTERAPEUTAS Y OTRAS ACTIVIDADES SANITARIAS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -714,9 +617,9 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "ref=350/2025/35462 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -728,7 +631,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270579705",
@@ -747,7 +650,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=S/R | via=FRANCISCO GRANDE COVIAN | num=000024 | cp=28052 | utm=(452158.4501409702, 4472510.051050291)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -759,7 +662,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -773,7 +676,7 @@
           "snippet": "ref=350/2023/36715 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-11-07",
           "date_observed": "2025-11-07",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -785,7 +688,7 @@
       "license_date": "2025-11-07",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270580617",
@@ -804,7 +707,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=S/R | via=FERENC PUSKAS | num=000245 | cp=28052 | utm=(0.0, 0.0)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -816,7 +719,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -830,7 +733,7 @@
           "snippet": "ref=350/2024/12058 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-08-01",
           "date_observed": "2025-08-01",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -842,7 +745,7 @@
       "license_date": "2025-08-01",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270582483",
@@ -861,7 +764,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=MI LUGAR FAVORITO 2 | via=HUMILDAD | num=000027 | cp=28052 | utm=(452553.9704093642, 4473020.005326391)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -873,7 +776,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "932001=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES CON COCINA",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -885,9 +788,9 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "ref=350/2026/31706 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -899,7 +802,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270582658",
@@ -918,7 +821,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=S/R | via=CAÑADA DE VICALVARO A SAN FERNANDO | num=000002 | cp=28052 | utm=(452254.2701278466, 4473061.828886631)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -930,7 +833,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -944,7 +847,7 @@
           "snippet": "ref=350/2025/27420 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2026-09-22",
           "date_observed": "2026-09-22",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -956,12 +859,12 @@
       "license_date": "2026-09-22",
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270584903",
       "name": "GIMNASIO",
-      "location": "CALLE MARIO MORENO \"CANTINFLAS 49, 28052",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 49, 28052",
       "services": [
         "Actividades de los gimnasios"
       ],
@@ -969,13 +872,13 @@
       "evidences": [
         {
           "evidence_id": "census_local_270584903",
-          "claim": "Local 270584903 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS 49, 28052'.",
+          "claim": "Local 270584903 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 49, 28052'.",
           "value": null,
           "unit": null,
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
-          "snippet": "rotulo=GIMNASIO | via=MARIO MORENO \"CANTINFLAS | num=000049 | cp=28052 | utm=(452403.3639179576, 4472884.426901194)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "snippet": "rotulo=GIMNASIO | via=MARIO MORENO \"CANTINFLAS\" | num=000049 | cp=28052 | utm=(452403.3639179576, 4472884.426901194)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -987,7 +890,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -999,7 +902,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "(sin registro de licencia)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "La ausencia de registro significa 'no disponible', no 'denegada' ni 'sin efectos'."
         }
@@ -1013,7 +916,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270585548",
@@ -1032,7 +935,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=GIMNASIO DUMAFIT S.L | via=FERENC PUSKAS | num=000207 | cp=28052 | utm=(453548.0172343577, 4472250.762022691)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -1044,7 +947,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -1056,7 +959,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "(sin registro de licencia)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "La ausencia de registro significa 'no disponible', no 'denegada' ni 'sin efectos'."
         }
@@ -1070,7 +973,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:07:27.430004+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     },
     {
       "identifier": "270585886",
@@ -1089,7 +992,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
           "snippet": "rotulo=CENTRO WELLNESS | via=GALES | num=000039 | cp=28052 | utm=(453133.5659537717, 4472004.36377741)",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
         },
@@ -1101,7 +1004,7 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
           "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
           "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
         },
@@ -1113,9 +1016,9 @@
           "frequency": null,
           "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
           "snippet": "ref=350/2026/32280 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
-          "date_observed": "2026-10-20T17:06:36.023408+00:00",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
           "geo_scope": "EL CAÑAVERAL",
-          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso."
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
         }
       ],
       "postal_code": "28052",
@@ -1127,7 +1030,7 @@
       "license_date": null,
       "has_playroom": null,
       "verification_status": "verified",
-      "consulted_at": "2026-10-20T17:06:36.023408+00:00"
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
     }
   ],
   "counters": {

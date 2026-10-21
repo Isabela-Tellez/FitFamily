@@ -215,6 +215,40 @@ def test_the_negation_stops_at_the_end_of_the_clause():
     assert detect_playroom("Sinergia con ludoteca para socios")
 
 
+def test_identity_negations_are_not_offers():
+    """'No es una ludoteca' describes what the business is not."""
+    assert detect_playroom("No es una ludoteca, es una guardería") is None
+    assert detect_playroom("No somos una ludoteca") is None
+    assert detect_playroom("No se trata de una ludoteca") is None
+    assert detect_playroom("No constituye una ludoteca") is None
+    assert detect_playroom("No es un centro con ludoteca") is None
+    # 'No es solo una ludoteca' does describe an offered service.
+    assert detect_playroom("No es solo una ludoteca: también hay zona infantil")
+
+
+def test_identity_negation_does_not_hide_a_positive_claim():
+    assert detect_playroom("No es la primera vez que ofrecemos ludoteca")
+    assert detect_playroom("No es un secreto que tenemos ludoteca")
+    assert detect_playroom("No es una simple ludoteca")
+    assert detect_playroom("No se trata de una simple ludoteca")
+
+
+def test_mentions_of_other_businesses_are_not_attributed_to_the_competitor():
+    assert detect_playroom("El gimnasio de al lado tiene ludoteca") is None
+    assert detect_playroom("Enfrente hay un centro con ludoteca") is None
+    assert detect_playroom("Otro gimnasio ofrece ludoteca") is None
+    assert detect_playroom("La competencia cuenta con zona infantil") is None
+    # First person keeps the mention about the establishment.
+    assert detect_playroom("A diferencia de otros gimnasios, nosotros contamos con ludoteca")
+    assert detect_playroom("Nuestro gimnasio tiene ludoteca; el de al lado también")
+
+
+def test_public_playgrounds_and_municipal_playrooms_are_not_the_service():
+    assert detect_playroom("Junto al gimnasio hay un parque infantil") is None
+    assert detect_playroom("La ludoteca municipal está enfrente") is None
+    assert detect_playroom("Zona infantil pública del ayuntamiento") is None
+
+
 def test_has_playroom_is_unknown_without_evidence():
     registry = _registry()
     assert all(c.has_playroom is None for c in registry["competitors"])
@@ -361,6 +395,23 @@ def test_a_negated_playroom_on_the_page_does_not_mark_the_service():
     assert not [e for e in enriched.evidences if e.evidence_id.startswith("web_playroom_")]
     # The price is still usable: the page is the right establishment.
     assert [t for t in enriched.tariffs if t.get("frequency") == "monthly"]
+
+
+def test_another_business_playroom_on_the_page_is_not_attributed():
+    competitor = _registry()["competitors"][0]
+    body = ("Gimnasio Ejemplo, calle Cerro del Campo 44, El Cañaveral. "
+            "Cuota mensual 49,90 euros. El gimnasio de al lado tiene ludoteca.")
+
+    def fake_search(query, max_results=4):
+        return [_FakeResult("https://gym.example")]
+
+    def fake_read(url):
+        return _FakePage(body)
+
+    enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
+                                          read_callable=fake_read)
+    assert enriched.has_playroom is None
+    assert not [e for e in enriched.evidences if e.evidence_id.startswith("web_playroom_")]
 
 
 # --- compatibilidad con los agentes existentes ---
@@ -560,3 +611,65 @@ def test_license_parser_keeps_raw_values():
     records = parse_license_records(read_census_rows(LICENCIAS_CSV))
     assert records["1"]["situacion_licencia"] == "En tramitacion"
     assert records["1"]["fecha_licencia"] == "2021-09-17"
+
+
+def test_read_census_rows_preserves_quotes_inside_a_value():
+    """The official street 'MARIO MORENO "CANTINFLAS"' keeps both quotes."""
+    csv_text = (
+        '"id_local";"desc_barrio_local";"desc_situacion_local";"rotulo";'
+        '"clase_vial_edificio";"desc_vial_edificio";"nom_edificio";"num_edificio";'
+        '"cal_edificio";"cod_postal";"desc_seccion_censal_local";'
+        '"coordenada_x_local";"coordenada_y_local"\n'
+        '"270562257";"EL CAÑAVERAL";"Abierto";"PISCINA";"CALLE";'
+        '"MARIO MORENO ""CANTINFLAS""";"";"64";"";"28052";"19052";"0.0";"0.0"\n'
+    )
+    row = next(read_census_rows(csv_text))
+    assert row["desc_vial_edificio"] == 'MARIO MORENO "CANTINFLAS"'
+    assert row["id_local"] == "270562257"
+
+
+def test_license_parser_keeps_the_most_recent_reference():
+    csv_text = (
+        '"id_local";"ref_licencia";"desc_tipo_licencia";'
+        '"desc_tipo_situacion_licencia";"Fecha_Dec_Lic"\n'
+        '"9";"500/2022/06998";"Declaracion Responsable";"En tramitacion";"2022-09-15"\n'
+        '"9";"350/2024/28192";"Declaracion Responsable";"Favorable no inspeccionada";"2025-08-26"\n'
+        '"9";"500/2022/06773";"";"Denegada";"2023-02-22"\n'
+    )
+    records = parse_license_records(read_census_rows(csv_text))
+    assert records["9"]["ref_licencia"] == "350/2024/28192"
+    assert records["9"]["situacion_licencia"] == "Favorable no inspeccionada"
+
+
+def test_newer_undated_reference_wins_over_an_older_dated_one():
+    csv_text = (
+        '"id_local";"ref_licencia";"desc_tipo_licencia";'
+        '"desc_tipo_situacion_licencia";"Fecha_Dec_Lic"\n'
+        '"9";"350/2023/01611";"Declaracion Responsable";"Ineficaz o sin efectos";"2024-11-04"\n'
+        '"9";"350/2025/11808";"Declaracion Responsable";"Presentada (pendiente de comprobacion)";""\n'
+    )
+    records = parse_license_records(read_census_rows(csv_text))
+    assert records["9"]["ref_licencia"] == "350/2025/11808"
+    assert records["9"]["situacion_licencia"].startswith("Presentada")
+
+
+def test_a_denied_licence_does_not_remove_an_open_premise():
+    """A licence state is not proof that the business is closed."""
+    licencias = (
+        '"id_local";"ref_licencia";"desc_tipo_licencia";'
+        '"desc_tipo_situacion_licencia";"Fecha_Dec_Lic"\n'
+        '"1";"500/2024/00001";"Declaracion Responsable";"Denegada";"2024-01-01"\n'
+    )
+    registry = build_competitor_registry(
+        area_id="el-cañaveral",
+        locales_rows=read_census_rows(LOCALES_CSV),
+        activity_rows=read_census_rows(ACTIVIDADES_CSV),
+        license_rows=read_census_rows(licencias),
+    )
+    competitor = next(c for c in registry["competitors"] if c.identifier == "1")
+    assert competitor.license_status == "Denegada"
+    assert "operating_status" not in competitor.model_dump()
+    licence_evidence = next(
+        e for e in competitor.evidences if e.evidence_id.startswith("census_license_")
+    )
+    assert "no acredita" in licence_evidence.limitations

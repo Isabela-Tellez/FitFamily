@@ -26,6 +26,7 @@ import io
 import json
 import logging
 import re
+import unicodedata
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 from urllib.parse import urlsplit
 
@@ -65,7 +66,9 @@ _GENERIC_STOPWORDS = {
 
 
 def _normalize(value: str) -> str:
-    return " ".join((value or "").lower().split())
+    decomposed = unicodedata.normalize("NFKD", value or "")
+    without_accents = "".join(c for c in decomposed if not unicodedata.combining(c))
+    return " ".join(without_accents.lower().split())
 
 
 def build_queries(
@@ -109,7 +112,7 @@ def required_terms(variable: str) -> List[str]:
     """Content terms that must appear for a source to be considered useful."""
     words = [w for w in re.findall(r"[\wáéíóúñÁÉÍÓÚÑ]+", variable.lower())
              if len(w) > 3 and w not in _GENERIC_STOPWORDS]
-    return words
+    return list(dict.fromkeys(words))
 
 
 def looks_like_dataset(url: str, content: str = "") -> bool:
@@ -161,18 +164,35 @@ def extract_table(text: str) -> List[Dict[str, str]]:
 
 
 def _contains_term(text: str, term: str) -> bool:
-    """Whole-word match: "renta" must not be satisfied by "rentabilidad"."""
-    return re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text) is not None
+    """Whole-word, accent-insensitive match with singular/plural variants.
+
+    "renta" must not be satisfied by "rentabilidad", while "rentas" and
+    "poblacion" must satisfy "renta" and "población".
+    """
+    term = _normalize(term)
+    variants = {term, term + "s", term + "es"}
+    if term.endswith("es") and len(term) > 4:
+        variants.add(term[:-2])
+    if term.endswith("s") and len(term) > 3:
+        variants.add(term[:-1])
+    pattern = "|".join(
+        re.escape(variant) for variant in sorted(variants, key=len, reverse=True)
+    )
+    return re.search(r"(?<!\w)(?:" + pattern + r")(?!\w)", text) is not None
 
 
 def check_variable(content: str, variable: str) -> Dict[str, Any]:
-    """Check whether a content really contains the requested variable."""
+    """Check whether a content really contains the requested variable.
+
+    Every key term must appear. Accepting a subset would validate a page about
+    "rentabilidad y barrios" as a source for "renta media por barrio".
+    """
     terms = required_terms(variable)
     normalized = _normalize(content)
     if not terms:
         return {"covered": False, "matched": [], "reason": "Variable demasiado generica para comprobar."}
     matched = [term for term in terms if _contains_term(normalized, term)]
-    covered = len(matched) >= max(1, (len(terms) + 1) // 2)
+    covered = len(matched) == len(terms)
     reason = (
         "Contiene los terminos clave de la variable."
         if covered else

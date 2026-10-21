@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field, field_validator
 from src.schemas import Evidence, Competitor as CompetitorSchema
 from src.tools.search_web import search_web, SearchResult
 from src.tools.read_web_page import read_web_page, PageReadResult
+from src.tools.evidence_ids import stable_evidence_id
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +173,7 @@ def competitor_search(params: Dict[str, Any]) -> Dict[str, Any]:
                 )
                 # Record that we tried but couldn't access
                 ev = Evidence(
-                    evidence_id=f"access_attempt_{url_norm}",
+                    evidence_id=stable_evidence_id("access_attempt", url_norm),
                     claim=f"Attempted to access {business_type} at {url}",
                     source_url=url,
                     snippet=f"Page access failed: {str(e)[:200]}",
@@ -459,7 +460,7 @@ def _extract_evidence_from_page(
     )
 
     evidence = Evidence(
-        evidence_id=f"ev_{hash(url) % 10000:04d}",
+        evidence_id=stable_evidence_id("ev", url),
         claim=claim,
         value=value,
         unit="euros" if value is not None else None,

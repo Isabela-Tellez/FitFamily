@@ -28,8 +28,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 
 from src.tools.competitor_registry import (  # noqa: E402
     ACTIVIDADES_URL,
+    BARRIO_NAMES,
     LICENCIAS_URL,
     LOCALES_URL,
+    _normalize_text,
     build_competitor_registry,
     enrich_competitor_from_web,
     read_census_rows,
@@ -38,21 +40,43 @@ from src.tools.competitor_registry import (  # noqa: E402
 )
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
+MIN_CACHE_BYTES = 1_000_000
+
+
+def _cache_is_valid(path: str) -> bool:
+    """A tiny file (an HTML error page, a fixture) is not the official CSV."""
+    if not os.path.exists(path) or os.path.getsize(path) < MIN_CACHE_BYTES:
+        return False
+    with open(path, encoding="utf-8-sig", errors="replace", newline="") as fh:
+        header = fh.readline()
+    return "id_local" in header
 
 
 def _cached(url: str, filename: str) -> str:
     os.makedirs(CACHE_DIR, exist_ok=True)
     path = os.path.join(CACHE_DIR, filename)
-    if os.path.exists(path) and os.path.getsize(path) > 0:
+    if _cache_is_valid(path):
         print("[cache] %s" % filename)
         return path
+    if os.path.exists(path):
+        print("[cache invalida] %s (%d bytes), se descarga de nuevo"
+              % (filename, os.path.getsize(path)))
     print("[descarga] %s" % url)
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=900) as resp:
-        data = resp.read()
-    with open(path, "wb") as fh:
-        fh.write(data)
-    print("[descarga] %s (%d bytes)" % (filename, len(data)))
+    partial = path + ".part"
+    with urllib.request.urlopen(req, timeout=900) as resp, open(partial, "wb") as fh:
+        total = 0
+        while True:
+            chunk = resp.read(1024 * 1024)
+            if not chunk:
+                break
+            fh.write(chunk)
+            total += len(chunk)
+    if not _cache_is_valid(partial):
+        os.remove(partial)
+        raise RuntimeError("La descarga de %s no parece el CSV oficial" % filename)
+    os.replace(partial, path)
+    print("[descarga] %s (%d bytes)" % (filename, total))
     return path
 
 
@@ -69,19 +93,36 @@ def main() -> int:
     actividades_path = _cached(ACTIVIDADES_URL, "censo_actividades.csv")
     licencias_path = _cached(LICENCIAS_URL, "censo_licencias.csv")
 
-    with open(locales_path, encoding="utf-8-sig", errors="replace", newline="") as fh:
-        locales_rows = list(read_census_rows(fh))
-    with open(actividades_path, encoding="utf-8-sig", errors="replace", newline="") as fh:
-        activity_rows = list(read_census_rows(fh))
-    with open(licencias_path, encoding="utf-8-sig", errors="replace", newline="") as fh:
-        license_rows = list(read_census_rows(fh))
+    barrio = BARRIO_NAMES.get(args.area.strip().lower())
+    if barrio is None:
+        print("Area desconocida: %s" % args.area, file=sys.stderr)
+        return 2
+    target_barrio = _normalize_text(barrio)
 
-    registry = build_competitor_registry(
-        area_id=args.area,
-        locales_rows=locales_rows,
-        activity_rows=activity_rows,
-        license_rows=license_rows,
-    )
+    with open(locales_path, encoding="utf-8-sig", errors="replace", newline="") as locales_fh, \
+         open(actividades_path, encoding="utf-8-sig", errors="replace", newline="") as activities_fh, \
+         open(licencias_path, encoding="utf-8-sig", errors="replace", newline="") as licenses_fh:
+        # Only the premises of the target neighbourhood are kept in memory;
+        # the other two files are filtered while they are streamed.
+        locales_rows = [
+            row for row in read_census_rows(locales_fh)
+            if _normalize_text(row.get("desc_barrio_local", "")) == target_barrio
+        ]
+        local_ids = {row.get("id_local") for row in locales_rows}
+        activity_rows = (
+            row for row in read_census_rows(activities_fh)
+            if row.get("id_local") in local_ids
+        )
+        license_rows = (
+            row for row in read_census_rows(licenses_fh)
+            if row.get("id_local") in local_ids
+        )
+        registry = build_competitor_registry(
+            area_id=args.area,
+            locales_rows=locales_rows,
+            activity_rows=activity_rows,
+            license_rows=license_rows,
+        )
     competitors = registry["competitors"]
     print("\n=== REGISTRO OFICIAL ===")
     print("contadores:", json.dumps(registry["counters"], ensure_ascii=False))

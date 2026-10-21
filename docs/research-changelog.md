@@ -1,6 +1,6 @@
 # FitFamily - Registro de Cambios del Módulo Persona 1
 
-> **Fecha última actualización**: 20 de octubre de 2026
+> **Fecha última actualización**: 21 de octubre de 2026
 > **Autor**: Juan (Persona 1 - Investigador, herramientas y MCP)
 > **Proyecto**: FitFamily - IA multiagente para análisis de viabilidad de gimnasio con ludoteca
 
@@ -9,7 +9,7 @@
 ## Nota sobre fechas y estado documental
 
 - Las fechas de las versiones 1.0.0 y 1.1.0 corresponden al desarrollo original del módulo (octubre de 2026) y se conservan como histórico.
-- La revisión, correcciones y poblado de datos de esta iteración se fechan el **20 de octubre de 2026**.
+- La revisión, correcciones y poblado de datos de esta iteración se fechan el **20-21 de octubre de 2026**.
 - Los elementos listados en "Backlog" **no** están completados; solo se consideran cerrados los marcados con `[x]`.
 - Las afirmaciones de la versión 1.0.0 sobre una prueba real de MCP se corrigieron en 1.1.1 (`tests/test_mcp_integration.py`).
 - No se afirma la ejecución de CrewAI con LLM mientras no exista una clave de proveedor configurada.
@@ -502,6 +502,76 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 - 8 tests nuevos y más aserciones en los existentes (negaciones largas y en plural,
   palabra completa, límite del encargo, identificadores estables, calle con comillas).
 - Suite completa: **161 tests**.
+
+## Versión 1.2.2 — Revisión final de riesgos residuales (21/10/2026)
+
+### Descubrimiento de fuentes
+- Prueba extremo a extremo de `run_research()`: una variable ausente genera consultas,
+  respeta `search_limits.max_results`, lee y evalúa cada fuente y produce evidencias
+  trazables.
+- Los fallos de red y las respuestas vacías también se registran como `Evidence` sin URL
+  (estado `rejected` y motivo), en lugar de desaparecer. Las fuentes inaccesibles conservan
+  su URL y el error de lectura.
+- La validación semántica exige **todos** los términos clave, no una parte: una página
+  sobre «rentabilidad y barrios» ya no valida «renta media por barrio». Se ignoran tildes
+  y se aceptan singular/plural («población»/«poblacion», «renta»/«rentas»), manteniendo la
+  palabra completa para no confundir «renta» con «rentabilidad».
+
+### Identificadores
+- `src/tools/evidence_ids.py`: IDs deterministas con SHA-256, sin `hash()` de Python.
+- Las evidencias de descubrimiento se identifican por variable normalizada + URL o consulta;
+  dos variables con el mismo slug ya no colisionan y el mismo par se puede deduplicar.
+- Las evidencias de búsqueda y de `competitor_search` usan el mismo esquema. Se elimina
+  `ev_{hash(url) % 10000}`, que cambiaba entre procesos y colisionaba con pocas URLs.
+- Las variables de `missing_variables` se deduplican sin distinguir mayúsculas.
+
+### Registro de competidores
+- `read_census_rows()` ya no elimina las comillas interiores: la dirección oficial
+  `MARIO MORENO "CANTINFLAS"` conserva la comilla de cierre.
+- Cuando un local tiene varias licencias se muestra la de referencia más reciente, no la
+  última fila del fichero. Una licencia denegada, pendiente o sin efectos no se interpreta
+  como cierre del negocio; la evidencia lo declara expresamente.
+- Artefacto regenerado desde los tres CSV oficiales: 18 competidores, 234 locales abiertos,
+  16 con licencia y los mismos contadores; 18 direcciones verificadas contra el censo, sin
+  IDs duplicados, coordenadas `0,0` ni actividades ausentes.
+
+### Semántica de ludoteca
+- Se descartan las negaciones de identidad («no es una ludoteca», «no somos una ludoteca»)
+  y las menciones a otros negocios («el gimnasio de al lado tiene ludoteca») o a espacios
+  públicos («ludoteca municipal», «parque infantil»). No se atribuyen al competidor.
+- No se pierden positivos como «no es la primera vez que ofrecemos ludoteca» o «no es un
+  secreto que tenemos ludoteca».
+
+### Datos y cachés
+- `data/raw/extract_competitor_registry.py` valida que la caché tenga tamaño y cabecera
+  oficiales; una página de error de 207 bytes ya no se acepta como CSV. La descarga usa
+  `.part` y `os.replace`.
+- La generación filtra por barrio mientras lee, sin cargar los tres CSV completos en memoria.
+- El test de `refresh_locales_count` escribía su CSV de ejemplo en la caché real
+  (`data/raw/cache/censo_locales.csv`) y sustituía el censo oficial por 207 bytes. Ahora usa
+  `tmp_path`; la suite ya no altera la caché de trabajo.
+
+### Compatibilidad
+- `tests/test_cross_module_integration.py` carga el registro real, lo pasa por
+  `to_dataframe()` y `summarize_competitors()`, y genera un `ReportDraft` con
+  `WriterAgent`. Los `None` siguen siendo desconocidos (sin precio, sin ludoteca, sin
+  nombre), no se convierten en 0 ni en hechos.
+- `tests/test_registry_artifact.py` verifica el JSON y el CSV versionados: contadores,
+  IDs únicos, direcciones, coordenadas, licencias y procedencia.
+
+### Pendiente (no implementado)
+- Renta neta media por sección censal (INE ADRH, operación 30325): sigue documentada en
+  `docs/pendiente-renta-ine.md`; no se ha descargado ni inventado en esta revisión.
+- `families_with_children` y `gyms_with_ludoteca` siguen bloqueados: ninguna fuente oficial
+  define esos indicadores con la precisión necesaria.
+- Evolución histórica del censo, plazas escolares, vivienda futura y accesibilidad: fases
+  posteriores.
+
+### Tests
+- 28 tests nuevos: extremo a extremo del descubrimiento, IDs estables entre procesos,
+  colisiones de slug, semántica de negaciones/menciones, licencias, artefacto, caché e
+  integración entre módulos.
+- Suite completa: **189 tests**.
 
 ## Versión 1.2.0 — Registro de competidores oficial, buscador de fuentes reparado y descubrimiento de datasets (20/10/2026)
 

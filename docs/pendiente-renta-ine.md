@@ -2,6 +2,8 @@
 
 > Estado: **documentado, no implementado**. Preparado para una segunda fase.
 > Responsable: Persona 1. Última verificación de metadatos: 21/10/2026 (ver §2).
+> En la revisión final del 21/10/2026 no se ha descargado ni imputado ningún valor de
+> renta; los indicadores que dependen de ella siguen en `null`.
 
 ## 1. Qué desbloquea
 

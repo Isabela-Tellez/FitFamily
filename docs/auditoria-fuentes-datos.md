@@ -110,6 +110,7 @@ coordenadas y geometría de secciones censales) se puede obtener:
 - **Recursos:** Locales (id, dirección, CP, coordenadas), Actividades (epígrafes) y Locales con información de licencia (ref., tipo, situación y fecha).
 - **Licencia:** CC BY 4.0. Actualización diaria.
 - **Resultados:** 234 locales abiertos en el barrio; 18 con actividad vinculada al estudio (gimnasios, deporte y recreación, ocio infantil y piscinas); 16 de esos con información de licencia.
+- **Tratamiento:** si un local tiene varias licencias se muestra la referencia más reciente; el estado es administrativo y no acredita que el negocio esté abierto ni cerrado. Las direcciones conservan las comillas del callejero oficial (`MARIO MORENO "CANTINFLAS"`).
 - **Limitaciones del propio dataset:** la información procede de un registro administrativo sin tratamiento estadístico, por lo que puede contener inconsistencias; hay duplicidad declarada en los ficheros de octubre 2021 a enero 2022.
 
 ### Gimnasios e instalaciones deportivas

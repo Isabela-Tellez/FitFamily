@@ -64,8 +64,15 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
   motivo explícito, y distingue páginas informativas de datasets descargables.
 - `ResearchBrief.missing_variables` (opcional) dispara esa pasada en `run_research()`: las
   candidatas vuelven como `Evidence` con URL, organismo, consulta y estado.
-- La validación exige palabras completas (`renta` no se satisface con `rentabilidad`) y el
-  límite `search_limits.max_results` del encargo se propaga a las consultas.
+- La validación exige palabras completas, **todos** los términos clave y es insensible a
+  tildes y a singular/plural: «rentabilidad» no satisface «renta», «poblacion» sí satisface
+  «población» y «rentas» sí satisface «renta». El límite `search_limits.max_results` del
+  encargo se propaga a las consultas.
+- Los fallos de red y las respuestas vacías se registran como evidencias `rejected` sin URL;
+  las fuentes inaccesibles conservan su URL y el motivo.
+- Los IDs de evidencia son deterministas (SHA-256 de variable + URL/consulta), no usan
+  `hash()` y no colisionan entre variables con el mismo slug. Un ID repetido identifica el
+  mismo par variable/fuente y se puede deduplicar.
 - Una fuente nunca se presenta como verificada sin haber leído su contenido.
 - Fase documentada y pendiente: renta por sección censal (INE ADRH, operación 30325) en
   `docs/pendiente-renta-ine.md`.
@@ -77,16 +84,27 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
   de modo que los datos municipales se distinguen de los comerciales.
 - Coordenadas `0,0` o fuera del entorno UTM 30N de Madrid se tratan como **no
   disponibles** y no se usan para distancias ni clustering.
-- Una licencia ausente significa "no hay información", nunca "denegada".
+- Una licencia ausente significa "no hay información", nunca "denegada". Si el local tiene
+  varias licencias se muestra la de referencia más reciente; una licencia pendiente,
+  denegada o sin efectos **no** se interpreta como prueba de cierre del negocio.
+- `read_census_rows()` conserva las comillas interiores del callejero oficial
+  (`MARIO MORENO "CANTINFLAS"`), que antes se perdían al quitar comillas de todo el valor.
 - La web del establecimiento solo se vincula si coinciden la calle **y el número**
   oficial. Un rango publicado que incluya el número (`42-46` para el 44) se acepta; si
   el censo no publica número, solo se puede comprobar la calle.
 - `has_playroom` es `True`/`False` solo con evidencia fiable; si no, queda `None`
   (desconocido). Una mención negada ("no dispone de ludoteca", "sin sala infantil",
   "ludoteca no disponible") no cuenta como oferta y **no** se registra como `True`.
+  Tampoco se atribuyen al competidor las menciones a otro negocio ("el gimnasio de al lado
+  tiene ludoteca") ni a espacios públicos ("ludoteca municipal", "parque infantil").
 - `to_dataframe()` produce el DataFrame que consume el módulo de análisis de mercado
   (`gym_name`, `monthly_price_eur`, `has_playroom` y contexto adicional).
-- Script reproducible: `python data/raw/extract_competitor_registry.py`.
+- Script reproducible: `python data/raw/extract_competitor_registry.py`. Valida que la
+  caché de `data/raw/cache/` tenga tamaño y cabecera oficiales antes de reutilizarla; una
+  página de error pequeña se descarta y se vuelve a descargar. La descarga usa un fichero
+  `.part` y `os.replace`, y la generación filtra por barrio mientras lee.
+- Los tests que usan `refresh_locales_count` escriben en `tmp_path`, no en la caché real;
+  así la suite no sustituye el censo oficial.
 
 ---
 
@@ -182,7 +200,14 @@ python -m pytest -q
 
 - `tests/test_mcp.py`: pruebas unitarias de la función y del cliente (sin subproceso).
 - `tests/test_mcp_integration.py`: prueba real extremo a extremo por `stdio`.
-- El resto de archivos cubren schemas, herramientas web y el agente.
+- `tests/test_source_discovery.py`: descubrimiento extremo a extremo, estados, límites,
+  identificadores y validación semántica.
+- `tests/test_competitor_registry.py`: censo, direcciones, licencias y ludoteca.
+- `tests/test_registry_artifact.py`: invariantes del JSON y del CSV versionados.
+- `tests/test_cross_module_integration.py`: registro -> análisis de mercado -> redactor.
+- `tests/test_evidence_ids.py` y `tests/test_extract_registry_cache.py`: IDs deterministas
+  y validación de cachés.
+- Suite completa: **189 tests**.
 
 ---
 
@@ -243,9 +268,10 @@ docs/
 ## 👥 Consumo por Otros Módulos
 
 > **Nota para los consumidores:** `ResearchResult.evidences` ya incluye las evidencias
-> que lleva cada `Competitor`. Si concatenáis `competitor.evidences` a esa lista,
-> las cuentas salen duplicadas. Usad la lista global para contar y la de cada competidor
-> solo para agrupar por fuente.
+> que lleva cada `Competitor`. Si además recorréis `competitor.evidences`, deduplicad por
+> `evidence_id` o URL antes de contar o listar fuentes (el redactor lo hace con
+> `_add_unique`). Usad la lista global para contar y la de cada competidor solo para
+> agrupar por fuente.
 
 ### Para Isabella (Persona 5 - Streamlit/LangGraph):
 ```python
