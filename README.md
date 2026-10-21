@@ -1,6 +1,6 @@
 # FitFamily
 
-FitFamily analiza la viabilidad de abrir un gimnasio con ludoteca en El Cañaveral (Madrid). El repositorio contiene el módulo de investigación, los datos municipales verificados y las interfaces de análisis y redacción. Todavía no existe un ejecutable único que recorra todo el producto de extremo a extremo; el estado detallado está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
+FitFamily analiza la viabilidad de abrir un gimnasio con ludoteca en El Cañaveral (Madrid). El repositorio contiene el módulo de investigación, los datos municipales con su estado de verificación y las interfaces de análisis y redacción. Todavía no existe un ejecutable único que recorra todo el producto de extremo a extremo; el estado detallado está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
 
 ## Estado actual
 
@@ -22,7 +22,7 @@ Pendiente:
 
 ## Requisitos
 
-- Python 3.13 (versión usada en la verificación local y en CI).
+- Python 3.13 (versión usada en la verificación local y configurada en el workflow de CI).
 - Git.
 - Acceso a internet para las búsquedas y la lectura de páginas web.
 - Opcional: `TAVILY_API_KEY` para usar Tavily en lugar de DuckDuckGo.
