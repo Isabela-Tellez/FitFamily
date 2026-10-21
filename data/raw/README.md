@@ -11,10 +11,14 @@ El servidor MCP (`src/mcp/server.py`) publica una herramienta llamada `get_area_
 | `population_total_2025` | 21 492 hab. | 1 ene 2025 | Fichero oficial de hogares (misma referencia que `households_total`) |
 | `households_total` | 8 140 hogares | 1 ene 2025 | Fichero oficial de hogares, agregado sobre las 9 secciones censales del barrio |
 | `average_household_size` | 2,64 pers./hogar | 1 ene 2025 | Derivado de los mismos datos (21.492 / 8.140) |
-| `businesses_open` | 234 locales | descarga 20 oct 2026 | Censo de Locales (datos.madrid.es, actualización diaria) |
-| `families_with_children` | `null` | — | Sin censo directo; referencia indirecta: 28,29 % de la población es menor de 20 años |
-| `gyms_registered` | `null` | — | Sin censo municipal publicado; conteo manual no verificado |
-| `gyms_with_ludoteca` | `null` | — | Sin censo municipal; ningún centro localizado publica ludoteca de forma verificable |
+| `households_with_minors` | 3 071 hogares | 1 ene 2025 | Hoja de composición del hogar (mínimo verificable) |
+| `businesses_open` | 234 locales | descarga 20 oct 2026 | Censo de Locales, fichero de Locales |
+| `gyms_registered` | 9 locales | descarga 20 oct 2026 | Censo de Locales, fichero de Actividades, epígrafe 931008 |
+| `sports_recreation_venues` | 4 locales | descarga 20 oct 2026 | Censo de Locales, epígrafe 855002 |
+| `childrens_play_venues` | 3 locales | descarga 20 oct 2026 | Censo de Locales, epígrafes 932001 y 932002 |
+| `community_pools` | 3 locales | descarga 20 oct 2026 | Censo de Locales, epígrafe 931010 |
+| `families_with_children` | `null` | — | Ninguna fuente oficial define "familias con hijos" a nivel de barrio |
+| `gyms_with_ludoteca` | `null` | — | Ningún epígrafe combina gimnasio y ludoteca; confirmar centro a centro |
 
 ⚠️ **Las referencias temporales no son intercambiables.** Los indicadores de hogares y `population_total_2025` son de **1 ene 2025**; `population_total` y `population_under_20_share` son de **oct 2026**. Para calcular ratios coherentes hay que usar `population_total_2025` (o el tamaño medio ya calculado), nunca `population_total`.
 
@@ -57,21 +61,27 @@ El detalle completo por fuente está en `data/sources.json`.
 
 ## Integración reproducible del Censo de Locales
 
-El indicador `businesses_open` se puede actualizar de forma automatizada:
+Los indicadores del Censo de Locales (`businesses_open`, `gyms_registered`, `sports_recreation_venues`, `childrens_play_venues`, `community_pools`) se actualizan de forma automatizada:
 
 ```python
-from src.mcp.server import refresh_locales_count
+from src.mcp.server import refresh_locales_count, refresh_gyms_count
 
-resultado = refresh_locales_count("el-cañaveral")
-print(resultado["status"], resultado.get("count"), resultado.get("consulted_at"))
+print(refresh_locales_count("el-cañaveral"))   # 234 locales abiertos
+print(refresh_gyms_count("el-cañaveral"))      # equipamientos por epígrafe
 ```
 
-- **Función pura (testeable sin red):** `parse_locales_csv(csv_text, barrio_name)`.
-- **Descarga explícita o bajo demanda:** la descarga ocurre solo al llamar a `refresh_locales_count()`, nunca en cada consulta MCP.
+- **Funciones puras (testeables sin red):** `parse_locales_csv(csv_text, barrio_name)` y `parse_actividades_csv(csv_text, barrio_name)`.
+- **Descarga explícita o bajo demanda:** la descarga ocurre solo al llamar a las funciones, nunca en cada consulta MCP.
 - **Método de cálculo:** filtrar `desc_barrio_local == "El Cañaveral"` y `desc_situacion_local == "Abierto"`, y contar `id_local` únicos.
-- **Recurso:** https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv (85.2 MB, actualizado diariamente, CC BY 4.0).
-- **Caché local:** el CSV descargado se guarda en `data/raw/censo_locales.csv` (ignorado por git).
+- **Ficheros oficiales:**
+  - Locales (85-89 MB): https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv
+  - Actividades (119-125 MB): https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv
+- **Epígrafes usados:** 931008 (gimnasios), 855002 (enseñanza no reglada deportiva y recreativa), 932001 y 932002 (juegos o celebraciones infantiles), 931010 (piscinas de comunidades de vecinos).
+- **Cobertura:** el fichero de Actividades recoge 229 de los 234 locales abiertos del fichero de Locales; 5 no tienen actividad económica declarada.
+- **Script offline reproducible:** `python data/raw/extract_censo_locales.py` (reproduce los cinco indicadores).
+- **Caché local:** las descargas se guardan en `data/raw/cache/` y en `data/raw/censo_locales.csv` (ambos ignorados por git).
 - **Errores:** descarga fallida, CSV vacío, columnas cambiadas o barrio no encontrado devuelven `status: "error"` y **no** modifican el valor almacenado. Un fallo nunca se convierte en cero.
+- **Cabecera con BOM:** los parsers toleran la cabecera con BOM UTF-8 (el fichero oficial la incluye).
 - **Áreas soportadas:** actualmente solo El Cañaveral. La estructura admite ampliar el mapa `_SUPPORTED_LOCALES_AREAS` a otros barrios de Madrid.
 
 ## Extracción reproducible de los hogares
@@ -87,9 +97,34 @@ python data/raw/extract_households.py --verify-geometry
 - **La agregación es exacta, no estimada:** las 9 secciones teselan el polígono del barrio al 100 % (0 m² fuera, 0 m² sin cubrir, ratio de intersección 1,0 en todas). Ninguna sección cruza el límite, por lo que **no se reparte por superficie**.
 - **Contraste independiente:** los 21.492 habitantes de esas secciones coinciden exactamente con la población oficial del barrio a 1 ene 2025 del dataset "Población por distrito y barrio a 1 de enero".
 - **Resultado:** 8.140 hogares, 2,6403 personas por hogar, 21.492 habitantes.
+- **Hogares con menores (mínimo verificable):** 3.071, de la hoja "Composición del hogar" del mismo fichero. Se cuentan solo las categorías donde la presencia de menores es explícita; las "con o sin menores" (662 hogares) no se pueden atribuir y las "sin menores" (2.484) se descartan.
 - **Caché:** las descargas se guardan en `data/raw/cache/` (ignorado por git).
 - **Dependencias:** `openpyxl` y `pyogrio` (ya instaladas). **No** son dependencias del servidor MCP: solo de esta herramienta offline.
 - **En el servidor MCP:** `refresh_households("el-cañaveral")` regenera los indicadores y `parse_households_rows(rows, section_codes)` es la función pura testeable sin red.
+
+## Registro de competidores respaldado por el Censo de Locales
+
+Script offline: **`data/raw/extract_competitor_registry.py`**. Une los tres recursos
+oficiales del Censo de Locales y, opcionalmente, enriquece cada competidor con los
+datos publicados en su propia web (precio y evidencia de ludoteca).
+
+```bash
+python data/raw/extract_competitor_registry.py            # con enriquecimiento web
+python data/raw/extract_competitor_registry.py --no-web   # solo datos oficiales
+```
+
+- **Módulo:** `src/tools/competitor_registry.py`.
+- **Fuentes:** Locales (identificador, dirección, CP, coordenadas), Actividades
+  (epígrafes) y Locales con información de licencia (referencia, tipo, situación y fecha).
+- **Salidas:** `data/processed/competitor_registry.json` (con evidencias) y
+  `data/processed/competitor_registry.csv` (DataFrame para el módulo de análisis).
+- **Reglas aplicadas:** identificador oficial conservado; coordenadas `0,0` o fuera del
+  entorno UTM 30N de Madrid marcadas como no disponibles; licencia ausente = "no
+  disponible" (nunca "denegada"); `has_playroom` en `True`/`False` solo con evidencia
+  fiable y `None` (desconocido) si la web no lo menciona; los precios conservan la
+  periodicidad publicada sin convertirla.
+- **Ficheros brutos:** se guardan en `data/raw/cache/` (ignorado por git) y no se
+  versionan.
 
 ## Trazabilidad
 

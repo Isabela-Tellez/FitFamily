@@ -153,6 +153,23 @@ Este documento registra todas las modificaciones y creación de archivos durante
 - Añadida `tests/test_mcp_integration.py`, que arranca el servidor real por stdio
 - Verificación manual: `python -m src.mcp.client` conecta, descubre 1 herramienta y devuelve estadísticas
 
+### Registro de competidores y descubrimiento de fuentes (20/10/2026)
+- `src/tools/competitor_registry.py`: une Locales, Actividades y Locales con licencia del Censo de Locales en registros `Competitor` con el identificador oficial del local. Reglas: coordenadas `0,0` o fuera del entorno UTM 30N de Madrid = no disponibles; licencia ausente = "no disponible"; `has_playroom` solo con evidencia fiable; precios con su periodicidad sin convertirla.
+- `src/tools/source_discovery.py`: convierte una variable pendiente en varias consultas y clasifica cada candidata como `discovered`, `accessible`, `extracted`, `validated` o `rejected`.
+- `src/tools/search_web.py`: corregido `_normalize_url()`, que rompía todas las búsquedas por un argumento inexistente en `urlencode()`.
+- `src/tools/competitor_search.py`: `extract_prices()` público, reutilizando la regex existente y detectando rangos.
+- `data/raw/extract_competitor_registry.py`: script offline que genera el registro y su DataFrame.
+
+### Revisión final de riesgos residuales (21/10/2026)
+- Evidencias de descubrimiento con IDs deterministas (SHA-256), sin `hash()`; se registran también las consultas fallidas o vacías para que el error sea trazable.
+- Validación de fuentes insensible a tildes y plurales, exigiendo todos los términos clave; «rentabilidad» no satisface «renta».
+- `parse_license_records()` conserva la licencia de referencia más reciente; una licencia denegada o pendiente no implica cierre.
+- `read_census_rows()` conserva las comillas interiores del callejero oficial.
+- Semántica de ludoteca: se descartan negaciones de identidad y menciones a otros negocios o espacios públicos; se mantienen positivos como «no es la primera vez que ofrecemos ludoteca».
+- Caché del script de extracción validada por tamaño y cabecera; descarga atómica con `.part`.
+- Tests nuevos: extremo a extremo del descubrimiento, IDs entre procesos, artefacto JSON/CSV, caché e integración registro -> análisis -> redactor.
+- Suite completa: **189 tests**.
+
 ### Corrección de la extracción de precios (20/10/2026)
 - `_extract_evidence_from_page()` usaba `findall` con un solo grupo y luego `price_patterns[0][0]`, que devuelve el primer carácter del importe en vez del número
 - Nueva regex con importes españoles e ingleses, parseo de separadores de miles y decimales

@@ -1,6 +1,6 @@
 # FitFamily - Registro de Cambios del Módulo Persona 1
 
-> **Fecha última actualización**: 20 de octubre de 2026
+> **Fecha última actualización**: 21 de octubre de 2026
 > **Autor**: Juan (Persona 1 - Investigador, herramientas y MCP)
 > **Proyecto**: FitFamily - IA multiagente para análisis de viabilidad de gimnasio con ludoteca
 
@@ -9,7 +9,7 @@
 ## Nota sobre fechas y estado documental
 
 - Las fechas de las versiones 1.0.0 y 1.1.0 corresponden al desarrollo original del módulo (octubre de 2026) y se conservan como histórico.
-- La revisión, correcciones y poblado de datos de esta iteración se fechan el **20 de octubre de 2026**.
+- La revisión, correcciones y poblado de datos de esta iteración se fechan el **20-21 de octubre de 2026**.
 - Los elementos listados en "Backlog" **no** están completados; solo se consideran cerrados los marcados con `[x]`.
 - Las afirmaciones de la versión 1.0.0 sobre una prueba real de MCP se corrigieron en 1.1.1 (`tests/test_mcp_integration.py`).
 - No se afirma la ejecución de CrewAI con LLM mientras no exista una clave de proveedor configurada.
@@ -428,6 +428,193 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 
 ### Tests
 - Suite completa: 78 tests pasando.
+
+
+## Versión 1.1.10 — Se respetan los límites de búsqueda del encargo (20/10/2026)
+
+### Corrección
+- run_research() usaba un límite fijo de 5 resultados y solo mostraba search_limits dentro del texto de la tarea, sin aplicarlo.
+- Ahora resuelve_max_results() toma search_limits.max_results del ResearchBrief, con valor por defecto 5 y tope de 20 (el límite que aceptan search_web y competitor_search).
+- El valor se aplica tanto a la búsqueda inicial como a competitor_search.
+
+### Pruebas
+- Añadido tests/test_search_limits.py con 7 tests: valor por defecto, valor del encargo, tope, valores inválidos y comprobación de que el límite llega a las dos herramientas.
+
+
+## Versión 1.1.11 — Indicadores de equipamientos y hogares con menores (20/10/2026)
+
+### Hallazgo: la auditoria anterior fue incompleta
+- Se habia revisado la ficha de cada dataset pero solo el PRIMER recurso de cada uno: el fichero de Locales del Censo de Locales y la hoja de Tamano del hogar del XLSX. Ambos tienen mas recursos: el Censo de Locales tiene cuatro ficheros (Locales, Actividades, Locales con licencia, Terrazas) y el libro de hogares tiene tres hojas (Tamano, Composicion del hogar, Tipo-Nacionalidad).
+- Consecuencia: familias y gimnasios estaban marcados como no disponibles cuando la fuente existia. Ningun valor se habia inventado, pero la conclusion era mas fuerte que la evidencia.
+
+### Indicadores anadidos (todos verificados contra fuente oficial)
+- gyms_registered: 9 locales abiertos con epigrafe 931008 (ACTIVIDADES DE LOS GIMNASIOS).
+- sports_recreation_venues: 4 locales con epigrafe 855002 (ensenanza no reglada deportiva y recreativa).
+- childrens_play_venues: 3 locales con epigrafes 932001 y 932002 (centros de juegos o celebraciones infantiles).
+- community_pools: 3 locales con epigrafe 931010 (piscinas de comunidades de vecinos).
+- households_with_minors: 3.071 hogares con al menos un menor (MINIMO verificable), referencia 1 ene 2025.
+
+### Indicadores que siguen en null
+- families_with_children: ninguna fuente oficial define ni publica familias con hijos a nivel de barrio; el Padron mide hogares. households_with_minors no es sinonimo.
+- gyms_with_ludoteca: no existe un epigrafe que combine gimnasio y ludoteca; los 9 de gimnasios y los 3 de ocio infantil son categorias distintas y un local puede estar en ambas. Falta confirmacion centro a centro.
+
+### Defectos propios detectados y corregidos
+- refresh_gyms_count() sobrescribia el indicador en vez de SUMAR los dos epigrafes que lo alimentan (childrens_play_venues devolvia 1 en lugar de 3). Ahora se suman y hay test de regresion.
+- La composicion del hogar clasificaba como ambiguas tanto las categorias con o sin menores como las explicitamente sin menores (3.146 en lugar de 662). Ahora se separan en tres grupos: con menores, sin menores y ambiguas.
+- Los parsers de CSV no toleraban la cabecera con BOM UTF-8: al leer el fichero oficial como texto, la primera columna (id_local) dejaba de reconocerse y el parser fallaba en silencio. Corregido y con test.
+
+### Implementacion
+- src/mcp/server.py: parse_actividades_csv(), refresh_gyms_count(), parse_household_composition_rows(), refresh_households_with_minors() y _sections_cache_path(). Importaciones perezosas: openpyxl y pyogrio son herramientas offline, NO dependencias del servidor MCP.
+- data/raw/extract_censo_locales.py: script offline que reproduce los 5 indicadores del Censo de Locales.
+- tests/test_area_indicators.py: 18 tests (recuentos, suma de epigrafes, BOM, cierres, areas no soportadas, errores que no tocan el almacen, composicion en tres grupos y contrato de los valores publicados).
+
+### Documentacion
+- data/raw/README.md, data/sources.json, docs/research-module.md, docs/research-changelog.md y docs/auditoria-fuentes-datos.md sincronizados.
+
+### Tests
+- Suite completa: 103 tests pasando.
+
+## Versión 1.2.1 — Correcciones de la revisión (21/10/2026)
+
+### Ludoteca negada
+- `detect_playroom()` daba por hecho el servicio cuando la página decía "no dispone de
+  ludoteca", "sin sala infantil" o "ludoteca no disponible". Ahora las menciones negadas
+  se descartan (con corte de cláusula: una negación de otro servicio no oculta una
+  ludoteca real) y el valor queda `None`, nunca `True`.
+
+### Dirección exacta
+- `_page_matches_address()` comprobaba solo la calle, así que una página del número 46
+  podía aportar precios al local del número 44. Ahora exige también el número oficial
+  junto a la calle; se acepta un rango que lo incluya (`42-46` -> 44) y, si el censo no
+  publica número, se mantiene la comprobación por calle.
+- Las comillas del callejero oficial (`MARIO MORENO "CANTINFLAS`) ya no impiden casar la
+  dirección con la web, que suele escribir el nombre sin comillas.
+
+### Descubrimiento de fuentes
+- La comprobación de la variable exige palabras completas: «rentabilidad» ya no valida
+  «renta».
+- El límite `search_limits.max_results` del encargo llega también a la búsqueda de
+  fuentes, que antes usaba 5 fijo.
+- Los identificadores de evidencia se construyen con la variable y el índice, sin
+  `hash()`, así que son reproducibles entre ejecuciones.
+
+### Tests
+- 8 tests nuevos y más aserciones en los existentes (negaciones largas y en plural,
+  palabra completa, límite del encargo, identificadores estables, calle con comillas).
+- Suite completa: **161 tests**.
+
+## Versión 1.2.2 — Revisión final de riesgos residuales (21/10/2026)
+
+### Descubrimiento de fuentes
+- Prueba extremo a extremo de `run_research()`: una variable ausente genera consultas,
+  respeta `search_limits.max_results`, lee y evalúa cada fuente y produce evidencias
+  trazables.
+- Los fallos de red y las respuestas vacías también se registran como `Evidence` sin URL
+  (estado `rejected` y motivo), en lugar de desaparecer. Las fuentes inaccesibles conservan
+  su URL y el error de lectura.
+- La validación semántica exige **todos** los términos clave, no una parte: una página
+  sobre «rentabilidad y barrios» ya no valida «renta media por barrio». Se ignoran tildes
+  y se aceptan singular/plural («población»/«poblacion», «renta»/«rentas»), manteniendo la
+  palabra completa para no confundir «renta» con «rentabilidad».
+
+### Identificadores
+- `src/tools/evidence_ids.py`: IDs deterministas con SHA-256, sin `hash()` de Python.
+- Las evidencias de descubrimiento se identifican por variable normalizada + URL o consulta;
+  dos variables con el mismo slug ya no colisionan y el mismo par se puede deduplicar.
+- Las evidencias de búsqueda y de `competitor_search` usan el mismo esquema. Se elimina
+  `ev_{hash(url) % 10000}`, que cambiaba entre procesos y colisionaba con pocas URLs.
+- Las variables de `missing_variables` se deduplican sin distinguir mayúsculas.
+
+### Registro de competidores
+- `read_census_rows()` ya no elimina las comillas interiores: la dirección oficial
+  `MARIO MORENO "CANTINFLAS"` conserva la comilla de cierre.
+- Cuando un local tiene varias licencias se muestra la de referencia más reciente, no la
+  última fila del fichero. Una licencia denegada, pendiente o sin efectos no se interpreta
+  como cierre del negocio; la evidencia lo declara expresamente.
+- Artefacto regenerado desde los tres CSV oficiales: 18 competidores, 234 locales abiertos,
+  16 con licencia y los mismos contadores; 18 direcciones verificadas contra el censo, sin
+  IDs duplicados, coordenadas `0,0` ni actividades ausentes.
+
+### Semántica de ludoteca
+- Se descartan las negaciones de identidad («no es una ludoteca», «no somos una ludoteca»)
+  y las menciones a otros negocios («el gimnasio de al lado tiene ludoteca») o a espacios
+  públicos («ludoteca municipal», «parque infantil»). No se atribuyen al competidor.
+- No se pierden positivos como «no es la primera vez que ofrecemos ludoteca» o «no es un
+  secreto que tenemos ludoteca».
+
+### Datos y cachés
+- `data/raw/extract_competitor_registry.py` valida que la caché tenga tamaño y cabecera
+  oficiales; una página de error de 207 bytes ya no se acepta como CSV. La descarga usa
+  `.part` y `os.replace`.
+- La generación filtra por barrio mientras lee, sin cargar los tres CSV completos en memoria.
+- El test de `refresh_locales_count` escribía su CSV de ejemplo en la caché real
+  (`data/raw/cache/censo_locales.csv`) y sustituía el censo oficial por 207 bytes. Ahora usa
+  `tmp_path`; la suite ya no altera la caché de trabajo.
+
+### Compatibilidad
+- `tests/test_cross_module_integration.py` carga el registro real, lo pasa por
+  `to_dataframe()` y `summarize_competitors()`, y genera un `ReportDraft` con
+  `WriterAgent`. Los `None` siguen siendo desconocidos (sin precio, sin ludoteca, sin
+  nombre), no se convierten en 0 ni en hechos.
+- `tests/test_registry_artifact.py` verifica el JSON y el CSV versionados: contadores,
+  IDs únicos, direcciones, coordenadas, licencias y procedencia.
+
+### Pendiente (no implementado)
+- Renta neta media por sección censal (INE ADRH, operación 30325): sigue documentada en
+  `docs/pendiente-renta-ine.md`; no se ha descargado ni inventado en esta revisión.
+- `families_with_children` y `gyms_with_ludoteca` siguen bloqueados: ninguna fuente oficial
+  define esos indicadores con la precisión necesaria.
+- Evolución histórica del censo, plazas escolares, vivienda futura y accesibilidad: fases
+  posteriores.
+
+### Tests
+- 28 tests nuevos: extremo a extremo del descubrimiento, IDs estables entre procesos,
+  colisiones de slug, semántica de negaciones/menciones, licencias, artefacto, caché e
+  integración entre módulos.
+- Suite completa: **189 tests**.
+
+## Versión 1.2.0 — Registro de competidores oficial, buscador de fuentes reparado y descubrimiento de datasets (20/10/2026)
+
+### Hallazgo crítico: el buscador de fuentes no funcionaba
+- Causa raiz: _normalize_url() en src/tools/search_web.py llamaba urlencode() con el argumento inexistente 'query_fragment', lo que lanzaba TypeError en CADA busqueda. El error se envolvia en RuntimeError y el agente recibia 'Search provider failed' sin ningun resultado.
+- Ademas, la query se reconstruia sin el interrogante, de modo que los parametros se perdian.
+- Los tests no lo detectaban porque todos mockeaban search_web. Se anaden 3 tests de regresion que usan la funcion real.
+- Efecto: hasta ahora ninguna busqueda web del modulo habia funcionado de verdad.
+
+### Registro de competidores (src/tools/competitor_registry.py, nuevo)
+- Une los tres recursos oficiales del Censo de Locales (Locales, Actividades y Locales con informacion de licencia) en registros Competitor con el identificador oficial del local.
+- 18 competidores de El Cañaveral con dirección, CP, coordenadas, actividad declarada y licencia.
+- Procedencia por campo: cada bloque oficial lleva su propia Evidence con URL, fecha de consulta y limitaciones.
+- Reglas: coordenadas 0,0 o fuera del entorno UTM 30N de Madrid = no disponibles; licencia ausente = 'no disponible' (nunca 'denegada'); has_playroom en True/False solo con evidencia fiable, si no None; precios con su periodicidad publicada, sin convertir.
+- Enriquecimiento web: se busca por direccion oficial, la pagina solo se acepta si menciona la calle y la actividad declarada, y se descartan los anuncios de alquiler de vivienda (se detectan por senales multiples de vivienda).
+- to_dataframe() genera el DataFrame que consume el modulo de analisis (gym_name, monthly_price_eur, has_playroom y contexto).
+- Script reproducible: data/raw/extract_competitor_registry.py.
+
+### Descubrimiento de fuentes (src/tools/source_discovery.py, nuevo)
+- Convierte una variable pendiente en varias consultas: la literal, 'datos abiertos', 'estadistica' y una por organismo (site:ine.es, site:datos.madrid.es...).
+- Clasifica cada resultado como discovered, accessible, extracted, validated o rejected, con motivo explicito.
+- Distingue paginas informativas de datasets descargables (extensiones, /dataset/, /api/ y contenido).
+- Extrae tablas de CSV y de HTML para comprobar la cobertura y el periodo.
+- No marca una fuente como validada sin haber leido su contenido.
+
+### Integracion con el agente de investigacion
+- ResearchBrief incorpora missing_variables (opcional). Cuando se rellena, run_research hace una pasada de busqueda de fuentes y devuelve cada candidata como Evidence con URL, organismo, consulta, estado (discovered/accessible/extracted/validated/rejected) y motivo.
+- Una fuente nunca se presenta como verificada sin haber leido su contenido.
+
+### Contrato de datos (src/schemas.py)
+- Competitor incorpora campos opcionales: postal_code, latitude, longitude, census_section, license_status, license_type, license_date, has_playroom, verification_status y consulted_at.
+- Aditivo: los agentes de analisis y redaccion siguen funcionando sin cambios.
+
+### Documentacion
+- docs/pendiente-renta-ine.md: fase de renta (INE ADRH, operacion 30325) documentada y NO implementada.
+- data/sources.json, data/raw/README.md, docs/research-module.md y docs/auditoria-fuentes-datos.md actualizados.
+
+### Tests
+- tests/test_competitor_registry.py (30), tests/test_source_discovery.py (13) y 3 tests de regresion del buscador.
+- Suite completa de la rama `fix/respect-search-limits`: **153 tests**.
+
+### Nota de integracion
+- Estos cambios se integraron en la rama `fix/respect-search-limits` (PR #5, abierto contra `dev`), no en un PR aparte.
 
 - [ ] Añadir más indicadores al MCP (demografía, ingresos, etc.)
 - [ ] Mejorar manejo de errores cuando Internet está sin conexión
