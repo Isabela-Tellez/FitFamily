@@ -85,6 +85,7 @@ La investigación y el MCP son dos rutas separadas. El análisis de mercado exis
 | Servidor MCP con 13 indicadores locales | Funcional |
 | Registro de competidores desde el censo municipal | Funcional; preparación offline |
 | Análisis descriptivo y borrador de informe | Contratos funcionales |
+| Trazabilidad del borrador (`draft_id`, `version`, `claims`) | Funcional |
 | CLI, orquestador, exportación, UI y ejecución LLM completa | Pendiente |
 
 ## Puesta en marcha
@@ -232,6 +233,7 @@ Research and MCP are separate paths. The research flow goes from `ResearchBrief`
 | MCP server with 13 local indicators | Working |
 | Competitor registry from municipal open data | Working; offline preparation |
 | Descriptive analysis and report draft | Working contracts |
+| Report draft traceability (`draft_id`, `version`, `claims`) | Working |
 | CLI, orchestrator, export, UI and full LLM execution | Pending |
 
 ### Setup
