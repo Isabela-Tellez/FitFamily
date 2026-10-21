@@ -474,7 +474,7 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 103 tests pasando.
 
-## Versión 1.2.1 - Correcciones de la revisión (21/10/2026)
+## Versión 1.2.1 — Correcciones de la revisión (21/10/2026)
 
 ### Ludoteca negada
 - `detect_playroom()` daba por hecho el servicio cuando la página decía "no dispone de
@@ -487,14 +487,25 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
   podía aportar precios al local del número 44. Ahora exige también el número oficial
   junto a la calle; se acepta un rango que lo incluya (`42-46` -> 44) y, si el censo no
   publica número, se mantiene la comprobación por calle.
+- Las comillas del callejero oficial (`MARIO MORENO "CANTINFLAS`) ya no impiden casar la
+  dirección con la web, que suele escribir el nombre sin comillas.
+
+### Descubrimiento de fuentes
+- La comprobación de la variable exige palabras completas: «rentabilidad» ya no valida
+  «renta».
+- El límite `search_limits.max_results` del encargo llega también a la búsqueda de
+  fuentes, que antes usaba 5 fijo.
+- Los identificadores de evidencia se construyen con la variable y el índice, sin
+  `hash()`, así que son reproducibles entre ejecuciones.
 
 ### Tests
-- 6 tests nuevos (negaciones, corte de cláusula, otro número, sin número y rango).
-- Suite completa: **159 tests**.
+- 8 tests nuevos y más aserciones en los existentes (negaciones largas y en plural,
+  palabra completa, límite del encargo, identificadores estables, calle con comillas).
+- Suite completa: **161 tests**.
 
-## Versión 1.2.0 — Registro de competidores oficial, busquador de fuentes reparado y descubrimiento de datasets (20/10/2026)
+## Versión 1.2.0 — Registro de competidores oficial, buscador de fuentes reparado y descubrimiento de datasets (20/10/2026)
 
-### Hallazgo critico: el buscador de fuentes no funcionaba
+### Hallazgo crítico: el buscador de fuentes no funcionaba
 - Causa raiz: _normalize_url() en src/tools/search_web.py llamaba urlencode() con el argumento inexistente 'query_fragment', lo que lanzaba TypeError en CADA busqueda. El error se envolvia en RuntimeError y el agente recibia 'Search provider failed' sin ningun resultado.
 - Ademas, la query se reconstruia sin el interrogante, de modo que los parametros se perdian.
 - Los tests no lo detectaban porque todos mockeaban search_web. Se anaden 3 tests de regresion que usan la funcion real.
@@ -502,7 +513,7 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 
 ### Registro de competidores (src/tools/competitor_registry.py, nuevo)
 - Une los tres recursos oficiales del Censo de Locales (Locales, Actividades y Locales con informacion de licencia) en registros Competitor con el identificador oficial del local.
-- 18 competidores de El Canaveral con direccion, CP, coordenadas, actividad declarada y licencia.
+- 18 competidores de El Cañaveral con dirección, CP, coordenadas, actividad declarada y licencia.
 - Procedencia por campo: cada bloque oficial lleva su propia Evidence con URL, fecha de consulta y limitaciones.
 - Reglas: coordenadas 0,0 o fuera del entorno UTM 30N de Madrid = no disponibles; licencia ausente = 'no disponible' (nunca 'denegada'); has_playroom en True/False solo con evidencia fiable, si no None; precios con su periodicidad publicada, sin convertir.
 - Enriquecimiento web: se busca por direccion oficial, la pagina solo se acepta si menciona la calle y la actividad declarada, y se descartan los anuncios de alquiler de vivienda (se detectan por senales multiples de vivienda).

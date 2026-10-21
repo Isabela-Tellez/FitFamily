@@ -213,7 +213,7 @@ _STATISTICS_DATA: Dict[str, Any] = {
                 "Locales ABIERTOS con epígrafe '932001/932002 - CENTROS DE JUEGOS O "
                 "CELEBRACIONES INFANTILES (CON O SIN COCINA)' en El Cañaveral. Es la "
                 "oferta de ocio infantil más próxima a una ludoteca, pero el epígrafe no "
-                "garantiza que el local.offerca ludoteca."
+                "garantiza que el local ofrezca ludoteca."
                 " El fichero de Actividades recoge 229 de los 234 locales abiertos del "
                 "fichero de Locales: 5 locales no tienen actividad económica declarada."
             ),
@@ -350,22 +350,15 @@ def get_area_statistics(area_id: str, indicators: Optional[List[str]] = None) ->
     return response
 
 
-# Add to src/mcp/server.py after _load_statistics function.
-# Insert the following functions.
-
-import csv
-import io
-import urllib.request
-from datetime import datetime, timezone
-
 _LOCALES_CSV_URL = "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv"
 _LOCALES_CACHE_PATH = None  # set lazily; see _locales_cache_path()
 
 def _locales_cache_path():
     global _LOCALES_CACHE_PATH
     if _LOCALES_CACHE_PATH is None:
-        from pathlib import Path
-        _LOCALES_CACHE_PATH = Path(__file__).resolve().parents[2] / "data" / "raw" / "censo_locales.csv"
+        cache_dir = Path(__file__).resolve().parents[2] / "data" / "raw" / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        _LOCALES_CACHE_PATH = cache_dir / "censo_locales.csv"
     return _LOCALES_CACHE_PATH
 
 # Canonical barrio names as they appear in the CSV (uppercase, normalized).
@@ -866,7 +859,7 @@ _EPIGRAPH_INDICATORS = {
 
 _EPIGRAPH_LABELS = {
     "931008": "Actividades de los gimnasios",
-    "855002": "Ensenanza no reglada (deportiva y recreativa)",
+    "855002": "Enseñanza no reglada (deportiva y recreativa)",
     "931010": "Piscinas de comunidades de vecinos",
     "932001": "Centros de juegos o celebraciones infantiles con cocina",
     "932002": "Centros de juegos o celebraciones infantiles sin cocina",

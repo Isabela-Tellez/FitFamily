@@ -58,9 +58,9 @@ DATASET_EXTENSIONS = (
 
 # Terms that must appear in the content to consider the variable covered.
 _GENERIC_STOPWORDS = {
-    "datos", "dato", "informacion", "datos", "por", "de", "del", "la", "el",
-    "los", "las", "en", "para", "con", "media", "por", "seccion", "censal",
-    "variable", "fuente", "serie", "serie", "historico", "actual",
+    "datos", "dato", "informacion", "por", "de", "del", "la", "el",
+    "los", "las", "en", "para", "con", "media", "seccion", "censal",
+    "variable", "fuente", "serie", "historico", "actual",
 }
 
 
@@ -160,13 +160,18 @@ def extract_table(text: str) -> List[Dict[str, str]]:
     return table
 
 
+def _contains_term(text: str, term: str) -> bool:
+    """Whole-word match: "renta" must not be satisfied by "rentabilidad"."""
+    return re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text) is not None
+
+
 def check_variable(content: str, variable: str) -> Dict[str, Any]:
     """Check whether a content really contains the requested variable."""
     terms = required_terms(variable)
     normalized = _normalize(content)
     if not terms:
         return {"covered": False, "matched": [], "reason": "Variable demasiado generica para comprobar."}
-    matched = [term for term in terms if term in normalized]
+    matched = [term for term in terms if _contains_term(normalized, term)]
     covered = len(matched) >= max(1, (len(terms) + 1) // 2)
     reason = (
         "Contiene los terminos clave de la variable."

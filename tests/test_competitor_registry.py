@@ -200,6 +200,10 @@ def test_a_negated_playroom_is_not_a_positive_mention():
     assert detect_playroom("Sin ludoteca") is None
     assert detect_playroom("Ludoteca no disponible") is None
     assert detect_playroom("Carece de area de juegos") is None
+    # Plural and long formulations are also negations.
+    assert detect_playroom("En el centro no disponen de ludoteca") is None
+    assert detect_playroom("No disponemos en nuestras instalaciones de una ludoteca") is None
+    assert detect_playroom("No ofrecen servicio de ludoteca") is None
 
 
 def test_the_negation_stops_at_the_end_of_the_clause():
@@ -318,6 +322,26 @@ def test_web_enrichment_accepts_a_range_that_includes_the_premises():
     enriched = enrich_competitor_from_web(competitor, search_callable=fake_search,
                                           read_callable=fake_read)
     assert [t for t in enriched.tariffs if t.get("frequency") == "monthly"]
+
+
+def test_quoted_official_street_matches_the_page_without_quotes():
+    """'MARIO MORENO "CANTINFLAS' must match 'Mario Moreno Cantinflas'."""
+    from src.tools.competitor_registry import _page_matches_address
+
+    competitor = Competitor(
+        identifier="270562257",
+        name="GIMNASIO EJEMPLO",
+        location='CALLE MARIO MORENO "CANTINFLAS 64, 28052',
+    )
+    assert _page_matches_address(
+        "Gimnasio Ejemplo, calle Mario Moreno Cantinflas 64, El Canaveral", competitor
+    )
+    assert _page_matches_address(
+        'Gimnasio Ejemplo, calle Mario Moreno "Cantinflas" 64, El Canaveral', competitor
+    )
+    assert not _page_matches_address(
+        "Gimnasio Ejemplo, calle Mario Moreno Cantinflas 66, El Canaveral", competitor
+    )
 
 
 def test_a_negated_playroom_on_the_page_does_not_mark_the_service():

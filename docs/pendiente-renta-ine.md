@@ -58,7 +58,7 @@ entorno**. Con ella se puede:
 
 ## 5. Estado
 
-- Fuentes rentals **no descargadas** ni procesadas: no se ha realizado ninguna
+- Fuentes de renta **no descargadas** ni procesadas: no se ha realizado ninguna
   descarga, por lo que no se afirma ningún valor de renta.
 - Pendiente: descarga, comprobación de cobertura de las 9 secciones, y tests de
   regresión del cruce.

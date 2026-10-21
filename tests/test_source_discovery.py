@@ -81,6 +81,8 @@ def test_check_variable_requires_the_key_terms():
     ko = check_variable("Poblacion total del municipio", "renta neta media")
     assert ko["covered"] is False
     assert "no menciona" in ko["reason"]
+    # Whole words: "rentabilidad" is not the variable "renta".
+    assert check_variable("Informe de rentabilidad del sector", "renta media")["covered"] is False
 
 
 def test_discover_sources_marks_states_and_keeps_traceability():
@@ -212,3 +214,41 @@ def test_brief_with_missing_variables_returns_discovered_sources():
     assert sources
     assert "validated" in sources[0].claim
     assert sources[0].limitations
+
+
+def test_discovery_respects_brief_limits_and_produces_stable_ids():
+    """The brief limit reaches the search and the evidence ids are reproducible."""
+    from src.schemas import ResearchBrief
+    from src.agents.researcher import discover_sources_for_brief
+
+    candidates = [{
+        "url": "https://datos.madrid.es/dataset/300557-0-poblacion-distrito-barrio",
+        "title": "Poblacion por distrito y barrio",
+        "query": "poblacion por barrio",
+        "organism": "datos.madrid.es",
+        "variable": "poblacion por barrio",
+        "state": "validated",
+        "reason": "Contiene los terminos clave de la variable.",
+        "is_dataset": True,
+        "matched_terms": ["poblacion"],
+    }]
+    captured = {}
+
+    def fake_discover(variable, area=None, max_results_per_query=None):
+        captured["max_results"] = max_results_per_query
+        return candidates
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+        missing_variables=["poblacion por barrio"],
+        search_limits={"max_results": 3},
+    )
+    with patch("src.tools.source_discovery.discover_sources", side_effect=fake_discover):
+        first = discover_sources_for_brief(brief)
+        second = discover_sources_for_brief(brief)
+
+    assert captured["max_results"] == 3
+    assert [e.evidence_id for e in first] == [e.evidence_id for e in second]
+    assert first[0].evidence_id.startswith("source_poblacion_por_barrio_")

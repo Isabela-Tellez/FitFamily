@@ -164,8 +164,21 @@ def resolve_max_results(search_limits: Optional[Dict[str, Any]]) -> int:
         if isinstance(raw, int) and raw >= 1:
             return min(raw, MAX_RESULTS_LIMIT)
         if isinstance(raw, float) and raw >= 1:
-            return min(int(raw), MAX_RESULTS_LIMIT)
+            try:
+                return min(int(raw), MAX_RESULTS_LIMIT)
+            except (OverflowError, ValueError):
+                return DEFAULT_MAX_RESULTS
     return DEFAULT_MAX_RESULTS
+
+
+def _variable_slug(variable: str) -> str:
+    """Stable identifier for a variable, so evidence ids are reproducible."""
+    compact = "".join(
+        char if char.isalnum() or char.isspace() else " "
+        for char in variable.lower()
+    )
+    return "_".join(compact.split())[:30] or "variable"
+
 
 def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
     """Look for the sources that could provide the variables the brief misses.
@@ -176,18 +189,21 @@ def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
     """
     from src.tools.source_discovery import discover_sources
 
+    max_results = resolve_max_results(brief.search_limits)
     evidences: List[Evidence] = []
-    for variable in brief.missing_variables:
+    for variable in dict.fromkeys(brief.missing_variables):
+        slug = _variable_slug(variable)
         candidates = discover_sources(
             variable,
             area=f"{brief.study_area}, {brief.location}",
+            max_results_per_query=max_results,
         )
         for index, candidate in enumerate(candidates):
             if not candidate.get("url"):
                 continue
             state = candidate.get("state", "discovered")
             evidences.append(Evidence(
-                evidence_id=f"source_{index:03d}_{abs(hash(variable)) % 10000:04d}",
+                evidence_id=f"source_{slug}_{index:03d}",
                 claim=(
                     f"Fuente localizada para la variable '{variable}': "
                     f"{candidate.get('title') or candidate['url']} "
@@ -306,9 +322,13 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
         # Source discovery pass for the variables the brief still needs.
         if brief.missing_variables:
             try:
-                for candidate in discover_sources_for_brief(brief):
-                    evidences.append(candidate)
-                    search_performed += f"; fuente localizada: {candidate.source_url}"
+                found_sources = discover_sources_for_brief(brief)
+                evidences.extend(found_sources)
+                if found_sources:
+                    search_performed += (
+                        f"; {len(found_sources)} fuentes candidatas para "
+                        f"{len(set(brief.missing_variables))} variables pendientes"
+                    )
             except Exception as e:
                 logger.warning(f"Source discovery failed: {e}")
                 search_performed += "; busqueda de fuentes fallo"

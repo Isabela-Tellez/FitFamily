@@ -78,7 +78,7 @@ PLAYROOM_TERMS = (
     "area infantil",
     "area de juegos",
     "parque infantil",
-    "c childcare",
+    "childcare",
     "kids club",
     "club infantil",
 )
@@ -425,6 +425,7 @@ def build_competitor_registry(
         "descartados_sin_actividad_relevante": 0,
         "sin_coordenadas": 0,
         "sin_nombre_comercial": 0,
+        "locales_sin_actividad": 0,
     }
 
     for local_id, record in open_locales.items():
@@ -590,6 +591,15 @@ def _street_text(competitor: Competitor) -> str:
 
 _STREET_NUMBER_RE = re.compile(r"(?<!\d)(\d{1,4})\s*([A-Za-z])?\s*$")
 
+_QUOTE_CHARS = "\"'“”«»‘’"
+
+
+def _without_quotes(value: str) -> str:
+    """Drop quoting marks so an official '"CANTINFLAS' matches 'Cantinflas'."""
+    for char in _QUOTE_CHARS:
+        value = value.replace(char, " ")
+    return " ".join(value.split())
+
 
 def _street_number(competitor: Competitor) -> Optional[str]:
     """House number of the official address, if the registry publishes one.
@@ -617,7 +627,7 @@ def _street_without_number(competitor: Competitor) -> str:
 
 def _address_tokens(competitor: Competitor) -> List[str]:
     """Street tokens used to bind a web page to a premises."""
-    normalized = _normalize_text(_street_text(competitor))
+    normalized = _without_quotes(_normalize_text(_street_text(competitor)))
     if not normalized:
         return []
     tokens = [t for t in normalized.split() if len(t) > 3]
@@ -654,7 +664,7 @@ def _page_matches_address(body_text: str, competitor: Competitor) -> bool:
     premises at number 44. When the registry publishes no number, only the
     street can be checked.
     """
-    normalized = _normalize_text(body_text)
+    normalized = _without_quotes(_normalize_text(body_text))
     tokens = _address_tokens(competitor)
     if not tokens:
         return False
@@ -665,7 +675,7 @@ def _page_matches_address(body_text: str, competitor: Competitor) -> bool:
     if number is None:
         return True
 
-    phrase = _normalize_text(_street_without_number(competitor))
+    phrase = _without_quotes(_normalize_text(_street_without_number(competitor)))
     phrase_start = normalized.find(phrase) if phrase else -1
     if phrase_start >= 0:
         start = phrase_start + len(phrase)
@@ -678,10 +688,14 @@ def _page_matches_address(body_text: str, competitor: Competitor) -> bool:
 
 # Negation markers that turn a mention into "the service is not offered".
 _NEGATION_PREFIXES = (
-    "no dispone de", "no disponemos de", "no dispone", "no disponemos",
-    "no cuenta con", "no contamos con", "no cuenta", "no contamos",
-    "no tiene", "no tenemos", "no hay", "no ofrece", "no ofrecemos",
-    "no incluye", "no incluimos", "no existe", "no se ofrece",
+    "no dispone de", "no disponemos de", "no disponen de",
+    "no dispone", "no disponemos", "no disponen",
+    "no cuenta con", "no contamos con", "no cuentan con",
+    "no cuenta", "no contamos", "no cuentan",
+    "no tiene", "no tenemos", "no tienen",
+    "no hay", "no ofrece", "no ofrecemos", "no ofrecen",
+    "no incluye", "no incluimos", "no incluyen",
+    "no existe", "no existen", "no se ofrece",
     "no se dispone", "carece de", "carente de", "ausencia de", "falta de",
     "ningun", "ninguna", "sin",
 )
@@ -698,7 +712,7 @@ _NEGATION_BREAKERS = (" pero ", " sino ", " aunque ", " y ", ",", ";", ".")
 
 def _is_negated(normalized: str, index: int, length: int) -> bool:
     """True when the mention at ``index`` is explicitly negated."""
-    before = normalized[max(0, index - 45):index]
+    before = normalized[max(0, index - 70):index]
     before = (
         before.replace("sin embargo", " ").replace("sin duda", " ").replace("no solo", " ")
     )
@@ -717,7 +731,7 @@ def _is_negated(normalized: str, index: int, length: int) -> bool:
         if any(breaker in between for breaker in _NEGATION_BREAKERS):
             continue
         # "no dispone de una ludoteca": at most a few words between.
-        if len(between.split()) <= 4:
+        if len(between.split()) <= 6:
             return True
     return any(suffix in after for suffix in _NEGATION_SUFFIXES)
 

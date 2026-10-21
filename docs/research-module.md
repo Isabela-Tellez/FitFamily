@@ -64,6 +64,8 @@ El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proy
   motivo explícito, y distingue páginas informativas de datasets descargables.
 - `ResearchBrief.missing_variables` (opcional) dispara esa pasada en `run_research()`: las
   candidatas vuelven como `Evidence` con URL, organismo, consulta y estado.
+- La validación exige palabras completas (`renta` no se satisface con `rentabilidad`) y el
+  límite `search_limits.max_results` del encargo se propaga a las consultas.
 - Una fuente nunca se presenta como verificada sin haber leído su contenido.
 - Fase documentada y pendiente: renta por sección censal (INE ADRH, operación 30325) en
   `docs/pendiente-renta-ine.md`.
