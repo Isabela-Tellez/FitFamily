@@ -1,0 +1,1047 @@
+{
+  "generated_at": "2026-10-21T08:14:31.943655+00:00",
+  "source": "Censo de Locales y Actividades del Ayuntamiento de Madrid",
+  "license": "CC BY 4.0 - Ayuntamiento de Madrid",
+  "competitors": [
+    {
+      "identifier": "270562257",
+      "name": "PISCINA C/ MARIO  MORENO CANTINFLAS",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 64, 28052",
+      "services": [
+        "Piscinas de comunidades de vecinos"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270562257",
+          "claim": "Local 270562257 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 64, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=PISCINA C/ MARIO  MORENO CANTINFLAS | via=MARIO MORENO \"CANTINFLAS\" | num=000064 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270562257",
+          "claim": "Actividades declaradas: Piscinas de comunidades de vecinos",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270562257",
+          "claim": "Licencia de actividad: Declaración Responsable — En tramitación (ref. 500/2016/12050), fecha 2016-09-06 01:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=500/2016/12050 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2016-09-06 01:00:00",
+          "date_observed": "2016-09-06 01:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": null,
+      "longitude": null,
+      "census_section": "19052",
+      "license_status": "En tramitación",
+      "license_type": "Declaración Responsable",
+      "license_date": "2016-09-06 01:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270567440",
+      "name": "PISCINA COMUNIDAD PROPIETARIOS VICTORIANO GRANIZO 1-35",
+      "location": "CALLE CONCEJAL VICTORINO GRANIZO 1, 28052",
+      "services": [
+        "Piscinas de comunidades de vecinos"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270567440",
+          "claim": "Local 270567440 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE CONCEJAL VICTORINO GRANIZO 1, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=PISCINA COMUNIDAD PROPIETARIOS VICTORIANO GRANIZO 1-35 | via=CONCEJAL VICTORINO GRANIZO | num=000001 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270567440",
+          "claim": "Actividades declaradas: Piscinas de comunidades de vecinos",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270567440",
+          "claim": "Licencia de actividad: Declaración Responsable — En tramitación (ref. 500/2018/09274), fecha 2018-08-24 01:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=500/2018/09274 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2018-08-24 01:00:00",
+          "date_observed": "2018-08-24 01:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": null,
+      "longitude": null,
+      "census_section": "19052",
+      "license_status": "En tramitación",
+      "license_type": "Declaración Responsable",
+      "license_date": "2018-08-24 01:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270571346",
+      "name": "PISCINA COM PROP RESIDENCIAL BREMEN",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 28, 28052",
+      "services": [
+        "Piscinas de comunidades de vecinos"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270571346",
+          "claim": "Local 270571346 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 28, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=PISCINA COM PROP RESIDENCIAL BREMEN | via=MARIO MORENO \"CANTINFLAS\" | num=000028 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270571346",
+          "claim": "Actividades declaradas: Piscinas de comunidades de vecinos",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931010=PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270571346",
+          "claim": "Licencia de actividad: Declaración Responsable — En tramitación (ref. 500/2020/00694), fecha 2020-01-29 00:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=500/2020/00694 | tipo=Declaración Responsable | situacion=En tramitación | fecha=2020-01-29 00:00:00",
+          "date_observed": "2020-01-29 00:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": null,
+      "longitude": null,
+      "census_section": "19052",
+      "license_status": "En tramitación",
+      "license_type": "Declaración Responsable",
+      "license_date": "2020-01-29 00:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270574138",
+      "name": null,
+      "location": "CALLE CAÑADA DE VICALVARO A SAN FERNANDO 226, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270574138",
+          "claim": "Local 270574138 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE CAÑADA DE VICALVARO A SAN FERNANDO 226, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=S/R | via=CAÑADA DE VICALVARO A SAN FERNANDO | num=000226 | cp=28052 | utm=(453068.21088307496, 4473238.26453264)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270574138",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270574138",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2026/04718)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2026/04718 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4084377,
+      "longitude": -3.5531202,
+      "census_section": "19055",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270575273",
+      "name": "DIVERMUN2 C.B",
+      "location": "CALLE ALTO DEL ESPARRAGAL 202, 28052",
+      "services": [
+        "Centros de juegos o celebraciones infantiles (con cocina)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270575273",
+          "claim": "Local 270575273 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE ALTO DEL ESPARRAGAL 202, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=DIVERMUN2 C.B | via=ALTO DEL ESPARRAGAL | num=000202 | cp=28052 | utm=(451988.94406217017, 4472629.974058928)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270575273",
+          "claim": "Actividades declaradas: Centros de juegos o celebraciones infantiles (con cocina)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "932001=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES CON COCINA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270575273",
+          "claim": "Licencia de actividad: Transmisión de licencia Urbanística — Transmisión de Licencia Denegada (ref. 350/2026/10333)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2026/10333 | tipo=Transmisión de licencia Urbanística | situacion=Transmisión de Licencia Denegada | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4028963,
+      "longitude": -3.5657936,
+      "census_section": "19052",
+      "license_status": "Transmisión de Licencia Denegada",
+      "license_type": "Transmisión de licencia Urbanística",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270576853",
+      "name": "MI LUGAR FAVORITO (CENTRO DE REGREO INFANTIL)",
+      "location": "CALLE FRANCISCO GRANDE COVIAN 16, 28052",
+      "services": [
+        "Centros de juegos o celebraciones infantiles (sin cocina)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270576853",
+          "claim": "Local 270576853 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE FRANCISCO GRANDE COVIAN 16, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=MI LUGAR FAVORITO (CENTRO DE REGREO INFANTIL) | via=FRANCISCO GRANDE COVIAN | num=000016 | cp=28052 | utm=(452109.6248658027, 4472543.033508594)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270576853",
+          "claim": "Actividades declaradas: Centros de juegos o celebraciones infantiles (sin cocina)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "932002=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES SIN COCINA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270576853",
+          "claim": "Licencia de actividad: Declaración Responsable — Ineficaz o sin efectos (ref. 350/2025/00827), fecha 2025-03-17 00:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2025/00827 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2025-03-17 00:00:00",
+          "date_observed": "2025-03-17 00:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.40212,
+      "longitude": -3.5643649,
+      "census_section": "19058",
+      "license_status": "Ineficaz o sin efectos",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-03-17 00:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270576995",
+      "name": "GIMNASIO SERENAL",
+      "location": "CALLE ALTO DEL ESPARRAGAL 204, 28052",
+      "services": [
+        "Ensenanza no reglada (deportiva y recreativa)",
+        "Actividades de los gimnasios",
+        "DESPACHO DE FISIOTERAPEUTAS"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270576995",
+          "claim": "Local 270576995 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE ALTO DEL ESPARRAGAL 204, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=GIMNASIO SERENAL | via=ALTO DEL ESPARRAGAL | num=000204 | cp=28052 | utm=(451950.46883498394, 4472652.515471834)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270576995",
+          "claim": "Actividades declaradas: Ensenanza no reglada (deportiva y recreativa), Actividades de los gimnasios (+1 otras)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "869008=DESPACHO DE FISIOTERAPEUTAS; 855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA); 931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270576995",
+          "claim": "Licencia de actividad: Declaración Responsable — Inspeccionada favorable (ref. 350/2024/28192), fecha 2025-08-26 00:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2024/28192 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-08-26 00:00:00",
+          "date_observed": "2025-08-26 00:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4030971,
+      "longitude": -3.5662487,
+      "census_section": "19052",
+      "license_status": "Inspeccionada favorable",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-08-26 00:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270577181",
+      "name": "ENERGIE FITNESS",
+      "location": "CALLE CERRO DEL CAMPO 46, 28052",
+      "services": [
+        "Ensenanza no reglada (deportiva y recreativa)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270577181",
+          "claim": "Local 270577181 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE CERRO DEL CAMPO 46, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=ENERGIE FITNESS | via=CERRO DEL CAMPO | num=000046 | cp=28052 | utm=(453261.7358767251, 4472822.499167725)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270577181",
+          "claim": "Actividades declaradas: Ensenanza no reglada (deportiva y recreativa)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270577181",
+          "claim": "Licencia de actividad: Declaración Responsable — Ineficaz o sin efectos (ref. 350/2023/01612), fecha 2025-02-19 00:00:00",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2023/01612 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2025-02-19 00:00:00",
+          "date_observed": "2025-02-19 00:00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4047031,
+      "longitude": -3.550809,
+      "census_section": "19054",
+      "license_status": "Ineficaz o sin efectos",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-02-19 00:00:00",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270577182",
+      "name": "GIMNASIO",
+      "location": "CALLE CERRO DEL CAMPO 44, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270577182",
+          "claim": "Local 270577182 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE CERRO DEL CAMPO 44, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=GIMNASIO | via=CERRO DEL CAMPO | num=000044 | cp=28052 | utm=(453265.1631750065, 4472862.919398019)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270577182",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270577182",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2025/11808)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2025/11808 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4050674,
+      "longitude": -3.5507716,
+      "census_section": "19054",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270578977",
+      "name": "GIMNASIO DIVERSABOX",
+      "location": "CALLE MAYORAZGO DE DUARTE 283, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270578977",
+          "claim": "Local 270578977 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MAYORAZGO DE DUARTE 283, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=GIMNASIO DIVERSABOX | via=MAYORAZGO DE DUARTE | num=000283 | cp=28052 | utm=(453131.3963512826, 4473256.941562104)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270578977",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270578977",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2024/07850)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2024/07850 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4086095,
+      "longitude": -3.552377,
+      "census_section": "19053",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270579042",
+      "name": null,
+      "location": "AVENIDA MIGUEL DELIBES 47, 28052",
+      "services": [
+        "Actividades de los gimnasios",
+        "FISIOTERAPEUTAS Y OTRAS ACTIVIDADES SANITARIAS"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270579042",
+          "claim": "Local 270579042 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'AVENIDA MIGUEL DELIBES 47, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=S/R | via=MIGUEL DELIBES | num=000047 | cp=28052 | utm=(452435.72046101076, 4472935.130524934)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270579042",
+          "claim": "Actividades declaradas: Actividades de los gimnasios (+1 otras)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS; 869007=FISIOTERAPEUTAS Y OTRAS ACTIVIDADES SANITARIAS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270579042",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2025/35462)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2025/35462 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.405671,
+      "longitude": -3.5605515,
+      "census_section": "19055",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270579705",
+      "name": null,
+      "location": "CALLE FRANCISCO GRANDE COVIAN 24, 28052",
+      "services": [
+        "Ensenanza no reglada (deportiva y recreativa)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270579705",
+          "claim": "Local 270579705 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE FRANCISCO GRANDE COVIAN 24, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=S/R | via=FRANCISCO GRANDE COVIAN | num=000024 | cp=28052 | utm=(452158.4501409702, 4472510.051050291)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270579705",
+          "claim": "Actividades declaradas: Ensenanza no reglada (deportiva y recreativa)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270579705",
+          "claim": "Licencia de actividad: Declaración Responsable — Inspeccionada favorable (ref. 350/2023/36715), fecha 2025-11-07",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2023/36715 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-11-07",
+          "date_observed": "2025-11-07",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4018257,
+      "longitude": -3.5637871,
+      "census_section": "19052",
+      "license_status": "Inspeccionada favorable",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-11-07",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270580617",
+      "name": null,
+      "location": "CALLE FERENC PUSKAS 245, 28052",
+      "services": [
+        "Ensenanza no reglada (deportiva y recreativa)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270580617",
+          "claim": "Local 270580617 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE FERENC PUSKAS 245, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=S/R | via=FERENC PUSKAS | num=000245 | cp=28052 | utm=(0.0, 0.0)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270580617",
+          "claim": "Actividades declaradas: Ensenanza no reglada (deportiva y recreativa)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "855002=ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE RECUPERACION, INFORMATICA)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270580617",
+          "claim": "Licencia de actividad: Declaración Responsable — Inspeccionada favorable (ref. 350/2024/12058), fecha 2025-08-01",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2024/12058 | tipo=Declaración Responsable | situacion=Inspeccionada favorable | fecha=2025-08-01",
+          "date_observed": "2025-08-01",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": null,
+      "longitude": null,
+      "census_section": "19053",
+      "license_status": "Inspeccionada favorable",
+      "license_type": "Declaración Responsable",
+      "license_date": "2025-08-01",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270582483",
+      "name": "MI LUGAR FAVORITO 2",
+      "location": "CALLE HUMILDAD 27, 28052",
+      "services": [
+        "Centros de juegos o celebraciones infantiles (con cocina)"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270582483",
+          "claim": "Local 270582483 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE HUMILDAD 27, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=MI LUGAR FAVORITO 2 | via=HUMILDAD | num=000027 | cp=28052 | utm=(452553.9704093642, 4473020.005326391)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270582483",
+          "claim": "Actividades declaradas: Centros de juegos o celebraciones infantiles (con cocina)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "932001=CENTROS DE JUEGOS O CELEBRACIONES INFANTILES CON COCINA",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270582483",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2026/31706)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2026/31706 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4064423,
+      "longitude": -3.5591643,
+      "census_section": "19055",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270582658",
+      "name": null,
+      "location": "CALLE CAÑADA DE VICALVARO A SAN FERNANDO 2, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270582658",
+          "claim": "Local 270582658 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE CAÑADA DE VICALVARO A SAN FERNANDO 2, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=S/R | via=CAÑADA DE VICALVARO A SAN FERNANDO | num=000002 | cp=28052 | utm=(452254.2701278466, 4473061.828886631)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270582658",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270582658",
+          "claim": "Licencia de actividad: Declaración Responsable — Ineficaz o sin efectos (ref. 350/2025/27420), fecha 2026-09-22",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2025/27420 | tipo=Declaración Responsable | situacion=Ineficaz o sin efectos | fecha=2026-09-22",
+          "date_observed": "2026-09-22",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.406802,
+      "longitude": -3.5626994,
+      "census_section": "19055",
+      "license_status": "Ineficaz o sin efectos",
+      "license_type": "Declaración Responsable",
+      "license_date": "2026-09-22",
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270584903",
+      "name": "GIMNASIO",
+      "location": "CALLE MARIO MORENO \"CANTINFLAS\" 49, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270584903",
+          "claim": "Local 270584903 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE MARIO MORENO \"CANTINFLAS\" 49, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=GIMNASIO | via=MARIO MORENO \"CANTINFLAS\" | num=000049 | cp=28052 | utm=(452403.3639179576, 4472884.426901194)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270584903",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270584903",
+          "claim": "Sin información de licencia disponible para este local en el fichero oficial.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "(sin registro de licencia)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "La ausencia de registro significa 'no disponible', no 'denegada' ni 'sin efectos'."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.4052124,
+      "longitude": -3.5609291,
+      "census_section": "19052",
+      "license_status": null,
+      "license_type": null,
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270585548",
+      "name": "GIMNASIO DUMAFIT S.L",
+      "location": "CALLE FERENC PUSKAS 207, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270585548",
+          "claim": "Local 270585548 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE FERENC PUSKAS 207, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=GIMNASIO DUMAFIT S.L | via=FERENC PUSKAS | num=000207 | cp=28052 | utm=(453548.0172343577, 4472250.762022691)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270585548",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270585548",
+          "claim": "Sin información de licencia disponible para este local en el fichero oficial.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "(sin registro de licencia)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "La ausencia de registro significa 'no disponible', no 'denegada' ni 'sin efectos'."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.3995685,
+      "longitude": -3.5473936,
+      "census_section": "19053",
+      "license_status": null,
+      "license_type": null,
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    },
+    {
+      "identifier": "270585886",
+      "name": "CENTRO WELLNESS",
+      "location": "CALLE GALES 39, 28052",
+      "services": [
+        "Actividades de los gimnasios"
+      ],
+      "tariffs": [],
+      "evidences": [
+        {
+          "evidence_id": "census_local_270585886",
+          "claim": "Local 270585886 declarado en el Censo de Locales del Ayuntamiento de Madrid (EL CAÑAVERAL), situación 'Abierto', dirección 'CALLE GALES 39, 28052'.",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-1-censo-locales/download/200085-1-censo-locales.csv",
+          "snippet": "rotulo=CENTRO WELLNESS | via=GALES | num=000039 | cp=28052 | utm=(453133.5659537717, 4472004.36377741)",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Registro administrativo municipal: puede contener inconsistencias. Las coordenadas se publican en EPSG:25830 (metros); la conversión a WGS84 la realiza el módulo y queda documentada en la evidencia."
+        },
+        {
+          "evidence_id": "census_activity_270585886",
+          "claim": "Actividades declaradas: Actividades de los gimnasios",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-5-censo-locales/download/200085-5-censo-locales.csv",
+          "snippet": "931008=ACTIVIDADES DE LOS GIMNASIOS",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Epígrafes de actividad económica declarados por el titular. No equivalen a servicios verificados por el negocio."
+        },
+        {
+          "evidence_id": "census_license_270585886",
+          "claim": "Licencia de actividad: Declaración Responsable — Presentada (pendiente de comprobación) (ref. 350/2026/32280)",
+          "value": null,
+          "unit": null,
+          "frequency": null,
+          "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales/resource/200085-3-censo-locales/download/200085-3-censo-locales.csv",
+          "snippet": "ref=350/2026/32280 | tipo=Declaración Responsable | situacion=Presentada (pendiente de comprobación) | fecha=",
+          "date_observed": "2026-10-21T08:14:16.606033+00:00",
+          "geo_scope": "EL CAÑAVERAL",
+          "limitations": "Una situación administrativa no acredita que el negocio esté abierto ni cerrado, ni que la actividad esté en curso. Si el local tiene varias licencias, se muestra la referencia más reciente."
+        }
+      ],
+      "postal_code": "28052",
+      "latitude": 40.3973255,
+      "longitude": -3.5522592,
+      "census_section": "19060",
+      "license_status": "Presentada (pendiente de comprobación)",
+      "license_type": "Declaración Responsable",
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": "verified",
+      "consulted_at": "2026-10-21T08:14:16.606033+00:00"
+    }
+  ],
+  "counters": {
+    "locales_en_barrio": 298,
+    "locales_abiertos": 234,
+    "locales_con_actividad": 229,
+    "locales_con_licencia": 16,
+    "descartados_sin_actividad_relevante": 211,
+    "sin_coordenadas": 4,
+    "sin_nombre_comercial": 5,
+    "locales_sin_actividad": 5,
+    "competidores": 18
+  }
+}
