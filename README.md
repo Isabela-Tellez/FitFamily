@@ -28,6 +28,10 @@ El repositorio **todavía no es un producto de extremo a extremo**: no hay CLI, 
 
 > **Principio de diseño:** un dato que no se ha observado se queda en `null`. Un `null` significa "no disponible", nunca cero, y una fuente no se considera verificada solo porque aparezca en una búsqueda.
 
+## Problema que resuelve
+
+Decidir si abrir un gimnasio con ludoteca exige datos locales verificables sobre población, hogares, competencia, precios y servicios. Hoy esa información suele estar dispersa, desactualizada o mezclada con suposiciones, lo que dificulta justificar la inversión y detectar lo que todavía no se sabe.
+
 ## Demo rápida
 
 Comprueba el servidor MCP local por `stdio`, sin claves ni conexión a internet:
@@ -189,6 +193,10 @@ FitFamily is a market-research project for assessing a gym with a playroom in **
 This repository is **not yet an end-to-end product**: there is no CLI, user interface, or complete LLM orchestration. What exists is a functional, auditable base for researching competitors, querying local indicators, and producing a draft report without inventing missing data.
 
 > **Design principle:** if a value has not been observed, it stays `null`. `null` means "not available", never zero. A source is not considered verified just because it appears in a search result.
+
+### Problem it solves
+
+Deciding whether to open a gym with a playroom requires verifiable local data about population, households, competitors, prices and services. Today that information is often scattered, outdated or mixed with assumptions, which makes it hard to justify the investment and to see what is still unknown.
 
 ### Quick demo
 
