@@ -11,18 +11,44 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.schemas import ResearchBrief, ResearchResult, Evidence, Competitor
 from src.agents.researcher import run_research, build_researcher, build_research_task
+from src.tools.search_web import SearchResult
 
 
 def _run_research_without_network(brief):
-    """Run the researcher with controlled, empty web tool responses.
+    """Run the researcher with controlled web tool responses.
 
     ``run_research`` normally calls the real search and competitor tools.
     Patching those module-level dependencies keeps this test deterministic
-    and independent from search providers or internet connectivity.
+    and independent from search providers or internet connectivity, while
+    still exercising the conversion of tool output into the result.
     """
-    with patch("src.agents.researcher.search_web", return_value=[]), patch(
+    search_results = [
+        SearchResult(
+            title="Gimnasio de prueba",
+            url="https://example.com/gimnasio",
+            snippet="Gimnasio con ludoteca",
+            provider="test",
+        )
+    ]
+    competitor = Competitor(
+        identifier="controlled-competitor",
+        name="Gimnasio de prueba",
+        location="El Cañaveral",
+        services=["gimnasio", "ludoteca"],
+        evidences=[],
+    )
+    competitor_evidence = Evidence(
+        evidence_id="controlled-evidence",
+        claim="Dato controlado",
+        source_url="https://example.com/gimnasio",
+    )
+
+    with patch("src.agents.researcher.search_web", return_value=search_results), patch(
         "src.agents.researcher.competitor_search",
-        return_value={"competitors": [], "evidences": []},
+        return_value={
+            "competitors": [competitor],
+            "evidences": [competitor_evidence],
+        },
     ):
         return run_research(brief)
 
@@ -50,8 +76,10 @@ def test_run_research_returns_research_result():
     )
     result = _run_research_without_network(brief)
     assert isinstance(result, ResearchResult)
-    assert isinstance(result.evidences, list)
-    assert isinstance(result.competitors, list)
+    assert len(result.evidences) == 2
+    assert result.evidences[0].source_url == "https://example.com/gimnasio"
+    assert len(result.competitors) == 1
+    assert result.competitors[0].name == "Gimnasio de prueba"
     assert isinstance(result.coverage_percentage, (int, float))
     assert isinstance(result.unresolved_questions, list)
     assert result.coverage_percentage == 0.0  # No LLM by design
@@ -135,6 +163,5 @@ def test_run_research_with_multiple_questions():
     )
     result = _run_research_without_network(brief)
     assert isinstance(result, ResearchResult)
-    assert len(result.questions) if hasattr(result, 'questions') else True
-    # Should have unresolved questions since no LLM
-    assert isinstance(result.unresolved_questions, list)
+    # No LLM analysis is performed, so every question remains unresolved.
+    assert result.unresolved_questions == ["precios", "servicios", "horarios"]
