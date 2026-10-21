@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
-  <img alt="188 tests passed" src="https://img.shields.io/badge/tests-188%20passed-2ea44f">
+  <img alt="192 tests passed" src="https://img.shields.io/badge/tests-192%20passed-2ea44f">
   <a href=".github/workflows/ci.yml"><img alt="CI first run pending" src="https://img.shields.io/badge/CI-first%20run%20pending-lightgrey"></a>
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="Research prototype" src="https://img.shields.io/badge/status-research%20prototype-f59e0b">
@@ -154,7 +154,7 @@ python -m pytest -q
 python -m compileall -q src tests data/raw
 ```
 
-En un entorno limpio sin `pyproj`: **188 pruebas pasan y 1 se omite** (la conversión opcional de coordenadas). Con `pyproj` instalado: **189 pasan**. Las pruebas del investigador sustituyen las herramientas web por respuestas controladas; el cliente MCP arranca un subproceso local.
+En un entorno limpio sin `pyproj`: **192 pruebas pasan y 1 se omite** (la conversión opcional de coordenadas). Con `pyproj` instalado: **193 pasan**. Las pruebas del investigador sustituyen las herramientas web por respuestas controladas; el cliente MCP arranca un subproceso local.
 
 El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ejecuta `compileall` y `pytest` con Python 3.13. **Su primera ejecución remota aún está pendiente**, así que este README no afirma que GitHub Actions haya pasado. No hay linter ni comprobador de tipos configurados.
 
@@ -286,7 +286,7 @@ python -m pytest -q
 python -m compileall -q src tests data/raw
 ```
 
-In a clean environment without `pyproj`: **188 tests pass and 1 is skipped** (the optional coordinate conversion). With `pyproj` installed: **189 pass**. Researcher tests replace web tools with controlled responses; the MCP client starts a local subprocess.
+In a clean environment without `pyproj`: **192 tests pass and 1 is skipped** (the optional coordinate conversion). With `pyproj` installed: **193 pass**. Researcher tests replace web tools with controlled responses; the MCP client starts a local subprocess.
 
 The workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `compileall` and `pytest` on Python 3.13. **Its first remote run is still pending**, so this README does not claim that GitHub Actions has passed. No linter or type checker is configured.
 
