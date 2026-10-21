@@ -69,8 +69,45 @@ class TestReportDraft(unittest.TestCase):
         self.assertEqual(borrador_b.sections, [])
         self.assertEqual(borrador_b.sources, [])
         self.assertEqual(borrador_b.limitations, [])   
+
+
+def test_drafts_have_different_identifiers():
+    """Cada borrador nuevo tiene un identificador independiente."""
+    from src.reporting.models import ReportDraft
+
+    first = ReportDraft(title="Informe A", study_area="El Cañaveral")
+    second = ReportDraft(title="Informe B", study_area="El Cañaveral")
+
+    assert first.draft_id
+    assert second.draft_id
+    assert first.draft_id != second.draft_id
+    assert first.version == 1
+    assert second.version == 1
+
+
+def test_draft_keeps_claim_and_evidence_reference():
+    """La afirmación conserva la referencia a su evidencia."""
+    from src.reporting.models import ReportClaim, ReportDraft
+
+    claim = ReportClaim(
+        claim_id="precio_gym_1",
+        text="El gimnasio publica una cuota mensual de 45 euros.",
+        kind="fact",
+        evidence_ids=["test_price_1"],
+    )
+
+    draft = ReportDraft(
+        title="Informe de prueba",
+        study_area="El Cañaveral",
+        claims=[claim],
+    )
+
+    assert draft.claims[0].text == claim.text
+    assert draft.claims[0].kind == "fact"
+    assert draft.claims[0].evidence_ids == ["test_price_1"]
+
+
+
 # Permite ejecutar las pruebas directamente con Python.
 if __name__ == "__main__":
     unittest.main()
-
-      

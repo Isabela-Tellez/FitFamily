@@ -1,40 +1,65 @@
 """
-Modelo de datos para los borradores de informes de FitFamily.
+Modelos para los borradores de informes de FitFamily.
 
-Este módulo define la estructura básica que tendrá un informe
-antes de convertirse en un documento final.
-
+El borrador conserva su contenido y las referencias que permiten
+rastrear las afirmaciones hasta las evidencias utilizadas.
 """
 
 from dataclasses import dataclass, field
+from typing import Literal
+from uuid import uuid4
+
+
+@dataclass
+class ReportClaim:
+    """
+    Afirmación incluida en el informe.
+
+    Atributos:
+        claim_id: Identificador único dentro del borrador.
+        text: Texto de la afirmación.
+        kind: Distingue hechos, supuestos e inferencias.
+        evidence_ids: Identificadores de las evidencias que la respaldan.
+
+    Registrar una referencia no demuestra que respalde la afirmación.
+    Esa comprobación corresponde al constructor y al revisor.
+    """
+
+    claim_id: str
+    text: str
+    kind: Literal["fact", "assumption", "inference"]
+    evidence_ids: list[str] = field(default_factory=list)
 
 
 @dataclass
 class ReportDraft:
     """
-    Representa un borrador de informe generado por FitFamily.
-
-    Esta clase almacena la información del informe,
-    pero no se encarga de redactarlo ni de exportarlo.
+    Borrador de informe pendiente de revisión y entrega.
 
     Atributos:
         title: Título del informe.
-        study_area: Zona geográfica objeto del estudio.
-        sections: Lista de secciones del informe.
-        sources: Lista de fuentes de información utilizadas.
-        limitations: Lista de limitaciones del análisis.
+        study_area: Zona geográfica estudiada.
+        sections: Secciones con su contenido.
+        sources: Fuentes utilizadas.
+        limitations: Limitaciones del estudio.
+        draft_id: Identificador del borrador.
+        version: Versión del contenido, comenzando en 1.
+        claims: Afirmaciones y sus referencias.
+
+    El identificador se conserva al revisar un mismo borrador.
+    Si cambia su contenido, el proceso de revisión debe incrementar
+    la versión. Esta clase no lo hace automáticamente.
     """
 
-    # Datos obligatorios: deben proporcionarse al crear el borrador.
     title: str
     study_area: str
 
-    # Datos opcionales: comienzan como listas vacías.
-    # default_factory=list crea una lista independiente
-    # para cada instancia de ReportDraft.
-    # Así evitamos que dos informes compartan accidentalmente
-    # las mismas secciones, fuentes o limitaciones.
-
+    # Conservamos los campos existentes para mantener la compatibilidad.
     sections: list[str] = field(default_factory=list)
     sources: list[str] = field(default_factory=list)
     limitations: list[str] = field(default_factory=list)
+
+    # Cada borrador nuevo recibe un identificador independiente.
+    draft_id: str = field(default_factory=lambda: uuid4().hex)
+    version: int = 1
+    claims: list[ReportClaim] = field(default_factory=list)
