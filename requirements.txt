@@ -1,10 +1,11 @@
-# requirements.txt - Dependencias para FitFamily Módulo Persona 1
+# requirements.txt - Dependencias de FitFamily
 # --------------------------------
-# Núcleo del módulo (obligatorias):
+# Núcleo del proyecto (obligatorias):
 # - pydantic: modelos y validación de datos
 # - mcp: SDK del Model Context Protocol (servidor y cliente)
 # - httpx: lectura de páginas web
 # - beautifulsoup4: extracción de texto HTML
+# - pandas: análisis descriptivo de competidores
 # - ddgs: búsqueda web (reemplaza a duckduckgo-search)
 # - crewai: marco de agentes AI
 #
@@ -15,6 +16,7 @@ pydantic==2.12.5
 mcp==1.28.1
 httpx==0.28.1
 beautifulsoup4==4.14.3
+pandas==2.3.3
 ddgs==9.14.4
 crewai==1.15.28
 tavily-python==0.8.5
