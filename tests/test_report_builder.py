@@ -74,3 +74,67 @@ def test_evidence_inside_competitor_is_accepted():
     )
 
     assert find_missing_evidence_ids(draft, research) == []
+
+def test_build_report_returns_draft_with_valid_references():
+    """El constructor genera un borrador con referencias existentes."""
+    from src.reporting.report_builder import build_report
+    from src.schemas import ResearchBrief
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+    )
+    evidence = Evidence(
+        evidence_id="price_1",
+        claim="Cuota mensual publicada de 45 euros.",
+        value=45,
+        unit="euros",
+        frequency="monthly",
+        source_url="https://example.com/tarifas",
+    )
+    research = ResearchResult(evidences=[evidence])
+
+    draft = build_report(brief, research)
+
+    assert isinstance(draft, ReportDraft)
+    assert draft.claims
+    assert draft.claims[0].evidence_ids == ["price_1"]
+    assert find_missing_evidence_ids(draft, research) == []
+
+
+def test_build_report_rejects_missing_reference():
+    """El constructor no devuelve un borrador con referencias inexistentes."""
+    from unittest.mock import patch
+
+    import pytest
+
+    from src.reporting.report_builder import build_report
+    from src.schemas import ResearchBrief
+
+    brief = ResearchBrief(
+        business_type="gimnasio con ludoteca",
+        location="Madrid",
+        study_area="El Cañaveral",
+    )
+
+    # Simulamos que el Writer produce una referencia incorrecta.
+    invalid_draft = ReportDraft(
+        title="Informe de prueba",
+        study_area="El Cañaveral",
+        claims=[
+            ReportClaim(
+                claim_id="claim_1",
+                text="Afirmación de prueba.",
+                kind="fact",
+                evidence_ids=["missing_1"],
+            )
+        ],
+    )
+
+    with patch(
+        "src.agents.writer_agent.WriterAgent.create_draft",
+        return_value=invalid_draft,
+    ):
+        with pytest.raises(ValueError, match="missing_1"):
+            build_report(brief, ResearchResult())
