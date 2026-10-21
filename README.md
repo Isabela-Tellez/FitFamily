@@ -6,7 +6,7 @@ FitFamily analiza la viabilidad de abrir un gimnasio con ludoteca en El Cañaver
 
 Implementado:
 
-- Investigación con `run_research(brief)`: búsqueda web, lectura de páginas y búsqueda de competidores.
+- Investigación con `run_research(brief)`: búsqueda web y búsqueda de competidores; esta última lee las páginas encontradas.
 - Servidor MCP local con la herramienta `get_area_statistics` y cliente de comprobación.
 - Esquemas compartidos: `ResearchBrief`, `ResearchResult`, `Evidence` y `Competitor`.
 - Análisis descriptivo de competidores con `summarize_competitors`.
