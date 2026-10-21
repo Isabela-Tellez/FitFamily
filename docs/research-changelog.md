@@ -474,7 +474,7 @@ efresh_locales_count() para descarga y procesamiento reproducible del Censo de L
 ### Tests
 - Suite completa: 103 tests pasando.
 
-## Versión 1.2.1 - Correcciones de la revisión (20/10/2026)
+## Versión 1.2.1 - Correcciones de la revisión (21/10/2026)
 
 ### Ludoteca negada
 - `detect_playroom()` daba por hecho el servicio cuando la página decía "no dispone de
