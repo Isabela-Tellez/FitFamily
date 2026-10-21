@@ -28,3 +28,6 @@ pytest==9.0.3
 # - El paquete duckduckgo-search NO se incluye porque el código usa from ddgs import DDGS
 # - tavily-python es opcional: solo necesita TAVILY_API_KEY configurado en el entorno
 #   para usar Tavily como proveedor de búsqueda alternativa
+
+# Análisis de datos e integración entre módulos
+pandas==3.0.6
