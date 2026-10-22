@@ -50,3 +50,17 @@ def test_summarize_competitors_returns_no_average_without_prices():
     assert result["competitor_count"] == 2
     assert result["known_price_count"] == 0
     assert result["average_monthly_price_eur"] is None
+
+def test_summarize_competitors_accepts_boolean_playroom_values():
+    # Comprobamos que los booleanos no se cuentan como desconocidos.
+    competitors = pd.DataFrame({
+        "gym_name": ["Gym Alpha", "Gym Beta", "Gym Gamma"],
+        "monthly_price_eur": [35, 45, None],
+        "has_playroom": [True, False, None],
+    })
+
+    result = summarize_competitors(competitors)
+
+    assert result["playroom_yes_count"] == 1
+    assert result["playroom_no_count"] == 1
+    assert result["playroom_unknown_count"] == 1
