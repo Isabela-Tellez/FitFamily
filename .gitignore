@@ -16,3 +16,43 @@ _site/
 # counterproductive to check this file into the repository.
 # Details at https://github.com/github/pages-gem/issues/768
 Gemfile.lock
+
+# Python-specific exclusions
+# Entornos virtuales y caches
+.env
+.venv
+venv/
+ENV/
+
+# Caches y PyCache
+__pycache__/
+*.pyc
+.pytest_cache/
+pycache/
+
+# Logs y archivos de salida
+*.log
+*.out
+*.db
+*.sqlite
+*.sqlite3
+
+# Resultados de investigación reales (locales por defecto)
+# Solo versionar si el equipo ha acordado compartir un dataset concreto
+# resultados_investigacion/
+# investigación_local/
+
+# Archivos temporales y de diagnóstico
+# diagnostic.py
+# debug.py
+# test_*.py (excepto en directorio tests/)
+
+# Credenciales y secretos
+*.env*
+secret*
+
+# Descargas grandes de fuentes oficiales (no versionar)
+data/raw/*.csv
+data/raw/*.xlsx
+data/raw/*.json.gz
+data/raw/cache/
