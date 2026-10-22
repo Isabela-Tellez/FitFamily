@@ -214,3 +214,37 @@ def test_existing_different_file_is_not_overwritten(tmp_path):
         )
 
     assert path.read_text(encoding="utf-8") == "Contenido diferente."
+
+def test_failed_publication_can_be_retried(tmp_path):
+    """Un fallo no deja archivos parciales y permite reintentar."""
+    from unittest.mock import patch
+
+    draft = ReportDraft(
+        title="Informe de prueba",
+        study_area="El Cañaveral",
+        sections=["Objetivo\nEstudiar la competencia."],
+    )
+    approval = make_approved_record(draft)
+
+    # Simulamos un fallo al publicar el archivo ya escrito.
+    with patch(
+        "src.automation.exporter.os.link",
+        side_effect=OSError("Fallo simulado"),
+    ):
+        with pytest.raises(OSError, match="Fallo simulado"):
+            export_markdown(
+                draft, approval, "run_test", tmp_path
+            )
+
+    # No debe quedar ni el informe final ni el temporal.
+    assert list(tmp_path.iterdir()) == []
+
+    # Al desaparecer el fallo, la misma operación funciona.
+    path = export_markdown(
+        draft, approval, "run_test", tmp_path
+    )
+
+    assert path.read_text(encoding="utf-8") == (
+        render_report_markdown(draft)
+    )
+    assert len(list(tmp_path.iterdir())) == 1
