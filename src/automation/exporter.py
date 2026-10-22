@@ -4,7 +4,8 @@ Exportación controlada de informes de FitFamily.
 Las funciones de este módulo las utilizará el controlador,
 no el agente redactor como herramienta de libre uso.
 """
-
+import os
+import tempfile
 import hashlib
 import json
 from dataclasses import asdict
@@ -127,17 +128,47 @@ def export_markdown(
 
     target = directory / f"report_{operation_key}.md"
 
-    try:
-        # El modo "x" crea un archivo nuevo y evita sobrescribir.
-        with target.open("x", encoding="utf-8", newline="\n") as file:
-            file.write(markdown)
-    except FileExistsError:
-        existing_content = target.read_text(encoding="utf-8")
-
-        if existing_content != markdown:
-            raise ValueError(
-                "Ya existe una exportación diferente para esta "
-                "ejecución y versión."
-            )
+    _write_markdown_atomically(target, markdown)
 
     return target
+
+def _write_markdown_atomically(target: Path, markdown: str) -> None:
+    """
+    Publica un archivo completo sin sobrescribir uno existente.
+
+    El temporal se crea en la misma carpeta para mantener
+    ambos archivos en el mismo sistema de archivos.
+    """
+    temporary_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="\n",
+            dir=target.parent,
+            prefix=".report_",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary.write(markdown)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+
+        try:
+            # Publica el contenido completo. Si el destino existe,
+            # no lo sobrescribe.
+            os.link(temporary_path, target)
+        except FileExistsError:
+            existing_content = target.read_text(encoding="utf-8")
+
+            if existing_content != markdown:
+                raise ValueError(
+                    "Ya existe una exportación diferente para esta "
+                    "ejecución y versión."
+                )
+    finally:
+        # Limpiamos el temporal tanto si funciona como si falla.
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
