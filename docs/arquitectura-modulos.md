@@ -63,9 +63,9 @@ Persona 5 (Isabella) — Streamlit, LangGraph, aprobación humana y estado compa
 | **4 María** | Revisión / validación | `src/review/models.py` | Funcional | Modelo de revisión |
 | **4 María** | Revisión / validación | `tests/test_review_validation.py` | Funcional | Pruebas de validación |
 | **4 María** | Revisión / validación | `tests/test_evidence_quality.py`, `test_quality_checks.py` | Funcional | Pruebas de calidad |
-| **5 Isabella** | Streamlit / aprobación | `docs/streamlit-approval.md` | **Pendiente** | No existe archivo aún |
-| **5 Isabella** | Streamlit / aprobación | `docs/langgraph-flow.md` | **Pendiente** | No existe archivo aún |
-| **5 Isabella** | Streamlit / aprobación | UI real / Streamlit | **Pendiente** | No existe código en `src/ui/` aún |
+| **5 Isabella** | Streamlit / aprobación | `docs/streamlit-approval.md` | **Diseño** | Contrato de UI y aprobación; implementación pendiente |
+| **5 Isabella** | Streamlit / aprobación | `docs/langgraph-flow.md` | **Diseño** | Estado, nodos y transiciones; código pendiente |
+| **5 Isabella** | Streamlit / aprobación | `src/ui/` | **Pendiente** | Solo `.gitkeep`; sin app Streamlit |
 
 ## Estado del flujo completo
 
@@ -90,6 +90,16 @@ Persona 5 (Isabella) — Streamlit, LangGraph, aprobación humana y estado compa
 - El análisis de mercado (`market_analysis`) no consume automáticamente `ResearchResult`.
 - La orquestación LLM (`CrewAI`) funciona como ruta separada (`run_writing`), pero la conexión al flujo global (`main.py`) sigue pendiente.
 - `coverage_percentage` sigue como `0.0` en `ResearchResult`; no se calcula automáticamente.
-- `docs/streamlit-approval.md` y `docs/langgraph-flow.md` no existen aún (responsabilidad de Persona 5).
+- `docs/streamlit-approval.md` y `docs/langgraph-flow.md` documentan el diseño de la Persona 5; la UI y el grafo siguen pendientes.
 - `tests/` cubre investigación, web, MCP, redacción, exportación, validación y revisión; la cobertura del análisis (`market_analysis`) es limitada.
 - `docs/arquitectura-modulos.md` fue actualizado para esta rama (`dev`) con referencias a todos los PRs nuevos.
+
+## Documentación por persona
+
+| Persona | Ficha | Documentos de módulo |
+|---|---|---|
+| **1 · Juan** | [equipo.md#persona-1](equipo.md#persona-1) | [research-module.md](research-module.md), [research-implementation.md](research-implementation.md), [auditoria-fuentes-datos.md](auditoria-fuentes-datos.md), [research-changelog.md](research-changelog.md) |
+| **2 · Laura** | [equipo.md#persona-2](equipo.md#persona-2) | [analysis.md](analysis.md) |
+| **3 · Gema** | [equipo.md#persona-3](equipo.md#persona-3) | [report-export.md](report-export.md), [writer-llm.md](writer-llm.md) |
+| **4 · María** | [equipo.md#persona-4](equipo.md#persona-4) | [review-quality.md](review-quality.md) |
+| **5 · Isabella** | [equipo.md#persona-5](equipo.md#persona-5) | [streamlit-approval.md](streamlit-approval.md), [langgraph-flow.md](langgraph-flow.md) |

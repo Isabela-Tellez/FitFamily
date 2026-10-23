@@ -38,13 +38,13 @@ FitFamily separa tres cosas que suelen confundirse:
 
 ## Equipo y roles
 
-| Persona | Rol | Módulos principales | Estado |
-|---|---|---|---|
-| **1 · Juan** | Investigación, fuentes y MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | ✅ Funcional |
-| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/market_analysis.py`, `src/analysis/scenarios.py` | ✅ Funcional |
-| **3 · Gema** | Redacción, informes y automatización | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | ✅ Funcional |
-| **4 · María** | Revisión, validación y seguridad | `src/review/`, `src/graph/review_routes.py` | ✅ Funcional |
-| **5 · Isabella** | Streamlit, LangGraph y aprobación humana | UI y orquestación global | ⚠️ Pendiente |
+| Persona | Rol | Módulos principales | Documentación | Estado |
+|---|---|---|---|---|
+| **1 · Juan** | Investigación, fuentes y MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Ficha](docs/equipo.md#persona-1) · [Investigación](docs/research-module.md) | ✅ Funcional |
+| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/market_analysis.py`, `src/analysis/scenarios.py` | [Ficha](docs/equipo.md#persona-2) · [Análisis](docs/analysis.md) | ✅ Funcional |
+| **3 · Gema** | Redacción, informes y automatización | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Ficha](docs/equipo.md#persona-3) · [Informes](docs/report-export.md) · [LLM](docs/writer-llm.md) | ✅ Funcional |
+| **4 · María** | Revisión, validación y seguridad | `src/review/`, `src/graph/review_routes.py` | [Ficha](docs/equipo.md#persona-4) · [Revisión](docs/review-quality.md) | ✅ Funcional |
+| **5 · Isabella** | Streamlit, LangGraph y aprobación humana | UI y orquestación global | [Ficha](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) | ⚠️ Pendiente |
 
 El detalle de interfaces, contratos y responsabilidades está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
 
@@ -231,13 +231,23 @@ El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ejecuta `comp
 
 ## Documentación
 
+### Documentación del equipo
+
+Cada integrante tiene su ficha y su documento de módulo al mismo nivel:
+
+- [**Equipo y responsabilidades**](docs/equipo.md) — ficha de las 5 personas
+- [**Juan** — investigación, fuentes y MCP](docs/research-module.md)
+- [**Laura** — análisis de mercado y escenarios](docs/analysis.md)
+- [**Gema** — redacción, informes y automatización](docs/report-export.md) · [LLM](docs/writer-llm.md)
+- [**María** — revisión, validación y calidad](docs/review-quality.md)
+- [**Isabella** — Streamlit, aprobación y LangGraph](docs/streamlit-approval.md) · [flujo](docs/langgraph-flow.md)
+
+### Documentación técnica
+
 - [Mapa de módulos e interfaces](docs/arquitectura-modulos.md)
-- [Módulo de investigación](docs/research-module.md)
 - [Implementación de la investigación](docs/research-implementation.md)
 - [Auditoría de fuentes de datos](docs/auditoria-fuentes-datos.md)
 - [Changelog de investigación](docs/research-changelog.md)
-- [Exportación de informes y PDF](docs/report-export.md)
-- [Redactor con LLM (CrewAI + Groq)](docs/writer-llm.md)
 - [Pendiente: renta media por hogar (INE)](docs/pendiente-renta-ine.md)
 
 ## Limitaciones
@@ -265,13 +275,13 @@ FitFamily assesses the viability of opening a gym with a playroom in **El Cañav
 
 ### Team and roles
 
-| Person | Role | Main modules | Status |
-|---|---|---|---|
-| **1 · Juan** | Research, sources and MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | ✅ Working |
-| **2 · Laura** | Market analysis and scenarios | `src/analysis/` | ✅ Working |
-| **3 · Gema** | Writing, reports and automation | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | ✅ Working |
-| **4 · María** | Review, validation and security | `src/review/`, `src/graph/review_routes.py` | ✅ Working |
-| **5 · Isabella** | Streamlit, LangGraph and human approval | UI and global orchestration | ⚠️ Pending |
+| Person | Role | Main modules | Documentation | Status |
+|---|---|---|---|---|
+| **1 · Juan** | Research, sources and MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Profile](docs/equipo.md#persona-1) · [Research](docs/research-module.md) | ✅ Working |
+| **2 · Laura** | Market analysis and scenarios | `src/analysis/` | [Profile](docs/equipo.md#persona-2) · [Analysis](docs/analysis.md) | ✅ Working |
+| **3 · Gema** | Writing, reports and automation | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Profile](docs/equipo.md#persona-3) · [Reports](docs/report-export.md) · [LLM](docs/writer-llm.md) | ✅ Working |
+| **4 · María** | Review, validation and security | `src/review/`, `src/graph/review_routes.py` | [Profile](docs/equipo.md#persona-4) · [Review](docs/review-quality.md) | ✅ Working |
+| **5 · Isabella** | Streamlit, LangGraph and human approval | UI and global orchestration | [Profile](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) | ⚠️ Pending |
 
 ### Use case
 
@@ -398,13 +408,23 @@ The workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `compil
 
 ### Documentation
 
+#### Team documentation
+
+Each member has a profile and a module document at the same level:
+
+- [**Team and responsibilities**](docs/equipo.md) — profiles for all five members
+- [**Juan** — research, sources and MCP](docs/research-module.md)
+- [**Laura** — market analysis and scenarios](docs/analysis.md)
+- [**Gema** — writing, reports and automation](docs/report-export.md) · [LLM](docs/writer-llm.md)
+- [**María** — review, validation and quality](docs/review-quality.md)
+- [**Isabella** — Streamlit, approval and LangGraph](docs/streamlit-approval.md) · [flow](docs/langgraph-flow.md)
+
+#### Technical documentation
+
 - [Module map](docs/arquitectura-modulos.md)
-- [Research module](docs/research-module.md)
 - [Research implementation](docs/research-implementation.md)
 - [Data source audit](docs/auditoria-fuentes-datos.md)
 - [Research changelog](docs/research-changelog.md)
-- [Report export and PDF](docs/report-export.md)
-- [LLM writer (CrewAI + Groq)](docs/writer-llm.md)
 - [Pending: average household income (INE)](docs/pendiente-renta-ine.md)
 
 ### Limitations
