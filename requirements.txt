@@ -16,7 +16,9 @@ mcp==1.28.1
 httpx==0.28.1
 beautifulsoup4==4.14.3
 ddgs==9.14.4
-crewai==1.15.28
+crewai[litellm]==1.15.28
+# Versión fijada para comprobar compatibilidad con MCP 1.28.1
+litellm==1.88.6
 tavily-python==0.8.5
 
 # Pruebas (no necesarias en producción)
