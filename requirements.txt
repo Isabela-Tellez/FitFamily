@@ -33,3 +33,6 @@ pytest==9.0.3
 
 # Análisis de datos e integración entre módulos
 pandas==3.0.6
+
+# Exportación de informes a PDF
+reportlab==5.1.0

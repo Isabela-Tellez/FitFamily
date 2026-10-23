@@ -8,13 +8,24 @@ No escribe archivos ni ejecuta acciones de exportación.
 from src.reporting.models import ReportDraft
 
 
-def render_report_markdown(draft: ReportDraft) -> str:
+def render_report_markdown(
+    draft: ReportDraft,
+    *,
+    approved: bool = False,
+) -> str:
     """
     Convierte un borrador en un documento Markdown.
 
     Conserva las secciones, las fuentes, las limitaciones
     y el registro de afirmaciones con sus referencias.
     """
+
+    status = (
+        "aprobado para exportación."
+        if approved
+        else "borrador pendiente de revisión y aprobación."
+    )
+
     lines = [
         f"# {draft.title}",
         "",
@@ -24,7 +35,7 @@ def render_report_markdown(draft: ReportDraft) -> str:
         "",
         f"**Versión:** {draft.version}",
         "",
-        "**Estado:** borrador pendiente de revisión y aprobación.",
+        f"**Estado:** {status}",
     ]
 
     # El Writer actual guarda cada sección como un texto:

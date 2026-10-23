@@ -10,7 +10,7 @@ la exportación PDF ni la actualización del CSV.
 
 ## Responsabilidades
 
-- El WriterAgent prepara el borrador; no concede aprobación.
+- El redactor prepara el ReportDraft; no concede aprobación.
 - El controlador muestra el borrador y recibe la decisión humana.
 - El controlador crea ApprovalRecord con esa decisión.
 - El exportador comprueba el registro antes de escribir el archivo.
@@ -32,10 +32,11 @@ Contiene:
 - actions: tupla con las acciones autorizadas.
 - decided_at: fecha de la decisión con zona horaria.
 
-La acción disponible actualmente es export_markdown.
+Las acciones disponibles actualmente son `export_markdown` y `export_pdf`.
+Cada formato requiere su propia autorización en `actions`.
 
-export_pdf y update_tracking_csv están reservadas para las
-siguientes entregas; todavía no tienen implementación.
+La acción `update_tracking_csv` está reservada para una siguiente
+entrega; todavía no tiene implementación.
 
 ## Vinculación con el borrador
 
@@ -51,11 +52,12 @@ Si cambia el borrador, se requiere una nueva aprobación.
 
 ## Uso del exportador
 
-La función pública es:
+Las funciones públicas de src/automation/exporter.py son:
 
-export_markdown(draft, approval, run_id, output_dir)
+- `export_markdown(draft, approval, run_id, output_dir)`
+- `export_pdf(draft, approval, run_id, output_dir)`
 
-Devuelve la ruta del archivo generado.
+Ambas devuelven la ruta del archivo generado.
 
 output_dir lo configura el controlador y debe ser una carpeta
 de salida permitida, por ejemplo reports/generated.
@@ -91,17 +93,54 @@ No se garantiza la limpieza de temporales tras un apagado brusco.
 
 ## Presentación
 
-El Markdown conserva actualmente el aviso de borrador pendiente
-de revisión y aprobación incluido por el renderer.
+La vista previa muestra el estado de borrador pendiente de revisión
+y aprobación. Tras validar la aprobación, los exportadores Markdown
+y PDF muestran el estado de aprobado para exportación.
 
-La autorización para exportarlo se comprueba por separado.
-La presentación del estado final queda pendiente de integración.
+El estado mostrado no concede autorización: el exportador comprueba
+el registro de aprobación antes de guardar el documento.
+
+## Exportación PDF
+
+`export_pdf(draft, approval, run_id, output_dir)` genera y publica
+un PDF del mismo `ReportDraft` revisado y aprobado.
+
+Requiere que la aprobación autorice expresamente `export_pdf`.
+Una autorización para Markdown no permite exportar PDF.
+
+Antes de generar el documento o crear la carpeta, comprueba la
+ejecución, el identificador, la versión y la huella del borrador.
+
+El documento incluye secciones, fuentes, limitaciones, registro de
+afirmaciones y páginas numeradas. Utiliza ReportLab y fuentes
+incluidas en la dependencia.
+
+La publicación utiliza un archivo temporal y enlaces duros,
+con las mismas restricciones del exportador Markdown.
+Un reintento devuelve el archivo existente si sus bytes coinciden;
+si son diferentes, se rechaza sin sobrescribirlo.
+
+La reproducción de los mismos bytes se comprueba en el mismo
+entorno. Cambiar las dependencias puede cambiar el PDF generado.
+
+`render_report_pdf` genera bytes en memoria y no valida aprobaciones.
+Su parámetro `approved` solo controla el estado mostrado.
+La autorización se comprueba en `export_pdf`.
 
 ## Pruebas
 
-Ejecutar:
+Ejecutar desde la raíz del proyecto:
 
-python -m pytest tests/test_exporter.py -q
+```bash
+python -m pytest tests/test_pdf_exporter.py tests/test_exporter.py tests/test_markdown_renderer.py -q
+```
 
-Incluyen huella, aprobación, creación del archivo, repetición,
-conflictos y reintento tras un fallo simulado.
+Las pruebas comprueban aprobación, huella, creación de archivos,
+repeticiones, rechazo de sobrescrituras y reintento de publicación
+Markdown tras un fallo simulado.
+
+Para PDF también comprueban que la generación no modifique el
+borrador y produzca los mismos bytes en el mismo entorno.
+
+La revisión visual del ejemplo comprobó tildes, eñes, símbolo €,
+márgenes, saltos de página y numeración.
