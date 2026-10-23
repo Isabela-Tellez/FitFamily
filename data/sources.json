@@ -27,7 +27,7 @@
       "type": "official_open_data",
       "geo_scope": "Sección censal (distrito 19, barrio 194)",
       "period": "1 de enero de 2025 (último dato oficial disponible)",
-      "use": "households_total, average_household_size y population_total_2025 (agregados sobre las 9 secciones censales de El Cañaveral)",
+      "use": "households_total, average_household_size, population_total_2025 y households_with_minors (agregados sobre las 9 secciones censales de El Cañaveral; la última variable usa la hoja 'Composicion del hogar')",
       "limitations": "Cobertura hasta 1 ene 2025. Organizado por sección censal; la atribución a barrio procede de la cartografía oficial (COD_BAR). 'Hogares' es el concepto del Padrón, no familias ni viviendas."
     },
     {
@@ -47,8 +47,8 @@
       "type": "official_open_data",
       "geo_scope": "El Cañaveral, Madrid",
       "period": "actualizado diariamente (consulta: 20 oct 2026)",
-      "use": "businesses_open: conteo de locales con situación 'Abierto' en El Cañaveral",
-      "limitations": "Cuenta locales (premises), no negocios (establecimientos). Un local puede albergar varias actividades."
+      "use": "businesses_open (234 locales abiertos, fichero de Locales) y equipamientos por epígrafe (gyms_registered 9 = 931008; sports_recreation_venues 4 = 855002; childrens_play_venues 3 = 932001 + 932002; community_pools 3 = 931010, fichero de Actividades)",
+      "limitations": "El fichero de Locales y el de Actividades no cubren exactamente el mismo conjunto: 229 de los 234 locales abiertos tienen actividad declarada. Cuentan locales (premises), no negocios (establecimientos): un local puede albergar varias actividades. Registro administrativo: puede contener inconsistencias."
     },
     {
       "id": "poblacion_distrito_barrio",
@@ -79,6 +79,36 @@
       "period": "enero 2026",
       "use": "ninguna: los indicadores de hogares se apoyan ahora en la fuente oficial",
       "limitations": "Fuente secundaria, no verificable. Se conserva solo como contexto histórico en el changelog."
+    },
+    {
+      "id": "censo_locales_licencias",
+      "name": "Censo de Locales con informacion de licencia - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "type": "official_open_data",
+      "geo_scope": "El Cañaveral, Madrid",
+      "period": "actualizado diariamente (consulta: 20 oct 2026)",
+      "use": "license_type, license_status y license_date del registro de competidores (6 de 9 gimnasios con informacion de licencia)",
+      "limitations": "La situacion administrativa (En tramitacion, Denegada, Presentada, Ineficaz o sin efectos) no acredita que el negocio este abierto ni cerrado. La ausencia de registro significa 'no disponible', nunca 'denegada'."
+    },
+    {
+      "id": "censo_locales_historico",
+      "name": "Censo de Locales historico - Ayuntamiento de Madrid",
+      "url": "https://datos.madrid.es/dataset/209548-0-censo-locales-historico",
+      "type": "official_open_data",
+      "geo_scope": "El Cañaveral, Madrid (historico mensual)",
+      "period": "marzo 2014 - septiembre 2026 (actualizaciones mensuales)",
+      "use": "validacion cruzada del censo actual y serie de evolucion de la oferta deportiva y de ocio infantil",
+      "limitations": "El propio dataset advierte de duplicidad en los ficheros de octubre 2021 a enero 2022 y de la falta de datos de actividades de diciembre de 2017. Registro administrativo sin tratamiento estadistico."
+    },
+    {
+      "id": "ine_renta_adrh",
+      "name": "Atlas de Distribucion de Renta de los Hogares (ADRH) - INE",
+      "url": "https://www.ine.es/dyngs/INEbase/operacion.htm?c=Estadistica_C&cid=1254736177088&menu=ultiDatos&idp=1254735976608",
+      "type": "official_open_data",
+      "geo_scope": "seccion censal (incluye Comunidad de Madrid)",
+      "period": "edicion 2024 (datos de 2024), actualizacion indicada 21/10/2025",
+      "use": "PENDIENTE: renta neta media por seccion censal. No descargada ni validada todavia.",
+      "limitations": "Estadistica Experimental. Base tributaria. El periodo de referencia (2024) no coincide con la fecha de consulta."
     },
     {
       "id": "mcp_local_data",

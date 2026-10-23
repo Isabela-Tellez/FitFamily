@@ -8,7 +8,7 @@ Esta versión organiza los datos sin utilizar un LLM.
 No calcula la viabilidad financiera ni inventa información ausente.
 """
 
-from src.reporting.models import ReportDraft
+from src.reporting.models import ReportDraft, ReportClaim
 from src.schemas import ResearchBrief, ResearchResult
 
 
@@ -47,8 +47,52 @@ class WriterAgent:
         for competitor in research_result.competitors:
             evidences.extend(competitor.evidences)
 
+                # Reunimos las evidencias generales y las de cada competidor.
+        evidences = list(research_result.evidences)
+        for competitor in research_result.competitors:
+            evidences.extend(competitor.evidences)
+
+        # Registramos las tarifas con su evidencia, una sola vez.
+        claims: list[ReportClaim] = []
+        seen_evidence_ids: set[str] = set()
+
+        for evidence in evidences:
+            if evidence.evidence_id in seen_evidence_ids:
+                continue
+
+            if evidence.evidence_id.startswith("access_attempt_"):
+                continue
+
+            # Solo recogemos precios con fuente, importe y periodicidad.
+            if (
+                evidence.source_url
+                and evidence.value is not None
+                and evidence.unit
+                and evidence.frequency in ("monthly", "annual", "one-time")
+            ):
+                claims.append(
+                    ReportClaim(
+                        claim_id=f"claim_{evidence.evidence_id}",
+                        text=evidence.claim,
+                        kind="fact",
+                        evidence_ids=[evidence.evidence_id],
+                    )
+                )
+                seen_evidence_ids.add(evidence.evidence_id)
+
+        if claims:
+            sections.append(
+                "Tarifas documentadas\n"
+                + "\n".join(
+                    f"- {claim.text} "
+                    f"[evidencia: {claim.evidence_ids[0]}]"
+                    for claim in claims
+                )
+            )
+
         sources: list[str] = []
         limitations: list[str] = []
+
 
         for evidence in evidences:
             # Los intentos fallidos no respaldan datos del informe.
@@ -118,6 +162,7 @@ class WriterAgent:
             sections=sections,
             sources=sources,
             limitations=limitations,
+            claims=claims,
         )
 
     def _build_scope_section(self, brief: ResearchBrief) -> str:
