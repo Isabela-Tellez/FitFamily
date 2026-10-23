@@ -7,8 +7,10 @@ a partir de ResearchBrief y ResearchResult.
 
 Se conserva el WriterAgent determinista existente.
 
-La nueva ruta no está conectada automáticamente al constructor
-anterior ni al flujo global.
+El constructor permite elegir explícitamente el redactor con LLM.
+Por defecto conserva el modo determinista para mantener compatibilidad.
+
+La conexión con la interfaz y el flujo global sigue pendiente.
 
 ## Configuración
 
@@ -78,3 +80,24 @@ y las limitaciones de las evidencias citadas.
   de tokens, coste o llamadas.
 - No hay exportación ni aprobación accesibles como herramientas
   del agente.
+
+## Integración con el constructor
+
+Para obtener un ReportDraft redactado con el LLM:
+
+build_report(brief, research_result, use_llm=True)
+
+Para obtener directamente el texto Markdown:
+
+build_report_markdown(brief, research_result, use_llm=True)
+
+Ambas funciones están en src/reporting/report_builder.py.
+
+Si se omite use_llm, se utiliza el Writer determinista.
+Si el LLM falla, el error se propaga: no se cambia de modo
+automáticamente.
+
+El controlador debe elegir el modo explícitamente. Para mostrar,
+revisar, aprobar y exportar un mismo informe, debe conservar el
+ReportDraft generado y renderizar ese objeto. No debe volver a
+generarlo después de la aprobación.
