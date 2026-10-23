@@ -1,99 +1,95 @@
-# Mapa de módulos e interfaces
+# Mapa de módulos e interfaces — Estado actualizado
 
-Estado descrito: base remota `origin/dev` (`6dbe80e`), 21/10/2026. Este documento no incluye el trabajo del PR #5, que sigue abierto y no fusionado.
+Estado: base `dev` (`3586712`), 23/10/2026. Incluye PR #9, #10, #11, #12, #13, #14, #15, #16, #17, #18, #19.
 
-## Flujo actual
+## Flujo completo del proyecto
 
 ```text
-ResearchBrief
-   │
-   ▼
-run_research() ──────────────► ResearchResult ──────► WriterAgent.create_draft() ──► ReportDraft
-   │                              │
-   ├── search_web()               └── [falta adaptador] ──► summarize_competitors(DataFrame)
-   ├── read_web_page()
-   └── competitor_search()
+Persona 1 (Juan) — Investigación y herramientas
+  ResearchBrief
+     │
+     ▼
+  run_research(brief) ─────► ResearchResult ──────► WriterAgent / CrewAI (Gema)
+     │                              │
+     ├── search_web()               ├── Evidence IDs (deterministas)
+     ├── read_web_page()            ├── Competitor registry
+     ├── competitor_search()        ├── Discovery sources
+     └── discover_sources()         └── Coverage / unresolved questions
 
-MCP (proceso local)
-   python -m src.mcp.server ──► get_area_statistics() ──► _STATISTICS_DATA
-   python -m src.mcp.client ──► connect_mcp() / list_mcp_tools() / call_area_statistics()
+  MCP local (Juan)
+     python -m src.mcp.server ──► get_area_statistics() ──► Datos municipales
+     python -m src.mcp.client ──► connect_mcp() / call_area_statistics()
+
+Persona 2 (Laura) — Análisis y escenarios
+  ResearchResult ──► summarize_competitors(DataFrame) ──► dict (precios, ludoteca, escenarios)
+  Scenarios: break-even, análisis descriptivo
+
+Persona 3 (Gema) — Redacción, informes y automatización
+  ResearchResult ──► WriterAgent.create_draft() / run_writing(use_llm=True) ──► ReportDraft
+     │
+     ├── build_report(brief, research_result) ──► valida referencias (ValueError si faltan)
+     └── build_report_markdown() ──► texto Markdown
+  ReportDraft ──► build_report_markdown() ──► Markdown (en memoria, no archivo)
+  ApprovalRecord ──► exporter.py (PDF / Markdown) ──► archivo publicado
+
+Persona 4 (María) — Revisión crítica, validaciones y seguridad
+  Review routes: validación de evidencias citadas, control de duplicados, SSRF,
+  control de calidad (quality_checks.py, validation.py, review_routes.py)
+
+Persona 5 (Isabella) — Streamlit, LangGraph, aprobación humana y estado compartido
+  ApprovalRecord (autorización del borrador) ──► exportación PDF / Markdown
+  Estado compartido pendiente: conexión Streamlit / LangGraph / flujo global
 ```
 
-El borrador puede consumir directamente un `ResearchResult`, pero no hay un orquestador que encadene investigación, análisis y salida. El análisis de mercado y la exportación del informe todavía no forman parte de un flujo automático.
+## Módulos implementados por persona
 
-## Módulos implementados
+| Persona | Rol | Módulo / Archivo | Estado | Notas |
+|---|---|---|---|---|
+| **1 Juan** | Investigación / MCP | `src/agents/researcher.py` | Funcional | `run_research`, `build_researcher`, `build_research_task` |
+| **1 Juan** | Investigación / MCP | `src/mcp/server.py`, `src/mcp/client.py` | Funcional | `get_area_statistics`, cliente con comprobación |
+| **1 Juan** | Investigación / MCP | `src/tools/search_web.py` | Funcional | Validación URL, SSRF, límites |
+| **1 Juan** | Investigación / MCP | `src/tools/read_web_page.py` | Funcional | Bloqueo IPs privadas, redirecciones |
+| **1 Juan** | Investigación / MCP | `src/tools/competitor_search.py`, `source_discovery.py` | Funcional | Registro de competidores, IDs deterministas |
+| **2 Laura** | Análisis / escenarios | `src/analysis/market_analysis.py` | Funcional | `summarize_competitors` (requiere DataFrame) |
+| **2 Laura** | Análisis / escenarios | `src/analysis/scenarios.py` | Funcional | Break-even, escenarios de mercado |
+| **3 Gema** | Redactor / informes | `src/agents/writer_agent.py` | Funcional | `WriterAgent.create_draft()` (sin LLM por defecto) |
+| **3 Gema** | Redactor / informes | `src/agents/writer_llm.py` | Funcional | `run_writing(use_llm=True)` con CrewAI + Groq |
+| **3 Gema** | Redactor / informes | `src/reporting/report_builder.py` | Funcional | `build_report`, `find_missing_evidence_ids`, `validate_report_references` |
+| **3 Gema** | Redactor / informes | `src/reporting/markdown_renderer.py` | Funcional | `render_report_markdown()` (texto en memoria) |
+| **3 Gema** | Redactor / informes | `src/reporting/pdf_renderer.py` | Funcional | `build_pdf_report()` (exportación con autorización) |
+| **3 Gema** | Automatización | `src/automation/exporter.py`, `models.py` | Funcional | `ApprovalRecord`, huella del borrador, publicación atómica |
+| **4 María** | Revisión / validación | `src/review/validation.py` | Funcional | Validación de referencias existentes |
+| **4 María** | Revisión / validación | `src/review/quality_checks.py` | Funcional | Control de calidad de evidencias citadas |
+| **4 María** | Revisión / validación | `src/review/models.py` | Funcional | Modelo de revisión |
+| **4 María** | Revisión / validación | `tests/test_review_validation.py` | Funcional | Pruebas de validación |
+| **4 María** | Revisión / validación | `tests/test_evidence_quality.py`, `test_quality_checks.py` | Funcional | Pruebas de calidad |
+| **5 Isabella** | Streamlit / aprobación | `docs/streamlit-approval.md` | **Pendiente** | No existe archivo aún |
+| **5 Isabella** | Streamlit / aprobación | `docs/langgraph-flow.md` | **Pendiente** | No existe archivo aún |
+| **5 Isabella** | Streamlit / aprobación | UI real / Streamlit | **Pendiente** | No existe código en `src/ui/` aún |
 
-| Área | Archivo | Interfaz principal | Estado |
-|---|---|---|---|
-| Contratos | `src/schemas.py` | `ResearchBrief`, `ResearchResult`, `Evidence`, `Competitor` | Implementado |
-| Investigación | `src/agents/researcher.py` | `build_researcher()`, `build_research_task(brief, context=None)`, `run_research(brief, context=None)` | Implementado; sin LLM en ejecución |
-| Búsqueda web | `src/tools/search_web.py` | `search_web(query, max_results=10) -> list[SearchResult]` | Implementado; requiere red |
-| Lectura web | `src/tools/read_web_page.py` | `read_web_page(url) -> PageReadResult` | Implementado; requiere red |
-| Competidores | `src/tools/competitor_search.py` | `competitor_search(params) -> dict` | Implementado; requiere red |
-| Servidor MCP | `src/mcp/server.py` | `get_area_statistics(area_id, indicators=None)`, `run_mcp_server()` | Implementado; datos locales |
-| Cliente MCP | `src/mcp/client.py` | `connect_mcp()`, `list_mcp_tools(session)`, `call_area_statistics(session, area_id, indicators=None)` | Implementado |
-| Análisis | `src/analysis/market_analysis.py` | `summarize_competitors(data: pandas.DataFrame) -> dict` | Implementado; requiere DataFrame |
-| Redacción | `src/agents/writer_agent.py` | `WriterAgent.create_draft(brief, research_result) -> ReportDraft` | Implementado; plantilla sin LLM |
-| Modelo de informe | `src/reporting/models.py` | `ReportDraft(title, study_area, sections, sources, limitations)` | Implementado; sin exportación |
-| Datos offline | `data/raw/extract_households.py` | `python data/raw/extract_households.py [--verify-geometry] [--json PATH]` | Implementado; no es runtime |
-| Fuentes | `data/sources.json` | Catálogo de fuentes, períodos y limitaciones | Implementado |
-| CI | `.github/workflows/ci.yml` | `compileall` + `pytest` | Añadido en esta rama |
+## Estado del flujo completo
 
-## Contratos e interfaces
+| Paso | Persona responsable | Estado |
+|---|---|---|
+| Investigación (`run_research`) | Juan | ✅ Funcional |
+| MCP (`get_area_statistics`) | Juan | ✅ Funcional |
+| Análisis descriptivo (`summarize_competitors`) | Laura | ✅ Funcional |
+| Redacción determinista (`WriterAgent`) | Gema | ✅ Funcional |
+| Redacción con LLM (`run_writing`) | Gema | ✅ Funcional (integrado con `build_report`) |
+| Validación referencias (`validate_report_references`) | Gema / María | ✅ Funcional |
+| Revisión calidad (`quality_checks`) | María | ✅ Funcional |
+| Exportación Markdown (`markdown_renderer`) | Gema | ✅ Funcional |
+| Exportación PDF (`pdf_renderer`) | Gema | ✅ Funcional (requiere autorización) |
+| Aprobación humana / UI (`ApprovalRecord` → exportación) | Isabella | ⚠️ Pendiente |
+| Orquestación completa (`main.py` o CLI) | Isabella / Gema | ❌ No implementado |
 
-### `ResearchBrief` → `ResearchResult`
+## Limitaciones conocidas
 
-`run_research(brief, context=None)` valida el brief, ejecuta `search_web` y `competitor_search` y devuelve un `ResearchResult` con:
-
-- `evidences`: evidencias recuperadas.
-- `competitors`: competidores identificados.
-- `coverage_percentage`: cobertura declarada; en esta base vale `0.0` porque no hay análisis LLM.
-- `unresolved_questions`: preguntas pendientes.
-- `search_performed` y `notes`: resumen y limitaciones de la ejecución.
-
-En esta base `run_research` usa `max_results=5` de forma fija. El PR #5 propone tomar el valor de `brief.search_limits.max_results`.
-
-### Herramientas web
-
-- `search_web` usa Tavily si existe `TAVILY_API_KEY`; si no, usa DuckDuckGo con `ddgs`. El máximo efectivo es 20 resultados.
-- `read_web_page` acepta solo HTTP/HTTPS, valida redirecciones, bloquea destinos privados/locales y limita tamaño y tiempo de respuesta.
-- `competitor_search` devuelve un diccionario con `competitors`, `evidences`, `search_summary` y `unresolved_questions`.
-
-### MCP
-
-El servidor publica una única herramienta, `get_area_statistics(area_id, indicators=None)`. En la base `origin/dev` publica 9 indicadores: 6 con valor verificado y 3 con `null` (`families_with_children`, `gyms_registered`, `gyms_with_ludoteca`).
-
-El cliente se usa para comprobar el protocolo:
-
-```bash
-python -m src.mcp.client
-```
-
-### Análisis y redacción
-
-`summarize_competitors` requiere un `pandas.DataFrame` con estas columnas:
-
-- `gym_name`
-- `monthly_price_eur`
-- `has_playroom`
-
-Devuelve conteos de competidores, precios conocidos, precio medio mensual y respuestas de ludoteca (`sí`, `no`, desconocidas).
-
-`WriterAgent.create_draft` consume directamente un `ResearchResult` y produce un `ReportDraft` en memoria. No calcula viabilidad financiera, no usa LLM y no escribe archivos.
-
-## Piezas que faltan para el flujo de extremo a extremo
-
-1. **Orquestador/CLI**: no existe `src/main.py` ni un comando que encadene brief → investigación → análisis → borrador → salida.
-2. **Adaptador `ResearchResult` → DataFrame**: `summarize_competitors` no puede consumir directamente `ResearchResult.competitors`. Hay que definir cómo obtener `monthly_price_eur` desde `Competitor.tariffs` y `has_playroom` desde evidencias o servicios explícitos, sin inferir datos ausentes.
-3. **Exportación del informe**: `ReportDraft` no tiene serializador ni escritura en `reports/`.
-4. **Orquestación LLM**: `build_researcher` y `build_research_task` crean objetos CrewAI, pero no hay una `Crew` que ejecute el ciclo completo.
-5. **Interfaz de usuario y capas de producto**: `automation`, `graph`, `multimodal`, `review`, `runtime`, `security` y `ui` están vacías.
-6. **Persistencia y actualización**: los indicadores del MCP viven en `_STATISTICS_DATA`; no hay base de datos ni programación de actualizaciones.
-7. **Pruebas deterministas**: los tests del investigador sustituyen las herramientas web por respuestas controladas en esta rama; el PR #5 añade pruebas de extremo a extremo para el registro de competidores y la búsqueda de fuentes.
-
-## Limitaciones conocidas de la base
-
-- Los IDs de evidencia de `competitor_search` usan `hash(url)` y no son estables entre procesos. El PR #5 propone IDs deterministas con SHA-256.
-- `run_research` fija `max_results=5` y no lee `brief.search_limits.max_results`.
-- No hay integración automática entre los datos del MCP y `run_research`; son dos rutas separadas.
-- No hay CI en `origin/dev`; este documento acompaña al workflow añadido en esta rama.
+- `run_research` usa `max_results=5` por defecto (configurable con `brief.search_limits`).
+- `WriterAgent.create_draft()` no conecta automáticamente con `summarize_competitors`; requiere adaptador manual o integración futura.
+- El análisis de mercado (`market_analysis`) no consume automáticamente `ResearchResult`.
+- La orquestación LLM (`CrewAI`) funciona como ruta separada (`run_writing`), pero la conexión al flujo global (`main.py`) sigue pendiente.
+- `coverage_percentage` sigue como `0.0` en `ResearchResult`; no se calcula automáticamente.
+- `docs/streamlit-approval.md` y `docs/langgraph-flow.md` no existen aún (responsabilidad de Persona 5).
+- `tests/` cubre investigación, web, MCP, redacción, exportación, validación y revisión; la cobertura del análisis (`market_analysis`) es limitada.
+- `docs/arquitectura-modulos.md` fue actualizado para esta rama (`dev`) con referencias a todos los PRs nuevos.
