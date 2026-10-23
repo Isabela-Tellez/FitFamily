@@ -174,6 +174,19 @@ def test_extract_price_prefers_monthly_over_registration():
     assert "al mes" in evidence.claim
 
 
+def test_extract_evidence_id_is_stable_and_content_based():
+    from src.tools.evidence_ids import stable_evidence_id
+
+    page = SimpleNamespace(body_text="Cuota mensual 49,90 €/mes.")
+    first = _extract_evidence_from_page(page, "gimnasio", "https://gym.example")
+    second = _extract_evidence_from_page(page, "gimnasio", "https://gym.example")
+    other = _extract_evidence_from_page(page, "gimnasio", "https://other.example")
+
+    assert first.evidence_id == second.evidence_id
+    assert first.evidence_id == stable_evidence_id("ev", "https://gym.example")
+    assert other.evidence_id != first.evidence_id
+
+
 def test_extract_price_identifies_registration_fee():
     page = SimpleNamespace(body_text="Matrícula: 25 €")
     evidence = _extract_evidence_from_page(page, "gimnasio", "https://gym.example")

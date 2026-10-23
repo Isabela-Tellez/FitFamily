@@ -44,6 +44,7 @@ from src.schemas import (
 from src.tools.search_web import search_web
 from src.tools.read_web_page import read_web_page
 from src.tools.competitor_search import competitor_search
+from src.tools.evidence_ids import stable_evidence_id
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +165,75 @@ def resolve_max_results(search_limits: Optional[Dict[str, Any]]) -> int:
         if isinstance(raw, int) and raw >= 1:
             return min(raw, MAX_RESULTS_LIMIT)
         if isinstance(raw, float) and raw >= 1:
-            return min(int(raw), MAX_RESULTS_LIMIT)
+            try:
+                return min(int(raw), MAX_RESULTS_LIMIT)
+            except (OverflowError, ValueError):
+                return DEFAULT_MAX_RESULTS
     return DEFAULT_MAX_RESULTS
+
+
+def _variable_slug(variable: str) -> str:
+    """Stable identifier for a variable, so evidence ids are reproducible."""
+    compact = "".join(
+        char if char.isalnum() or char.isspace() else " "
+        for char in variable.lower()
+    )
+    return "_".join(compact.split())[:30] or "variable"
+
+
+def discover_sources_for_brief(brief: ResearchBrief) -> List[Evidence]:
+    """Look for the sources that could provide the variables the brief misses.
+
+    Each candidate is returned as an :class:`Evidence` with its URL, the
+    organism and the reason why it was kept or discarded. A failed query has no
+    URL but is still recorded, so network errors and empty responses remain
+    traceable instead of silently disappearing.
+    """
+    from src.tools.source_discovery import discover_sources
+
+    max_results = resolve_max_results(brief.search_limits)
+    evidences: List[Evidence] = []
+    seen_variables = set()
+    for variable in brief.missing_variables:
+        normalized_variable = " ".join(variable.lower().split())
+        if not normalized_variable or normalized_variable in seen_variables:
+            continue
+        seen_variables.add(normalized_variable)
+        slug = _variable_slug(variable)
+        candidates = discover_sources(
+            variable,
+            area=f"{brief.study_area}, {brief.location}",
+            max_results_per_query=max_results,
+        )
+        for index, candidate in enumerate(candidates):
+            url = candidate.get("url")
+            state = candidate.get("state", "discovered")
+            identifier = url or candidate.get("query") or f"sin-fuente-{index}"
+            evidences.append(Evidence(
+                evidence_id=stable_evidence_id(
+                    f"source_{slug}",
+                    normalized_variable,
+                    identifier,
+                ),
+                claim=(
+                    f"Fuente localizada para la variable '{variable}': "
+                    f"{candidate.get('title') or url or candidate.get('query') or 'sin fuente'} "
+                    f"[{state}] {candidate.get('reason', '')}".strip()
+                ),
+                source_url=url,
+                snippet=(
+                    f"organismo: {candidate.get('organism')} | consulta: "
+                    f"{candidate.get('query')} | dataset: {candidate.get('is_dataset')}"
+                ),
+                limitations=(
+                    "Resultado de la busqueda automatica de fuentes. El estado indica "
+                    "si la fuente solo fue localizada, si se pudo acceder, si se "
+                    "extrajeron datos o si se descarto. Una fuente no se da por "
+                    "verificada sin haber leido su contenido. Si no hay URL, la "
+                    "consulta no devolvio resultados o fallo la red."
+                ),
+            ))
+    return evidences
 
 
 def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None) -> ResearchResult:
@@ -236,7 +304,10 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
             from src.schemas import Evidence as E
             for i, sr in enumerate(search_results):
                 ev = E(
-                    evidence_id=f"search_{i:03d}",
+                    evidence_id=stable_evidence_id(
+                        "search",
+                        sr.url or f"result-{i}",
+                    ),
                     claim=f"Search result: {sr.title or 'Untitled'}",
                     source_url=sr.url,
                     snippet=sr.snippet or "",
@@ -262,6 +333,20 @@ def run_research(brief: ResearchBrief, context: Optional[Dict[str, Any]] = None)
         except Exception as e:
             logger.warning(f"Competitor search tool failed: {e}")
             search_performed += "; competitor search had issues"
+
+        # Source discovery pass for the variables the brief still needs.
+        if brief.missing_variables:
+            try:
+                found_sources = discover_sources_for_brief(brief)
+                evidences.extend(found_sources)
+                if found_sources:
+                    search_performed += (
+                        f"; {len(found_sources)} fuentes candidatas para "
+                        f"{len(set(brief.missing_variables))} variables pendientes"
+                    )
+            except Exception as e:
+                logger.warning(f"Source discovery failed: {e}")
+                search_performed += "; busqueda de fuentes fallo"
 
         # Construct the result
         research_result = ResearchResult(

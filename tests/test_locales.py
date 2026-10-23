@@ -57,13 +57,21 @@ def test_parse_locales_csv_malformed_rows():
     assert r["count"] == 2
 
 
-def test_refresh_with_csv_text_updates_store():
+def test_refresh_with_csv_text_updates_store(tmp_path, monkeypatch):
+    from src.mcp import server
+
+    # Never write the test fixture into data/raw/cache/: that file is the real
+    # official census cache used by the registry extraction script.
+    cache_path = tmp_path / "censo_locales.csv"
+    monkeypatch.setattr(server, "_locales_cache_path", lambda: cache_path)
     store = {"indicators": {}}
     res = refresh_locales_count("el-cañaveral", csv_text=SAMPLE_CSV.replace("CANAVERAL", "CAÑAVERAL"), store=store)
     assert res["status"] == "ok"
     assert res["count"] == 2
     assert store["indicators"]["businesses_open"]["value"] == 2
     assert store["indicators"]["businesses_open"]["verification_status"] == "verified"
+    assert cache_path.exists()
+    assert "EL CAÑAVERAL" in cache_path.read_text(encoding="utf-8")
 
 
 def test_refresh_unsupported_area():
