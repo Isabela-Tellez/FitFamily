@@ -156,7 +156,7 @@ def test_export_markdown_creates_approved_file(tmp_path):
     assert path.is_file()
     assert path.parent == tmp_path.resolve()
     assert path.read_text(encoding="utf-8") == (
-        render_report_markdown(draft)
+        render_report_markdown(draft, approved=True)
     )
 
 
@@ -245,6 +245,6 @@ def test_failed_publication_can_be_retried(tmp_path):
     )
 
     assert path.read_text(encoding="utf-8") == (
-        render_report_markdown(draft)
+        render_report_markdown(draft, approved=True)
     )
     assert len(list(tmp_path.iterdir())) == 1

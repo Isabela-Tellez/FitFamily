@@ -105,7 +105,7 @@ def export_markdown(
         "export_markdown",
     )
 
-    markdown = render_report_markdown(draft)
+    markdown = render_report_markdown(draft, approved=True)
 
     # La carpeta de salida la configura el controlador,
     # no el agente ni el contenido del informe.
@@ -170,5 +170,91 @@ def _write_markdown_atomically(target: Path, markdown: str) -> None:
                 )
     finally:
         # Limpiamos el temporal tanto si funciona como si falla.
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+
+def export_pdf(
+    draft: ReportDraft,
+    approval: ApprovalRecord | None,
+    run_id: str,
+    output_dir: str | Path,
+) -> Path:
+    """
+    Exporta un PDF únicamente después de validar su aprobación.
+
+    Repetir la operación devuelve el archivo existente si coincide.
+    Nunca sobrescribe una exportación con contenido diferente.
+    """
+    # Comprobamos la autorización antes de generar el documento
+    # o crear la carpeta de salida.
+    validate_export_approval(
+        draft,
+        approval,
+        run_id,
+        "export_pdf",
+    )
+
+    # Importamos el generador cuando se solicita un PDF.
+    from src.reporting.pdf_renderer import render_report_pdf
+
+    pdf_content = render_report_pdf(draft, approved=True)
+
+    # El controlador decide la carpeta; el redactor no la configura.
+    directory = Path(output_dir).resolve()
+    directory.mkdir(parents=True, exist_ok=True)
+
+    # Incluimos la acción para distinguir esta operación
+    # de la exportación Markdown del mismo borrador.
+    operation = json.dumps(
+        {
+            "run_id": run_id,
+            "draft_id": draft.draft_id,
+            "version": draft.version,
+            "action": "export_pdf",
+        },
+        sort_keys=True,
+    )
+    operation_key = hashlib.sha256(
+        operation.encode("utf-8")
+    ).hexdigest()
+
+    target = directory / f"report_{operation_key}.pdf"
+    _write_pdf_atomically(target, pdf_content)
+
+    return target
+
+
+def _write_pdf_atomically(target: Path, content: bytes) -> None:
+    """Publica el PDF completo sin sobrescribir archivos existentes."""
+    temporary_path = None
+
+    try:
+        # Creamos el temporal en la misma carpeta del destino.
+        # El modo binario es necesario porque un PDF contiene bytes.
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=target.parent,
+            prefix=".report_",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary:
+            temporary_path = Path(temporary.name)
+            temporary.write(content)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+
+        try:
+            # Publicamos el archivo completo mediante un enlace duro,
+            # igual que en la exportación Markdown.
+            os.link(temporary_path, target)
+        except FileExistsError:
+            # Un reintento solo se acepta si el contenido coincide.
+            if target.read_bytes() != content:
+                raise ValueError(
+                    "Ya existe una exportación diferente para esta "
+                    "ejecución y versión."
+                )
+    finally:
+        # Limpiamos el temporal tanto al terminar como ante un error.
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
