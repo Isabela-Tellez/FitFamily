@@ -1,157 +1,126 @@
 # FitFamily
 
-FitFamily analiza la viabilidad de abrir un gimnasio con ludoteca en El Cañaveral (Madrid). El repositorio contiene el módulo de investigación, los datos municipales con su estado de verificación y las interfaces de análisis y redacción. Todavía no existe un ejecutable único que recorra todo el producto de extremo a extremo; el estado detallado está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
+FitFamily analiza la viabilidad de abrir un gimnasio con ludoteca en El Cañaveral (Madrid). Es una plataforma de investigación de mercado con trazabilidad completa, redacción con o sin LLM, análisis descriptivo, exportación aprobada (Markdown y PDF) y revisión crítica de evidencias.
+
+Estado: **funcional**. Todos los módulos principales implementados; pendiente la interfaz de usuario y la orquestación global (`main.py` / Streamlit).
+
+| Módulo | Responsable | Estado |
+|---|---|---|
+| Investigación / MCP | Juan | ✅ Funcional |
+| Análisis descriptivo | Laura | ✅ Funcional |
+| Redacción (determinista + CrewAI) | Gema | ✅ Funcional |
+| Exportación Markdown + PDF con aprobación | Gema | ✅ Funcional |
+| Revisión crítica / validación / seguridad | María | ✅ Funcional |
+| Streamlit / aprobación humana / LangGraph | Isabella | ⚠️ Pendiente |
+
+## Caso de uso principal
+
+Un investigador configura `ResearchBrief`, obtiene `ResearchResult` con evidencias trazables (`evidence_id`), genera un `ReportDraft` con validación de referencias, obtiene aprobación (`ApprovalRecord`) y exporta a Markdown o PDF con huella de contenido.
 
 ## Estado actual
 
-Implementado:
-
-- Investigación con `run_research(brief)`: búsqueda web y búsqueda de competidores; esta última lee las páginas encontradas.
-- Servidor MCP local con la herramienta `get_area_statistics` y cliente de comprobación.
-- Esquemas compartidos: `ResearchBrief`, `ResearchResult`, `Evidence` y `Competitor`.
-- Análisis descriptivo de competidores con `summarize_competitors`.
-- Borrador de informe en memoria con `WriterAgent`.
-- Extracción offline de hogares con `data/raw/extract_households.py`.
-
-Pendiente:
-
-- CLI u orquestador que encadene investigación → análisis → informe.
-- Exportación de informes y interfaz de usuario.
-- Orquestación LLM con CrewAI: hoy se construyen `Agent`/`Task`, pero `run_research` ejecuta las herramientas directamente.
-- Módulos `automation`, `graph`, `multimodal`, `review`, `runtime`, `security` y `ui`.
+| Área | Estado |
+|---|---|
+| Investigación web y búsqueda de competidores | Funcional |
+| Evidencias con IDs deterministas y límites de búsqueda | Funcional |
+| Descubrimiento de fuentes para variables pendientes | Funcional |
+| Servidor MCP con 13 indicadores locales | Funcional |
+| Registro de competidores desde el censo municipal | Funcional; preparación offline |
+| Análisis descriptivo (`summarize_competitors`, `scenarios`) | Funcional |
+| Borrador de informe determinista (`WriterAgent`) | Funcional |
+| Borrador con LLM (`run_writing`, `use_llm=True`) | Funcional (integrado en `build_report`) |
+| Trazabilidad del borrador (`draft_id`, `version`, `claims`) | Funcional |
+| Validación de referencias (`validate_report_references`) | Funcional |
+| Control de calidad y revisión crítica (`review`) | Funcional |
+| Exportación Markdown (`markdown_renderer`) | Funcional |
+| Exportación PDF (`pdf_renderer`) | Funcional; requiere autorización |
+| Configuración básica de trazas LangSmith | Funcional (`.env.example`) |
+| CLI / orquestador / UI (`main.py`, Streamlit) | Pendiente |
+| Conexión completa del flujo global (investigación → análisis → informe → exportación) | Pendiente; contrato funcional pero sin orquestador automático |
 
 ## Requisitos
 
-- Python 3.13 (versión usada en la verificación local y configurada en el workflow de CI).
-- Git.
-- Acceso a internet para las búsquedas y la lectura de páginas web.
-- Opcional: `TAVILY_API_KEY` para usar Tavily en lugar de DuckDuckGo.
-
-## Instalación
+- Python 3.13, Git, conexión a internet para herramientas web.
+- `GROQ_API_KEY` para usar CrewAI (`use_llm=True`).
+- `pyproj` opcional para conversión de coordenadas UTM → WGS84.
+- `reportlab` para exportación PDF.
 
 ```bash
 git clone https://github.com/Isabela-Tellez/FitFamily.git
 cd FitFamily
 python -m venv .venv
-```
-
-Activa el entorno virtual.
-
-Windows PowerShell:
-
-```powershell
+# Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
-```
-
-macOS/Linux:
-
-```bash
+# macOS / Linux:
 source .venv/bin/activate
-```
-
-Instala las dependencias:
-
-```bash
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Configuración
+## Uso rápido
 
-La aplicación lee las variables del entorno del proceso. `.env.example` documenta los nombres; exporta las variables en tu shell o en el entorno de ejecución.
-
-`TAVILY_API_KEY` es opcional.
-
-Windows PowerShell:
-
-```powershell
-$env:TAVILY_API_KEY = "..."
-```
-
-macOS/Linux:
-
-```bash
-export TAVILY_API_KEY="..."
-```
-
-Si la variable no está definida, `search_web` usa DuckDuckGo mediante `ddgs`. No guardes claves reales en el repositorio.
-
-## Ejecución
-
-Ejecuta los comandos y ejemplos desde la raíz del repositorio.
-
-### Comprobar el servidor MCP
-
-```bash
-python -m src.mcp.client
-```
-
-Arranca el servidor local por `stdio`, descubre sus herramientas y llama a `get_area_statistics`.
-
-### Arrancar el servidor MCP
-
-```bash
-python -m src.mcp.server
-```
-
-El servidor se queda escuchando por `stdio`; está pensado para que lo lance un cliente MCP, no para funcionar como servidor HTTP.
-
-### Ejecutar una investigación desde Python
-
-Todavía no hay una CLI de investigación. La interfaz actual es:
+### Investigación básica
 
 ```python
-from src.schemas import ResearchBrief
 from src.agents.researcher import run_research
+from src.schemas import ResearchBrief
 
 brief = ResearchBrief(
     business_type="gimnasio con ludoteca",
     location="Madrid",
     study_area="El Cañaveral",
-    questions=["precios", "servicios", "horarios"],
+    questions=["precios", "servicios"],
+    search_limits={"max_results": 5},
 )
 result = run_research(brief)
-print(result.model_dump_json(indent=2))
 ```
 
-La búsqueda y la lectura de páginas requieren red. Si una fuente falla, el resultado conserva las evidencias disponibles y describe el problema en `search_performed` o `notes`.
+### Borrador con validación
 
-### Análisis y borrador
+```python
+from src.reporting.report_builder import build_report
+from src.schemas import ResearchBrief
 
-`summarize_competitors(data)` espera un `pandas.DataFrame` con las columnas `gym_name`, `monthly_price_eur` y `has_playroom`. `WriterAgent().create_draft(brief, result)` genera un `ReportDraft` en memoria; no exporta archivos. No existe todavía un adaptador automático de `ResearchResult` al DataFrame.
+draft = build_report(brief, result)
+```
 
-## Pruebas y calidad
+### Borrador con LLM (CrewAI + Groq)
+
+```python
+draft_llm = build_report(brief, result, use_llm=True)
+```
+
+### Exportación a Markdown y PDF (requiere aprobación)
+
+```python
+from src.automation.exporter import build_pdf_report, build_markdown_report
+from src.reporting.report_builder import build_report_markdown
+# Tras validar ApprovalRecord:
+pdf = build_pdf_report(draft, approval=approval_record)
+md_text = build_report_markdown(brief, result)
+```
+
+### Pruebas
 
 ```bash
 python -m pytest -q
 python -m compileall -q src tests data/raw
 ```
 
-Para ejecutar solo las pruebas del investigador:
+- **193 tests pasan**, 36 warnings de deprecación en CrewAI (no fallos).
+- Pruebas del investigador sustituyen herramientas web por respuestas controladas.
+- MCP arranca subproceso local.
 
-```bash
-python -m pytest tests/test_researcher.py -q
-```
+## Documentación por módulo
 
-Las pruebas del investigador sustituyen las herramientas web por respuestas controladas; el test de integración MCP arranca un subproceso local y no necesita internet. El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ejecuta `compileall` y `pytest` con Python 3.13 en `push` a `dev`/`main` y en pull requests contra esas ramas.
-
-No hay linter ni comprobador de tipos configurado en el repositorio; por tanto, no se ejecutan en CI.
-
-## Datos
-
-- `data/sources.json`: catálogo de fuentes, períodos y limitaciones.
-- `data/raw/README.md`: indicadores publicados, procedencia y actualización.
-- `data/raw/extract_households.py`: extracción offline reproducible de hogares. La verificación geométrica (`--verify-geometry`) requiere `pyogrio`, que no forma parte de las dependencias de runtime.
-- Las descargas grandes y la caché (`data/raw/cache/`) están ignoradas por Git.
-
-## Documentación
-
-- [Mapa de módulos e interfaces](docs/arquitectura-modulos.md)
-- [Módulo de investigación](docs/research-module.md)
+- [Arquitectura y módulos](docs/arquitectura-modulos.md)
+- [Investigación](docs/research-module.md)
 - [Implementación](docs/research-implementation.md)
 - [Auditoría de fuentes](docs/auditoria-fuentes-datos.md)
 - [Changelog de investigación](docs/research-changelog.md)
+- [Report export y PDF](docs/report-export.md)
+- [LLM writer con CrewAI](docs/writer-llm.md)
+- [Pendiente renta/ine y análisis](docs/pendiente-renta-ine.md)
 
-## Limitaciones
+## Licencia
 
-Este repositorio no es todavía un producto completo: no hay interfaz de usuario, orquestador único, exportación de informes ni ejecución LLM de extremo a extremo. Los datos publicados por el MCP son locales y deben citarse con su período y fuente; un valor `null` significa "no disponible", no cero.
+MIT. Ver [LICENSE](LICENSE).
