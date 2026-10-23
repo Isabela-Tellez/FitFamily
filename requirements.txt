@@ -16,7 +16,7 @@ pydantic==2.12.5
 mcp==1.28.1
 httpx==0.28.1
 beautifulsoup4==4.14.3
-pandas==2.3.3
+pandas==3.0.6
 ddgs==9.14.4
 crewai[litellm]==1.15.28
 # Versión fijada para comprobar compatibilidad con MCP 1.28.1
