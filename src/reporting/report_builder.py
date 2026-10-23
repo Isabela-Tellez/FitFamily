@@ -61,27 +61,46 @@ def validate_report_references(
 def build_report(
     brief: ResearchBrief,
     research_result: ResearchResult,
+    *,
+    use_llm: bool = False,
 ) -> ReportDraft:
-    """Genera el borrador y comprueba sus referencias antes de devolverlo."""
-    from src.agents.writer_agent import WriterAgent
+    """
+    Genera un borrador y comprueba sus referencias.
 
-    draft = WriterAgent().create_draft(brief, research_result)
+    Por defecto utiliza el Writer determinista.
+    use_llm=True ejecuta el agente con el proveedor configurado.
+    """
+    if use_llm:
+        from src.agents.strategic_writer import run_writing
+
+        draft = run_writing(brief, research_result)
+    else:
+        from src.agents.writer_agent import WriterAgent
+
+        draft = WriterAgent().create_draft(brief, research_result)
 
     validate_report_references(draft, research_result)
 
     return draft
 
+
 def build_report_markdown(
     brief: ResearchBrief,
     research_result: ResearchResult,
+    *,
+    use_llm: bool = False,
 ) -> str:
     """
-    Genera un borrador, valida sus referencias y devuelve su Markdown.
+    Genera el borrador validado y devuelve su Markdown.
 
-    No escribe archivos ni sustituye la revisión o aprobación humana.
+    No escribe archivos ni concede aprobación.
     """
     from src.reporting.markdown_renderer import render_report_markdown
 
-    draft = build_report(brief, research_result)
+    draft = build_report(
+        brief,
+        research_result,
+        use_llm=use_llm,
+    )
 
     return render_report_markdown(draft)
