@@ -36,3 +36,4 @@ pandas==3.0.6
 
 # Exportación de informes a PDF
 reportlab==5.1.0
+pyproj==3.7.2
