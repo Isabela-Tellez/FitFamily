@@ -1,13 +1,14 @@
 # Exportación de informes
 
-> Revisión documental: **26 de octubre de 2026**. La exportación Markdown y PDF está implementada a nivel de API. La interfaz que recoge la aprobación humana y la actualización de un CSV de seguimiento **no** están implementadas.
+> Revisión documental: **26 de octubre de 2026**. La exportación Markdown y PDF y la actualización del CSV de seguimiento están implementadas a nivel de API. La integración con la interfaz y el controlador global sigue pendiente.
 
 ## Estado actual
 
 - `export_markdown()` y `export_pdf()` validan un `ApprovalRecord` y publican un archivo.
 - `render_report_markdown()` y `render_report_pdf()` generan contenido en memoria y **no** validan aprobaciones.
 - No hay UI, controlador global ni botón de aprobación.
-- La acción `update_tracking_csv` está reservada y no tiene función de exportación.
+- `update_tracking_csv()` valida la aprobación y registra o completa
+  una entrega en el CSV sin duplicar su fila.
 
 ## Responsabilidades
 
@@ -44,7 +45,9 @@ Campos:
 - `actions`: acciones autorizadas.
 - `decided_at`: fecha de la decisión, con zona horaria.
 
-Las acciones implementadas son `export_markdown` y `export_pdf`. Cada formato requiere su propia autorización en `actions`. La acción `update_tracking_csv` está reconocida por el validador como nombre permitido, pero no existe una función que la ejecute.
+Las acciones implementadas son `export_markdown`, `export_pdf` y
+`update_tracking_csv`. Cada acción requiere autorización explícita
+en `ApprovalRecord.actions`.
 
 ## Vinculación con el borrador
 
@@ -133,6 +136,64 @@ Antes de generar el documento o crear la carpeta, comprueba la ejecución, el id
 La publicación utiliza un archivo temporal y enlaces duros, con las mismas restricciones del exportador Markdown. Un reintento devuelve el archivo existente si sus bytes coinciden; si son diferentes, se rechaza sin sobrescribirlo. La reproducción de los mismos bytes se comprueba en el mismo entorno; cambiar las dependencias puede cambiar el PDF generado.
 
 `render_report_pdf` genera bytes en memoria y no valida aprobaciones. Su parámetro `approved` solo controla el estado mostrado. La autorización se comprueba en `export_pdf`.
+
+## CSV de seguimiento
+
+La función `update_tracking_csv` está en `src/automation/tracking.py`:
+
+```python
+update_tracking_csv(
+    draft,
+    approval,
+    run_id,
+    csv_path,
+    markdown_path=None,
+    pdf_path=None,
+)
+```
+
+Las rutas de los entregables se pasan como argumentos con nombre
+y deben ser las devueltas por los exportadores. `csv_path` lo
+configura el controlador; no procede del contenido del LLM.
+
+Requiere autorización para `update_tracking_csv` y para al menos
+uno de los formatos de informe.
+
+Registra ejecución, borrador, versión, huella, fecha de aprobación,
+título del caso, zona, estado y rutas de entregables.
+
+El estado es `complete` cuando están registrados todos los formatos
+autorizados, o `partial` si falta alguno. No expresa la viabilidad
+del negocio. El estado describe los informes; el controlador solo
+debe comunicar éxito completo después de guardar también el CSV.
+
+Una entrega se identifica por `run_id`, `draft_id` y `draft_version`.
+Repetirla no añade otra fila. Un reintento puede aportar únicamente
+el formato pendiente: se conservan las rutas anteriores y se
+recalcula el estado.
+
+Las rutas se comprueban por existencia y extensión. Esto no demuestra
+que el contenido corresponda al borrador: el controlador debe conservar
+las rutas devueltas por los exportadores para esa ejecución.
+
+Se rechazan esquemas de CSV distintos, filas mal formadas, claves
+duplicadas y cambios incompatibles en una entrega existente.
+
+La actualización usa un archivo temporal y reemplaza el CSV completo,
+conservando las otras entregas. Un archivo `.lock` impide actualizaciones
+simultáneas entre llamadas de esta función.
+
+Si existe el bloqueo, se propaga `FileExistsError`; el controlador puede
+reintentar de forma acotada. No se debe borrar un bloqueo de una
+actualización en curso.
+
+Tras un cierre brusco puede quedar un bloqueo o un temporal.
+Antes de retirar un bloqueo manualmente, se debe comprobar que
+no hay ninguna actualización activa y revisar el CSV conservado.
+
+La función no coordina por sí sola toda la entrega Markdown/PDF/CSV.
+Esa coordinación y la comunicación de resultados parciales corresponden
+al controlador.
 
 ## Pruebas
 
