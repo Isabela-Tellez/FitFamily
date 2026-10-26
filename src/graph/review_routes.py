@@ -4,6 +4,8 @@ from typing import Literal
 from src.review.models import ReviewResult
 from src.reporting.models import ReportDraft
 from src.review.quality_checks import validate_review_matches_draft
+from src.review.quality_checks import validate_review_matches_research
+from src.schemas import ResearchResult
 
 ReviewRoute = Literal[
     "revise_research",
@@ -87,6 +89,27 @@ def choose_review_route_for_draft(
 
     return choose_review_route(
         review,
+        revision_count=revision_count,
+        max_revisions=max_revisions,
+    )
+
+def choose_review_route_for_context(
+    review: ReviewResult,
+    draft: ReportDraft,
+    research_result: ResearchResult,
+    revision_count: int,
+    max_revisions: int = 2,
+) -> ReviewRoute:
+    """
+    Comprueba la investigación y el borrador antes de decidir la ruta.
+
+    Una revisión desactualizada debe repetirse antes de continuar.
+    """
+    validate_review_matches_research(review, research_result)
+
+    return choose_review_route_for_draft(
+        review,
+        draft,
         revision_count=revision_count,
         max_revisions=max_revisions,
     )
