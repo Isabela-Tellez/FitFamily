@@ -4,8 +4,6 @@
 
 <h1 align="center">FitFamily</h1>
 
-<!-- Actualización de documentación para el PR #20: exportador PDF, redactor LLM y trazas LangSmith -->
-
 <p align="center">
   <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong>
 </p>
