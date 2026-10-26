@@ -54,3 +54,26 @@ def run_basic_review(
             "evidence_quality",
         ),
     )
+
+def validate_review_matches_draft(
+    review: ReviewResult,
+    draft: ReportDraft,
+) -> None:
+    """
+    Comprueba que la revisión corresponde al borrador actual.
+
+    Si cambia el identificador, la versión o el contenido,
+    es necesario realizar una nueva revisión.
+    """
+    if review.draft_id != draft.draft_id:
+        raise ValueError("La revisión pertenece a otro borrador.")
+
+    if review.draft_version != draft.version:
+        raise ValueError("La revisión corresponde a otra versión.")
+
+    current_fingerprint = calculate_draft_fingerprint(draft)
+
+    if review.draft_fingerprint != current_fingerprint:
+        raise ValueError(
+            "El contenido cambió después de la revisión."
+        )
