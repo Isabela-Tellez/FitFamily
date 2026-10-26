@@ -66,8 +66,11 @@ Los indicadores del Censo de Locales (`businesses_open`, `gyms_registered`, `spo
 ```python
 from src.mcp.server import refresh_locales_count, refresh_gyms_count
 
-print(refresh_locales_count("el-cañaveral"))   # 234 locales abiertos
-print(refresh_gyms_count("el-cañaveral"))      # equipamientos por epígrafe
+locales = refresh_locales_count("el-cañaveral")
+print(locales["status"], locales["count"])        # ok 234 en la última descarga
+
+gyms = refresh_gyms_count("el-cañaveral")
+print(gyms["status"], gyms["indicators"])         # ok, recuentos por epígrafe
 ```
 
 - **Funciones puras (testeables sin red):** `parse_locales_csv(csv_text, barrio_name)` y `parse_actividades_csv(csv_text, barrio_name)`.
@@ -99,7 +102,7 @@ python data/raw/extract_households.py --verify-geometry
 - **Resultado:** 8.140 hogares, 2,6403 personas por hogar, 21.492 habitantes.
 - **Hogares con menores (mínimo verificable):** 3.071, de la hoja "Composición del hogar" del mismo fichero. Se cuentan solo las categorías donde la presencia de menores es explícita; las "con o sin menores" (662 hogares) no se pueden atribuir y las "sin menores" (2.484) se descartan.
 - **Caché:** las descargas se guardan en `data/raw/cache/` (ignorado por git).
-- **Dependencias:** `openpyxl` y `pyogrio` (ya instaladas). **No** son dependencias del servidor MCP: solo de esta herramienta offline.
+- **Dependencias:** los scripts offline usan `openpyxl`, `pyogrio`, `geopandas` y `shapely`. **No están fijadas en `requirements.txt`** y no son necesarias para arrancar el servidor MCP; instálalas solo si vas a regenerar los datos. `pyproj` sí está en `requirements.txt`.
 - **En el servidor MCP:** `refresh_households("el-cañaveral")` regenera los indicadores y `parse_households_rows(rows, section_codes)` es la función pura testeable sin red.
 
 ## Registro de competidores respaldado por el Censo de Locales
