@@ -28,7 +28,8 @@ class ReviewResult:
     draft_fingerprint: str
     issues: tuple[ReviewIssue, ...]
     checks_performed: tuple[str, ...]
-
+    research_fingerprint: str = ""
+    
     @property
     def status(self) -> Literal["needs_revision", "pending_review"]:
         """Calcula el estado a partir de las incidencias."""
