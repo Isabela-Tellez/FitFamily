@@ -1,7 +1,9 @@
 # Módulo de Investigación y MCP - FitFamily
 
 > **Persona 1: Juan** — Investigador, búsqueda web, herramientas y MCP  
-> **Propósito**: Localizar competidores, recuperar información verificable, registrar evidencias y proporcionar interfaz estable para el resto del equipo.
+> **Propósito**: Localizar competidores, recuperar información verificable, registrar evidencias y proporcionar una interfaz estable para el resto del equipo.
+>
+> **Revisión documental:** 26 de octubre de 2026. Las cifras de tests de este documento son las actuales; los documentos histórico pueden contener cifras anteriores.
 
 ---
 
@@ -9,12 +11,12 @@
 
 El **Módulo de Investigación y MCP** es el responsable de Persona 1 en el proyecto FitFamily. Su misión es:
 
-- Investigar el mercado de gimnasios con ludoteca en El Cañaveral, Madrid
-- Localizar competidores y recopilar datos verificables
-- Normalizar resultados y proporcionar modelos estructurados
-- Exposer herramientas mediante el protocolo Model Context Protocol (MCP) para uso interno
+- Investigar el mercado de gimnasios con ludoteca en El Cañaveral, Madrid.
+- Localizar competidores y recopilar datos verificables.
+- Normalizar resultados y proporcionar modelos estructurados.
+- Exponer herramientas mediante el protocolo Model Context Protocol (MCP) para uso interno.
 
-**Este módulo vive únicamente en local**. No requiere claves de API, servicios en la nube ni conectividad constante a Internet para funcionar. Todas las búsquedas y Lecturas web pueden fallar gracefuly si no hay red, pero la estructura, validación y lógica interna funcionan completamente offline.
+**Este módulo vive únicamente en local**. El servidor MCP y la validación no necesitan claves de API ni servicios en la nube. La búsqueda y la lectura de páginas web **sí requieren red**: si fallan, `run_research` devuelve un resultado parcial con el error registrado; no inventa datos ni convierte un fallo en cero.
 
 ---
 
@@ -144,18 +146,18 @@ brief = ResearchBrief(
     search_limits={"max_results": 10},
 )
 
-# Ejecutar investigación (funciona offline, usa herramientas locales)
+# Ejecutar investigación (requiere red para consultar fuentes web)
 result = run_research(brief, context=None)
 
 # Consumir resultados
 print(f"Competidores: {len(result.competitors)}")
 print(f"Evidencias: {len(result.evidences)}")
-print(f"Cobertura: {result.coverage_percentage}%")
+print(f"coverage_percentage (reservado, 0.0): {result.coverage_percentage}")
 ```
 
-**Sin conexión a Internet**: El módulo funciona completamente offline. Las búsquedas web devolverán errores controlados, pero la estructura, validación y lógica interna son totalmente funcionales.
+**Sin conexión a Internet**: el MCP local, los modelos y la validación siguen funcionando. `run_research` devuelve un `ResearchResult` parcial con los errores de búsqueda registrados; no rellena competidores ni precios.
 
-**Con conexión a Internet**: `search_web` y `read_web_page` realizarán búsquedas y lecturas reales.
+**Con conexión a Internet**: `search_web` y `read_web_page` realizan búsquedas y lecturas reales. La disponibilidad depende del proveedor (Tavily si hay clave; DuckDuckGo mediante `ddgs` en caso contrario).
 
 ---
 
@@ -207,23 +209,19 @@ python -m pytest -q
 - `tests/test_cross_module_integration.py`: registro -> análisis de mercado -> redactor.
 - `tests/test_evidence_ids.py` y `tests/test_extract_registry_cache.py`: IDs deterministas
   y validación de cachés.
-- Suite completa: **189 tests**.
+- Suite completa en la revisión actual: **273 tests**. El desglose y los límites están en [calidad-pruebas.md](calidad-pruebas.md).
 
 ---
 
 ## Semántica de coverage_percentage
 
-El campo `coverage_percentage` en `ResearchResult` representa la **cobertura de respuestas generadas mediante análisis LLM**, NO el volumen de datos recogidos.
+El contrato `ResearchResult` incluye `coverage_percentage`, pero **la implementación actual no calcula cobertura**: `run_research` lo devuelve siempre como `0.0`.
 
-- `0.0%`: Sin análisis LLM. El módulo funciona con herramientas deterministas (sin clave OpenAI).
-- Los datos reales (competidores, evidencias, URLs, fragmentos) SÍ se recogen de la web.
-- Las preguntas del encargo se marcan como no resueltas si no hay LLM para analizarlas.
-- Distinción importante:
-  - **Recopilación de datos**: Competidores y evidencias reales de la web (SÍ se realiza).
-  - **Análisis LLM**: Interpretación y respuesta a preguntas (NO se realiza sin clave OpenAI).
-  - **Preguntas respondidas**: Aquellas respaldadas por evidencia suficiente.
-  - **Preguntas pendientes**: Las que requieren análisis LLM o datos adicionales.
-  - **Errores**: Fallos de búsqueda o lectura se registran pero no detienen la ejecución.
+- No es un porcentaje de preguntas respondidas ni un recuento de evidencias.
+- No se deriva de un análisis LLM.
+- `unresolved_questions` se inicializa con todas las preguntas del `ResearchBrief`; no se eliminan las que hayan podido quedar respondidas.
+- Los datos (competidores, evidencias, URLs y fragmentos) sí se recogen con las herramientas cuando hay red.
+- Los fallos de búsqueda o lectura se registran en el resultado parcial y no se convierten en datos inventados.
 
 El módulo NO afirma haber ejecutado un flujo de CrewAI cuando realiza la recopilación directamente mediante herramientas Python.
 
@@ -275,39 +273,41 @@ docs/
 
 ### Para Isabella (Persona 5 - Streamlit/LangGraph):
 ```python
-from fitfamily.src.agents.researcher import run_research
-from fitfamily.src.schemas import ResearchBrief
+from src.agents.researcher import run_research
+from src.schemas import ResearchBrief
 
 brief = ResearchBrief(
     business_type="gimnasio con ludoteca",
-    location=city,
-    study_area=district,
-    questions=questions_list
+    location="Madrid",
+    study_area="El Cañaveral",
+    questions=["¿Qué competidores hay?", "¿Hay ludoteca?"],
 )
 
-result = run_research(brief, context=some_context)
+result = run_research(brief)
 # Usar result.competitors, result.evidences, etc.
 ```
 
+Isabella debe tener en cuenta que `run_research` puede tardar y que no hay un orquestador global todavía.
+
 ### Para Gema (Persona 3 - Redacción de Informes):
 ```python
-from fitfamily.src.schemas import Evidence, Competitor, ResearchResult
-# Los modelos son estándar y pueden ser serializados a JSON/CSV
+from src.schemas import Evidence, Competitor, ResearchResult
+# Los modelos son estándar y pueden serializarse a JSON/CSV.
 ```
 
-### Para María (Persona 4 - Revisor Crítico):
+### Para María (Persona 4 - Revisión Crítica):
 ```python
-from fitfamily.src.schemas import ResearchResult
-# Validar resultados y rutas de revisión
+from src.schemas import ResearchResult
+# Validar resultados y rutas de revisión.
 ```
 
-### Para Laura (Persona 2 - Análisis Financiero):
+### Para Laura (Persona 2 - Análisis de mercado):
 ```python
-from fitfamily.src.schemas import Competitor, ResearchResult
-# Acceder a tarifas, servicios, estructuras de datos
+from src.tools.competitor_registry import to_dataframe
+# to_dataframe(competitors) prepara gym_name, monthly_price_eur y has_playroom.
 ```
 
-**Importante**: Ningún módulo necesita importar `src.tools.*` o `src.agents.*` directamente. El punto de entrada único y estable es `run_research(brief, context)`.
+**Importante**: el punto de entrada estable para una investigación web es `run_research(brief, context)`. Para el registro oficial, el consumidor puede usar `src.tools.competitor_registry.to_dataframe` directamente; no es necesario duplicar el parseo.
 
 ---
 
@@ -355,20 +355,18 @@ from fitfamily.src.schemas import Competitor, ResearchResult
 
 ## 📞 Contacto y Soporte
 
-- **Propietario**: Juan (Persona 1)
-- **Proyecto**: FitFamily - Viabilidad gimnasio con ludoteca en El Cañaveral, Madrid
-- **Ramas relacionadas**: 
-  - `src/` → responsabilidad exclusiva de Persona 1
-  - No modificar archivos fuera de `src/mcp/`, `src/agents/`, `src/tools/`, `src/schemas/`
-- **¿Dudas?**: Revisar `docs/research-changelog.md` para el historial completo de cambios
+- **Propietario del módulo**: Juan (Persona 1).
+- **Proyecto**: FitFamily — viabilidad de un gimnasio con ludoteca en El Cañaveral, Madrid.
+- **Alcance**: este documento describe el módulo de investigación; los contratos compartidos se documentan también en [arquitectura-modulos.md](arquitectura-modulos.md).
+- **Dudas**: revisar [research-changelog.md](research-changelog.md) para el historial completo de cambios.
 
 ---
 
 ## 📜 Licencia
 
-Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` en la raíz del repositorio para términos y condiciones.
+Este módulo forma parte del proyecto FitFamily. Consulte el archivo `LICENSE` en la raíz del repositorio para los términos del código y [data/sources.json](../data/sources.json) para las fuentes de datos.
 
 ---
 
-**Última actualización**: 20 de octubre de 2026
-**Versión**: 1.1.5 — Endurecimiento SSRF y pruebas de seguridad
+**Última revisión documental**: 26 de octubre de 2026  
+**Base funcional**: módulo de investigación y MCP descrito en este documento.

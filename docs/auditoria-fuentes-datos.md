@@ -28,6 +28,9 @@ pero la conclusión era más fuerte que la evidencia.
 MCP con `reference_period`, `source_url`, `consulted_at` y `verification_status`, y
 son reproducibles con `data/raw/extract_censo_locales.py`,
 `data/raw/extract_households.py` y `data/raw/extract_competitor_registry.py`.
+Los scripts de hogares requieren dependencias offline (`openpyxl`, `pyogrio`,
+`geopandas`, `shapely`) que no están fijadas en `requirements.txt`; el servidor MCP
+no las necesita para responder.
 
 ## 2. Causa raíz del fallo del buscador de fuentes
 
@@ -168,7 +171,7 @@ Las secciones con `COD_BAR = 194` son **9**: 19052, 19053, 19054, 19055, 19056, 
 
 - Para *obtener* el valor basta `COD_BAR` + el XLSX. Cero geometría.
 - Para *demostrar* que la agregación es exacta (que ninguna sección cruza el límite) hace falta geometría: `geopandas` + `shapely` calculan la intersección y el área.
-- `geopandas` 1.1.3, `shapely` 2.1.2, `pyproj` 3.7.2 y `pyogrio` 0.12.1 ya están instalados; `fiona` no está y no hace falta (lee el SHP con `pyogrio`).
+- `geopandas` 1.1.3, `shapely` 2.1.2, `pyproj` 3.7.2 y `pyogrio` 0.12.1 están instalados en el entorno de desarrollo de la auditoría; `fiona` no está y no hace falta (lee el SHP con `pyogrio`). Solo `pyproj` está fijado en `requirements.txt`; las demás son dependencias opcionales de los scripts offline.
 - Coste: la verificación geométrica es un script de un solo uso, no debe ejecutarse en cada petición MCP.
 - La conversión de UTM 30N a WGS84 (para `latitude`/`longitude`) usa `pyproj` de forma **opcional**: si no está, las coordenadas UTM se conservan en la evidencia y `latitude`/`longitude` quedan como `None`.
 

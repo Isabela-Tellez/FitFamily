@@ -1,0 +1,6 @@
+# FitFamily no se distribuye como paquete instalable: la instalación se
+# gestiona con requirements.txt. Este archivo contiene la configuración de
+# las herramientas que ya usa el repositorio.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

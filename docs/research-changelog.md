@@ -13,6 +13,7 @@
 - Los elementos listados en "Backlog" **no** están completados; solo se consideran cerrados los marcados con `[x]`.
 - Las afirmaciones de la versión 1.0.0 sobre una prueba real de MCP se corrigieron en 1.1.1 (`tests/test_mcp_integration.py`).
 - No se afirma la ejecución de CrewAI con LLM mientras no exista una clave de proveedor configurada.
+- Las cifras de tests de las versiones históricas (33, 43, 44, 61, 69, 78, 103, 161, 189...) corresponden a cada fase. La suite actual tiene **273 tests**; consulta [calidad-pruebas.md](calidad-pruebas.md).
 
 ---
 
