@@ -148,7 +148,10 @@ El componente `src/agents/researcher.py` es código, no la persona Juan. Del mis
 - `src/runtime/`: solo `.gitkeep`; no hay grafo ni controlador.
 - `src/security/`, `src/multimodal/`: carpetas reservadas, sin módulos.
 - No hay `main.py`, CLI ni servidor de aplicación.
-- `update_tracking_csv` está reconocida como acción permitida, pero no existe una función que la implemente.
+- `update_tracking_csv()` está implementada en
+  `src/automation/tracking.py`. Valida la aprobación y registra
+  entregas completas o parciales sin duplicar filas al reintentar.
+  La coordinación global de Markdown, PDF y CSV sigue pendiente.
 - No hay actualización programada de datos, base de datos, autenticación, autorización ni trazas de auditoría.
 
 ### Datos
