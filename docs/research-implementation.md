@@ -1,5 +1,7 @@
 # FitFamily - Registro de Cambios del Módulo Persona 1
 
+> **Documento histórico.** Las cifras de tests de este archivo corresponden al momento en que se escribió cada fase (por ejemplo, 189 tests). La suite actual tiene **273 tests**; consulta [calidad-pruebas.md](calidad-pruebas.md) para el estado vigente. Este documento no se reescribe para conservar la trazabilidad.
+
 ## Visión General
 Este documento registra todas las modificaciones y creación de archivos durante la implementación del módulo de Investigación y MCP para la Persona 1 (Juan) en el proyecto FitFamily.
 

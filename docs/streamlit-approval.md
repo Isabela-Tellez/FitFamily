@@ -42,7 +42,7 @@ Reglas que la UI debe cumplir:
 4. Autorizar solo las acciones seleccionadas (`export_markdown`, `export_pdf`, `update_tracking_csv`).
 5. Usar `decided_at` con zona horaria; el exportador rechaza fechas sin `tzinfo`.
 6. No exportar si `ReviewResult.status == "needs_revision"` o si `choose_review_route` devuelve una ruta de corrección.
-7. No permitir que la UI escriba directamente en `exports/`: debe llamar a `export_markdown`/`export_pdf`.
+7. No permitir que la UI escriba directamente en `reports/generated`: debe llamar a `export_markdown`/`export_pdf`.
 8. Mantener el `run_id` estable durante toda la ejecución.
 
 ## Pantallas propuestas

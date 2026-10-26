@@ -1,42 +1,47 @@
 # Equipo y responsabilidades
 
-FitFamily se construye entre cinco personas con responsabilidades separadas y contratos explícitos. Este documento registra a cada integrante por igual: qué aporta, qué módulos mantiene, en qué estado está su trabajo y dónde está su documentación.
+FitFamily se construye entre cinco personas con responsabilidades separadas y contratos explícitos. Este documento registra qué aporta cada integrante, qué módulos mantiene y dónde está la documentación.
 
-| Persona | Rol | Módulos principales | Documento | Estado |
-|---|---|---|---|---|
-| **1 · Juan** | Investigación, fuentes y MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/`, `data/raw/` | [research-module.md](research-module.md) | ✅ Funcional |
-| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/market_analysis.py`, `src/analysis/scenarios.py` | [analysis.md](analysis.md) | ✅ Funcional |
-| **3 · Gema** | Redacción, informes y automatización | `src/agents/writer_agent.py`, `src/agents/strategic_writer.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [report-export.md](report-export.md) · [writer-llm.md](writer-llm.md) | ✅ Funcional |
-| **4 · María** | Revisión, validación y seguridad | `src/review/`, `src/graph/review_routes.py` | [review-quality.md](review-quality.md) | ✅ Funcional |
-| **5 · Isabella** | Streamlit, LangGraph y aprobación humana | `src/ui/` (pendiente), orquestación global | [streamlit-approval.md](streamlit-approval.md) · [langgraph-flow.md](langgraph-flow.md) | ⚠️ Diseño / pendiente |
+> **Roles humanos, no agentes.** Las cinco personas son roles de desarrollo. Los nombres `ResearchAgent`, `WriterAgent`, `ReviewResult` o `ApprovalRecord` designan componentes de software, no personas. La única ruta que ejecuta un `Crew` de CrewAI es el redactor LLM; el investigador usa las herramientas directamente.
 
-## Persona 1 — Juan: investigación y datos
+## Resumen
+
+| Persona | Rol | Módulos principales | Documentación |
+|---|---|---|---|
+| **1 · Juan** | Investigación, fuentes y MCP | `src/schemas.py`, `src/agents/researcher.py`, `src/tools/`, `src/mcp/`, `data/raw/` | [research-module.md](research-module.md) |
+| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/` | [analysis.md](analysis.md) |
+| **3 · Gema** | Redacción, informes y exportación | `src/agents/writer_agent.py`, `src/agents/strategic_writer.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [report-export.md](report-export.md) · [writer-llm.md](writer-llm.md) |
+| **4 · María** | Revisión, validación y rutas de calidad | `src/review/`, `src/graph/review_routes.py` | [review-quality.md](review-quality.md) |
+| **5 · Isabella** | Interfaz, orquestación y aprobación humana | `src/ui/` (vacío), `src/runtime/` (vacío), diseño de Streamlit/LangGraph | [streamlit-approval.md](streamlit-approval.md) · [langgraph-flow.md](langgraph-flow.md) |
+
+## Persona 1 — Juan: investigación, datos y MCP
 
 <a id="persona-1"></a>
 
-**Responsabilidad.** Convertir un `ResearchBrief` en un `ResearchResult` trazable, con evidencias identificables, competidores y fuentes descubiertas. También mantiene el servidor MCP que publica los indicadores municipales.
+**Responsabilidad.** Convertir un `ResearchBrief` en un `ResearchResult` trazable, con evidencias identificables, competidores y fuentes descubiertas. Mantiene también el servidor MCP que publica los indicadores municipales.
 
 **Entregables principales.**
 
-- `src/agents/researcher.py`: `run_research(brief)`, `build_researcher`, `build_research_task`.
-- `src/tools/`: búsqueda web, lectura de páginas, búsqueda de competidores y descubrimiento de fuentes.
-- `src/mcp/`: servidor y cliente MCP (`get_area_statistics`).
-- `data/raw/`: scripts de preparación del registro de competidores y fuentes documentadas.
+- `src/schemas.py`: contratos compartidos (`ResearchBrief`, `ResearchResult`, `Evidence`, `Competitor`).
+- `src/agents/researcher.py`: `run_research(brief, context=None)`, `build_researcher`, `build_research_task`.
+- `src/tools/`: búsqueda web, lectura de páginas, búsqueda de competidores, descubrimiento de fuentes y registro oficial.
+- `src/mcp/`: servidor y cliente MCP; `get_area_statistics(area_id, indicators=None)`.
+- `data/raw/`: scripts de preparación de datos y documentación de fuentes.
 - `.github/workflows/ci.yml` y pruebas deterministas del investigador.
 
-**Interfaces que consume.** Un `ResearchBrief` definido por la persona usuaria o la UI, y las fuentes municipales y web.
+**Interfaces que consume.** Un `ResearchBrief` y fuentes municipales o web.
 
-**Interfaces que produce.** `ResearchBrief` → `ResearchResult` (`evidences`, `competitors`, `unresolved_questions`, `coverage_percentage`).
+**Interfaces que produce.** `ResearchResult` con `evidences`, `competitors`, `unresolved_questions`, `coverage_percentage` y `search_performed`.
 
-**Estado.** Funcional. La investigación web requiere red; el MCP funciona en local por `stdio`.
+**Estado real.** La investigación web requiere red y puede devolver un resultado parcial si falla un proveedor. El MCP funciona en local por `stdio`. `run_research` no ejecuta un LLM ni un `Crew`; la cobertura permanece en `0.0`.
 
-**Documentación.** [research-module.md](research-module.md), [research-implementation.md](research-implementation.md), [auditoria-fuentes-datos.md](auditoria-fuentes-datos.md), [research-changelog.md](research-changelog.md).
+**Documentación.** [research-module.md](research-module.md), [auditoria-fuentes-datos.md](auditoria-fuentes-datos.md), [data/raw/README.md](../data/raw/README.md). Los documentos [research-implementation.md](research-implementation.md) y [research-changelog.md](research-changelog.md) son históricos.
 
 ## Persona 2 — Laura: análisis y escenarios
 
 <a id="persona-2"></a>
 
-**Responsabilidad.** Convertir los datos de competidores en indicadores descriptivos y calcular escenarios de punto de equilibrio con supuestos explícitos.
+**Responsabilidad.** Convertir datos de competidores en indicadores descriptivos y calcular escenarios de punto de equilibrio con supuestos explícitos.
 
 **Entregables principales.**
 
@@ -44,15 +49,15 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 - `src/analysis/scenarios.py`: `calculate_break_even_clients`.
 - `tests/test_market_analysis.py`, `tests/test_scenarios.py`.
 
-**Interfaces que consume.** Un `DataFrame` con `gym_name`, `monthly_price_eur` y `has_playroom`.
+**Interfaces que consume.** Un `DataFrame` con las columnas obligatorias `gym_name`, `monthly_price_eur` y `has_playroom`. El registro versionado puede convertirse con `src.tools.competitor_registry.to_dataframe`.
 
-**Interfaces que produce.** Un diccionario de indicadores (`competitor_count`, precios, ludoteca) y un entero de clientes mínimos para el punto de equilibrio.
+**Interfaces que produce.** Un diccionario de indicadores (`competitor_count`, precios conocidos, media de precios y estado de ludoteca) y un entero de clientes mínimos para el punto de equilibrio.
 
-**Estado.** Funcional. La conexión automática desde `ResearchResult` a `DataFrame` sigue pendiente y hoy requiere un adaptador explícito.
+**Estado real.** El análisis descriptivo y el punto de equilibrio están implementados. La conexión automática desde un `ResearchResult` a `DataFrame` sigue pendiente; hoy requiere un adaptador explícito o partir del registro versionado.
 
 **Documentación.** [analysis.md](analysis.md).
 
-## Persona 3 — Gema: redacción, informes y automatización
+## Persona 3 — Gema: redacción, informes y exportación
 
 <a id="persona-3"></a>
 
@@ -70,11 +75,11 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 
 **Interfaces que produce.** `ReportDraft` (con `draft_id`, `version`, `claims`) y archivos Markdown/PDF aprobados.
 
-**Estado.** Funcional. La ruta determinista es la predeterminada; la ruta LLM se activa con `use_llm=True` y requiere `GROQ_API_KEY`.
+**Estado real.** La ruta determinista es la predeterminada. La ruta LLM se activa con `build_report(..., use_llm=True)` y requiere `GROQ_API_KEY`; no se ejecutó con un proveedor real en la revisión documental. La exportación exige un `ApprovalRecord` válido, pero la interfaz que lo crea no existe.
 
 **Documentación.** [report-export.md](report-export.md), [writer-llm.md](writer-llm.md).
 
-## Persona 4 — María: revisión, validación y seguridad
+## Persona 4 — María: revisión, validación y rutas de calidad
 
 <a id="persona-4"></a>
 
@@ -92,20 +97,20 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 
 **Interfaces que produce.** `ReviewResult` con incidencias, huella del borrador y estado (`needs_revision` o `pending_review`).
 
-**Estado.** Funcional. No aprueba ni exporta: solo emite el diagnóstico y la ruta de corrección.
+**Estado real.** La revisión estructural está implementada. No verifica que una fuente respalde semánticamente una afirmación, no consulta Internet y no ejecuta correcciones. No aprueba ni exporta.
 
 **Documentación.** [review-quality.md](review-quality.md).
 
-## Persona 5 — Isabella: Streamlit, LangGraph y aprobación humana
+## Persona 5 — Isabella: interfaz, orquestación y aprobación
 
 <a id="persona-5"></a>
 
-**Responsabilidad.** Unir el flujo completo en una interfaz y una orquestación con aprobación humana: mostrar investigación, análisis, borrador y revisión; recoger la decisión de la persona usuaria; y autorizar la exportación.
+**Responsabilidad.** Unir el flujo completo en una interfaz y una orquestación con aprobación humana: mostrar investigación, análisis, borrador y revisión; recoger la decisión; y autorizar la exportación.
 
 **Entregables previstos.**
 
 - `src/ui/`: aplicación Streamlit (hoy solo existe `.gitkeep`).
-- Orquestación LangGraph con estado compartido y bucle de correcciones.
+- `src/runtime/`: orquestación y estado compartido (hoy solo existe `.gitkeep`).
 - Flujo de aprobación que construye un `ApprovalRecord` válido y llama al exportador de Gema.
 - Pruebas de la interfaz y del flujo de aprobación.
 
@@ -113,7 +118,7 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 
 **Interfaces que produce.** Decisión humana registrada y archivo Markdown/PDF publicado.
 
-**Estado.** Diseño documentado; implementación pendiente. No hay código de UI ni dependencias de Streamlit/LangGraph en `requirements.txt`.
+**Estado real.** Diseño documentado; implementación pendiente. No hay código de UI, dependencias de Streamlit/LangGraph en `requirements.txt`, ni orquestador global. El controlador que cree `ApprovalRecord` debe garantizar que la decisión humana existió.
 
 **Documentación.** [streamlit-approval.md](streamlit-approval.md), [langgraph-flow.md](langgraph-flow.md).
 
@@ -121,13 +126,13 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 
 | Contrato | Lo produce | Lo consumen |
 |---|---|---|
-| `ResearchResult` | Juan | Laura, Gema |
-| `DataFrame` de competidores | Adaptador pendiente (Juan/Laura) | Laura |
-| `ReportDraft` | Gema | María, Isabella |
-| `ReviewResult` | María | Isabella |
-| `ApprovalRecord` | Isabella (decisión humana) | Gema (exportación) |
-| Markdown / PDF | Gema | Isabella (UI), persona usuaria |
+| `ResearchResult` | Investigación | Análisis, redacción y revisión |
+| `DataFrame` de competidores | Registro oficial o adaptador explícito | Análisis |
+| `ReportDraft` | Redacción | Revisión y controlador |
+| `ReviewResult` | Revisión | Controlador/futuro grafo |
+| `ApprovalRecord` | Controlador con decisión humana | Exportación |
+| Markdown / PDF | Exportación | Persona usuaria |
 
 ## Regla de documentación
 
-Cada integrante mantiene el documento de su rol. Si un cambio afecta a un contrato compartido, se actualizan el documento del rol y [arquitectura-modulos.md](arquitectura-modulos.md) en el mismo pull request. Ningún rol se considera "secundario": la documentación debe reflejar las cinco responsabilidades por igual.
+Cada integrante mantiene el documento de su rol. Si un cambio afecta a un contrato compartido, se actualizan el documento del rol y [arquitectura-modulos.md](arquitectura-modulos.md) en el mismo cambio. Ningún rol se considera “secundario”: la documentación debe reflejar las cinco responsabilidades por igual.

@@ -12,6 +12,8 @@ Por defecto conserva el modo determinista para mantener compatibilidad.
 
 La conexión con la interfaz y el flujo global sigue pendiente.
 
+> **Revisión documental del 26 de octubre de 2026.** No se ha ejecutado una llamada real a Groq. Las pruebas de esta revisión usan respuestas simuladas; la ejecución real descrita más abajo es histórica y no se ha reproducido. El CI no tiene una clave de proveedor.
+
 ## Configuración
 
 Instalar las dependencias:
@@ -57,16 +59,20 @@ Se rechazan:
 Se conservan las preguntas pendientes de la investigación
 y las limitaciones de las evidencias citadas.
 
-## Validación realizada
+## Validación histórica y cobertura actual
 
 - Una ejecución real con datos ficticios produjo un borrador,
   conservó la cuota de 45 euros mensuales y su referencia,
-  y dejó la disponibilidad de ludoteca como pendiente.
+  y dejó la disponibilidad de ludoteca como pendiente. Es un registro
+  histórico, no una comprobación repetida en esta revisión.
 - Esa ejecución interpretó incorrectamente coverage_percentage.
   Después se añadió una instrucción para evitar esa interpretación;
   queda pendiente comprobarla en otra ejecución real.
 - Cuatro pruebas sin red validan la conversión y los rechazos.
 - Las pruebas conjuntas seleccionadas y las pruebas MCP pasaron.
+- En la suite actual, `tests/test_strategic_writer.py` cubre la ruta LLM
+  con mocks; no acredita que el proveedor responda ni que el modelo
+  real respete las referencias.
 
 ## Limitaciones
 
