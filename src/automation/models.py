@@ -34,3 +34,37 @@ class ApprovalRecord:
     approved: bool
     actions: tuple[str, ...]
     decided_at: datetime
+
+@dataclass(frozen=True)
+class TrackingRecord:
+    """
+    Fila de seguimiento de una entrega aprobada.
+
+    Registra el borrador y los archivos publicados.
+    No representa una conclusión sobre la viabilidad del negocio.
+    """
+
+    # Identificamos la ejecución y el contenido aprobado.
+    run_id: str
+    draft_id: str
+    draft_version: int
+    draft_fingerprint: str
+
+    # Guardamos la fecha de aprobación en formato ISO con zona horaria.
+    # Usaremos la fecha del ApprovalRecord para mantenerla estable
+    # cuando se repita una operación.
+    approved_at: str
+
+    # Identificamos el estudio sin copiar todo el informe al CSV.
+    case: str
+    study_area: str
+
+    # Estado de la entrega: "partial" o "complete".
+    # La función de seguimiento lo calculará según las acciones
+    # autorizadas y los archivos que se hayan publicado.
+    status: str
+
+    # Una ruta vacía indica que ese formato todavía no se ha generado
+    # o que no forma parte de las acciones autorizadas.
+    markdown_path: str = ""
+    pdf_path: str = ""
