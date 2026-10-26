@@ -151,7 +151,9 @@ El componente `src/agents/researcher.py` es código, no la persona Juan. Del mis
 - `update_tracking_csv()` está implementada en
   `src/automation/tracking.py`. Valida la aprobación y registra
   entregas completas o parciales sin duplicar filas al reintentar.
-  La coordinación global de Markdown, PDF y CSV sigue pendiente.
+- `export_approved_report()`, en `src/automation/delivery.py`,
+  coordina esas acciones y devuelve un `DeliveryResult` con
+  éxitos y fallos. Su conexión con la interfaz sigue pendiente.
 - No hay actualización programada de datos, base de datos, autenticación, autorización ni trazas de auditoría.
 
 ### Datos
