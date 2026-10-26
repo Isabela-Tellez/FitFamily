@@ -5,7 +5,8 @@
 <h1 align="center">FitFamily</h1>
 
 <p align="center">
-  <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong>
+  <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong><br>
+  <sub><strong>Proyecto abierto — documentación renovada; código sin cambios (16 oct 2026)</strong></sub>
 </p>
 
 <p align="center">

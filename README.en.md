@@ -5,7 +5,8 @@
 <h1 align="center">FitFamily</h1>
 
 <p align="center">
-  <strong>Traceable market research and report generation for a gym with a playroom in El Cañaveral, Madrid</strong>
+  <strong>Traceable market research and report generation for a gym with a playroom in El Cañaveral, Madrid</strong><br>
+  <sub><strong>Open project — documentation renewed; no code changed (26 Oct 2026)</strong></sub>
 </p>
 
 <p align="center">
