@@ -93,6 +93,10 @@ build_report_markdown(brief, research_result, use_llm=True)
 
 Ambas funciones están en src/reporting/report_builder.py.
 
+Para renderizar un borrador que ya existe, sin volver a generarlo:
+
+render_report_markdown(draft)
+
 Si se omite use_llm, se utiliza el Writer determinista.
 Si el LLM falla, el error se propaga: no se cambia de modo
 automáticamente.

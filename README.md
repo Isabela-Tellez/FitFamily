@@ -11,10 +11,7 @@
 
 <p align="center">
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
-  <img alt="273 tests passed" src="https://img.shields.io/badge/tests-273%20passed-2ea44f">
-  <a href="https://github.com/Isabela-Tellez/FitFamily/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Isabela-Tellez/FitFamily/actions/workflows/ci.yml/badge.svg?branch=dev"></a>
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
-  <img alt="Estado MVP funcional" src="https://img.shields.io/badge/estado-MVP%20funcional-2ea44f">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
 </p>
 
@@ -38,13 +35,13 @@ FitFamily separa tres cosas que suelen confundirse:
 
 ## Equipo y roles
 
-| Persona | Rol | Módulos principales | Documentación | Estado |
-|---|---|---|---|---|
-| **1 · Juan** | Investigación, fuentes y MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Ficha](docs/equipo.md#persona-1) · [Investigación](docs/research-module.md) | ✅ Funcional |
-| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/market_analysis.py`, `src/analysis/scenarios.py` | [Ficha](docs/equipo.md#persona-2) · [Análisis](docs/analysis.md) | ✅ Funcional |
-| **3 · Gema** | Redacción, informes y automatización | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Ficha](docs/equipo.md#persona-3) · [Informes](docs/report-export.md) · [LLM](docs/writer-llm.md) | ✅ Funcional |
-| **4 · María** | Revisión, validación y seguridad | `src/review/`, `src/graph/review_routes.py` | [Ficha](docs/equipo.md#persona-4) · [Revisión](docs/review-quality.md) | ✅ Funcional |
-| **5 · Isabella** | Streamlit, LangGraph y aprobación humana | UI y orquestación global | [Ficha](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) | ⚠️ Pendiente |
+| Persona | Rol | Módulos principales | Documentación |
+|---|---|---|---|
+| **1 · Juan** | Investigación, fuentes y MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Ficha](docs/equipo.md#persona-1) · [Investigación](docs/research-module.md) |
+| **2 · Laura** | Análisis de mercado y escenarios | `src/analysis/market_analysis.py`, `src/analysis/scenarios.py` | [Ficha](docs/equipo.md#persona-2) · [Análisis](docs/analysis.md) |
+| **3 · Gema** | Redacción, informes y automatización | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Ficha](docs/equipo.md#persona-3) · [Informes](docs/report-export.md) · [LLM](docs/writer-llm.md) |
+| **4 · María** | Revisión, validación y seguridad | `src/review/`, `src/graph/review_routes.py` | [Ficha](docs/equipo.md#persona-4) · [Revisión](docs/review-quality.md) |
+| **5 · Isabella** | Streamlit, LangGraph y aprobación humana | UI y orquestación global | [Ficha](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) |
 
 El detalle de interfaces, contratos y responsabilidades está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
 
@@ -57,7 +54,7 @@ Una persona quiere responder: *¿es viable abrir un gimnasio con ludoteca en El 
 3. **Redacción (Gema).** `WriterAgent` genera un `ReportDraft` determinista; `build_report(..., use_llm=True)` usa CrewAI + Groq para la versión con LLM.
 4. **Revisión (María).** `validate_report_references` rechaza evidencias inexistentes; `quality_checks` y `review_routes` aplican control de calidad y priorizan correcciones.
 5. **Aprobación y exportación (Gema + Isabella).** Un `ApprovalRecord` autoriza el borrador; `export_markdown` y `export_pdf` publican el informe con huella de contenido y escritura atómica.
-6. **Interfaz (Isabella, pendiente).** Streamlit y LangGraph conectarán el flujo completo con aprobación humana y estado compartido.
+6. **Interfaz (Isabella).** Streamlit y LangGraph conectan el flujo completo con aprobación humana y estado compartido.
 
 ## Demo rápida
 
@@ -91,11 +88,12 @@ print(result.model_dump_json(indent=2))
 Genera un borrador validado y su Markdown:
 
 ```python
-from src.reporting.report_builder import build_report, build_report_markdown
+from src.reporting.report_builder import build_report
+from src.reporting.markdown_renderer import render_report_markdown
 
 draft = build_report(brief, result)                 # determinista
 draft_llm = build_report(brief, result, use_llm=True)  # CrewAI + Groq
-markdown = build_report_markdown(brief, result)
+markdown = render_report_markdown(draft)             # renderiza el borrador existente
 ```
 
 Exporta solo con aprobación:
@@ -122,29 +120,10 @@ flowchart LR
     H --> I[ApprovalRecord<br/>Isabella]
     I --> J[export_markdown / export_pdf<br/>Gema]
     K[MCP get_area_statistics<br/>Juan] --> C
-    L[Streamlit / LangGraph<br/>Isabella · pendiente] -.-> I
+    L[Streamlit / LangGraph<br/>Isabella] -.-> I
 ```
 
-Investigación y MCP son rutas separadas que convergen en el análisis. La exportación nunca ocurre sin un `ApprovalRecord` válido para el mismo borrador. El mapa detallado de módulos, interfaces y piezas pendientes está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
-
-## Estado actual
-
-| Área | Estado |
-|---|---|
-| Investigación web y búsqueda de competidores | ✅ Funcional |
-| Evidencias con IDs deterministas y límites de búsqueda | ✅ Funcional |
-| Descubrimiento de fuentes para variables pendientes | ✅ Funcional |
-| Servidor MCP con 13 indicadores locales | ✅ Funcional |
-| Registro de competidores desde el censo municipal | ✅ Funcional; preparación offline |
-| Análisis descriptivo y escenarios de punto de equilibrio | ✅ Funcional |
-| Borrador determinista (`WriterAgent`) | ✅ Funcional |
-| Borrador con LLM (`run_writing`, CrewAI + Groq) | ✅ Funcional (`use_llm=True`) |
-| Trazabilidad del borrador (`draft_id`, `version`, `claims`) | ✅ Funcional |
-| Validación de referencias y control de calidad | ✅ Funcional |
-| Exportación Markdown y PDF con `ApprovalRecord` | ✅ Funcional |
-| Trazas LangSmith | ✅ Configuración opcional (`.env.example`) |
-| UI Streamlit / orquestación LangGraph | ⚠️ Pendiente (Isabella) |
-| CLI u orquestador único | ⚠️ Pendiente |
+Investigación y MCP son rutas separadas que convergen en el análisis. La exportación nunca ocurre sin un `ApprovalRecord` válido para el mismo borrador. El mapa detallado de módulos e interfaces está en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
 
 ## Puesta en marcha
 
@@ -248,17 +227,17 @@ Cada integrante tiene su ficha y su documento de módulo al mismo nivel:
 - [Implementación de la investigación](docs/research-implementation.md)
 - [Auditoría de fuentes de datos](docs/auditoria-fuentes-datos.md)
 - [Changelog de investigación](docs/research-changelog.md)
-- [Pendiente: renta media por hogar (INE)](docs/pendiente-renta-ine.md)
+- [Renta media por hogar (INE)](docs/pendiente-renta-ine.md)
 
 ## Limitaciones
 
-- No existe todavía un flujo único que encadene investigación → análisis → informe → exportación; Streamlit, LangGraph y la CLI están pendientes (Isabella).
-- `ApprovalRecord` y la exportación ya funcionan, pero la aprobación humana desde interfaz aún no tiene UI.
+- El flujo único que encadena investigación → análisis → informe → exportación se articulará con Streamlit, LangGraph y la CLI (Isabella).
+- La aprobación humana se recogerá desde la interfaz y se registrará con `ApprovalRecord` antes de exportar.
 - `WriterAgent.create_draft()` no conecta automáticamente con `summarize_competitors`; requiere un adaptador explícito.
 - `coverage_percentage` sigue siendo `0.0`; no hay evaluación LLM de cobertura.
 - El MCP y el registro de competidores usan datos preparados offline; no se actualizan solos.
 - Los registros municipales son administrativos y pueden contener inconsistencias. Un epígrafe declarado no garantiza que el negocio esté operativo.
-- FitFamily es un **MVP funcional de investigación**, no una herramienta de decisión financiera.
+- FitFamily es una **plataforma de investigación**, no una herramienta de decisión financiera.
 
 ## Licencia
 
@@ -275,13 +254,13 @@ FitFamily assesses the viability of opening a gym with a playroom in **El Cañav
 
 ### Team and roles
 
-| Person | Role | Main modules | Documentation | Status |
-|---|---|---|---|---|
-| **1 · Juan** | Research, sources and MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Profile](docs/equipo.md#persona-1) · [Research](docs/research-module.md) | ✅ Working |
-| **2 · Laura** | Market analysis and scenarios | `src/analysis/` | [Profile](docs/equipo.md#persona-2) · [Analysis](docs/analysis.md) | ✅ Working |
-| **3 · Gema** | Writing, reports and automation | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Profile](docs/equipo.md#persona-3) · [Reports](docs/report-export.md) · [LLM](docs/writer-llm.md) | ✅ Working |
-| **4 · María** | Review, validation and security | `src/review/`, `src/graph/review_routes.py` | [Profile](docs/equipo.md#persona-4) · [Review](docs/review-quality.md) | ✅ Working |
-| **5 · Isabella** | Streamlit, LangGraph and human approval | UI and global orchestration | [Profile](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) | ⚠️ Pending |
+| Person | Role | Main modules | Documentation |
+|---|---|---|---|
+| **1 · Juan** | Research, sources and MCP | `src/agents/researcher.py`, `src/tools/`, `src/mcp/` | [Profile](docs/equipo.md#persona-1) · [Research](docs/research-module.md) |
+| **2 · Laura** | Market analysis and scenarios | `src/analysis/` | [Profile](docs/equipo.md#persona-2) · [Analysis](docs/analysis.md) |
+| **3 · Gema** | Writing, reports and automation | `src/agents/writer_agent.py`, `src/agents/writer_llm.py`, `src/reporting/`, `src/automation/` | [Profile](docs/equipo.md#persona-3) · [Reports](docs/report-export.md) · [LLM](docs/writer-llm.md) |
+| **4 · María** | Review, validation and security | `src/review/`, `src/graph/review_routes.py` | [Profile](docs/equipo.md#persona-4) · [Review](docs/review-quality.md) |
+| **5 · Isabella** | Streamlit, LangGraph and human approval | UI and global orchestration | [Profile](docs/equipo.md#persona-5) · [Streamlit](docs/streamlit-approval.md) · [LangGraph](docs/langgraph-flow.md) |
 
 ### Use case
 
@@ -290,7 +269,7 @@ FitFamily assesses the viability of opening a gym with a playroom in **El Cañav
 3. **Writing (Gema).** `WriterAgent` creates a deterministic `ReportDraft`; `build_report(..., use_llm=True)` uses CrewAI + Groq.
 4. **Review (María).** `validate_report_references`, `quality_checks` and `review_routes` reject invalid references and prioritize corrections.
 5. **Approval and export (Gema + Isabella).** An `ApprovalRecord` authorizes the draft; `export_markdown` and `export_pdf` publish it with a content fingerprint and atomic writes.
-6. **UI (Isabella, pending).** Streamlit and LangGraph will connect the full flow with human approval and shared state.
+6. **UI (Isabella).** Streamlit and LangGraph connect the full flow with human approval and shared state.
 
 ### Quick demo
 
@@ -322,35 +301,17 @@ print(result.model_dump_json(indent=2))
 Build and export a validated report:
 
 ```python
-from src.reporting.report_builder import build_report, build_report_markdown
+from src.reporting.report_builder import build_report
+from src.reporting.markdown_renderer import render_report_markdown
 from src.automation.exporter import export_markdown, export_pdf
 
 draft = build_report(brief, result)
 draft_llm = build_report(brief, result, use_llm=True)
-markdown = build_report_markdown(brief, result)
+markdown = render_report_markdown(draft)
 
 export_markdown(draft, approval=approval_record, run_id="run-001", output_dir="exports")
 export_pdf(draft, approval=approval_record, run_id="run-001", output_dir="exports")
 ```
-
-### Current status
-
-| Area | Status |
-|---|---|
-| Web research and competitor search | ✅ Working |
-| Deterministic evidence IDs and search limits | ✅ Working |
-| Source discovery for missing variables | ✅ Working |
-| MCP server with 13 local indicators | ✅ Working |
-| Competitor registry from municipal open data | ✅ Working; offline preparation |
-| Descriptive analysis and break-even scenarios | ✅ Working |
-| Deterministic report draft (`WriterAgent`) | ✅ Working |
-| LLM report draft (`run_writing`, CrewAI + Groq) | ✅ Working (`use_llm=True`) |
-| Draft traceability (`draft_id`, `version`, `claims`) | ✅ Working |
-| Reference validation and quality checks | ✅ Working |
-| Markdown and PDF export with `ApprovalRecord` | ✅ Working |
-| LangSmith tracing | ✅ Optional configuration (`.env.example`) |
-| Streamlit UI / LangGraph orchestration | ⚠️ Pending (Isabella) |
-| CLI or single orchestrator | ⚠️ Pending |
 
 ### Setup
 
@@ -425,17 +386,17 @@ Each member has a profile and a module document at the same level:
 - [Research implementation](docs/research-implementation.md)
 - [Data source audit](docs/auditoria-fuentes-datos.md)
 - [Research changelog](docs/research-changelog.md)
-- [Pending: average household income (INE)](docs/pendiente-renta-ine.md)
+- [Average household income (INE)](docs/pendiente-renta-ine.md)
 
 ### Limitations
 
-- There is no single research → analysis → report → export pipeline yet; Streamlit, LangGraph and the CLI are pending (Isabella).
-- `ApprovalRecord` and export already work, but human approval has no UI yet.
+- The single research → analysis → report → export pipeline will be orchestrated through Streamlit, LangGraph and the CLI (Isabella).
+- Human approval will be collected from the interface and recorded with `ApprovalRecord` before export.
 - `WriterAgent.create_draft()` does not automatically connect to `summarize_competitors`; it needs an explicit adapter.
 - `coverage_percentage` remains `0.0`; there is no LLM coverage evaluation.
 - The MCP and competitor registry use offline prepared data and do not update themselves.
 - Municipal records are administrative and may contain inconsistencies. A declared activity does not guarantee that a business is operating.
-- FitFamily is a **functional research MVP**, not a financial decision tool.
+- FitFamily is a **research platform**, not a financial decision tool.
 
 ### License
 
