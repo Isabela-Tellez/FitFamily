@@ -27,7 +27,7 @@
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
 </p>
 
-> **What this is and what it is not.** FitFamily is a research and documentation prototype for deciding whether opening a gym with a playroom in El Cañaveral makes sense. It is not a finished business plan, it does not produce an investment recommendation, and **it does not yet have a UI or an orchestrator**. Its current value is in data traceability, explicit module contracts, and checks that prevent invented figures.
+> **What it is and what it isn't (open project).** FitFamily is a research and documentation prototype in development for deciding whether opening a gym with a playroom in El Cañaveral makes sense. It is not a closed business plan, it does not compute an investment recommendation, **it is not finished** and **still has no UI or orchestrator**. The current value is in data traceability, module contracts, and checks that prevent invented figures.
 
 ## What FitFamily is
 

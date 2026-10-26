@@ -27,7 +27,7 @@
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
 </p>
 
-> **Qué es y qué no es.** FitFamily es un prototipo de investigación y documentación para decidir si tiene sentido abrir un gimnasio con ludoteca en El Cañaveral. No es un plan de negocio cerrado, no calcula una recomendación de inversión y **todavía no tiene interfaz ni orquestador**. El valor actual está en la trazabilidad de los datos, los contratos entre módulos y las comprobaciones que impiden inventar cifras.
+> **Qué es y qué no es (proyecto abierto).** FitFamily es un prototipo de investigación y documentación en desarrollo para decidir si tiene sentido abrir un gimnasio con ludoteca en El Cañaveral. No es un plan de negocio cerrado, no calcula una recomendación de inversión, **no está terminado** y **todavía no tiene interfaz ni orquestador**. El valor actual está en la trazabilidad de los datos, los contratos entre módulos y las comprobaciones que impiden inventar cifras.
 
 ## Qué es FitFamily
 
