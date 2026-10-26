@@ -11,7 +11,7 @@ from pathlib import Path
 from src.automation.delivery import export_approved_report
 from src.automation.exporter import calculate_draft_fingerprint
 from src.automation.models import ApprovalRecord
-from src.graph.review_routes import choose_review_route
+from src.graph.review_routes import choose_review_route_for_context
 from src.reporting.markdown_renderer import render_report_markdown
 from src.reporting.report_builder import build_report
 from src.review.quality_checks import run_basic_review
@@ -56,7 +56,14 @@ def test_research_draft_review_and_delivery(tmp_path):
     review = run_basic_review(draft, research)
 
     assert review.issues == ()
-    assert choose_review_route(review, revision_count=0) == "pending_review"
+    # Comprueba que la revisión corresponde a los datos actuales.
+    route = choose_review_route_for_context(
+        review,
+        draft,
+        research,
+        revision_count=0,
+    )
+    assert route == "pending_review"
     assert review.draft_id == draft.draft_id
     assert review.draft_version == draft.version
     assert review.draft_fingerprint == fingerprint
