@@ -6,6 +6,7 @@ from src.reporting.models import ReportDraft
 from src.review.models import ReviewIssue, ReviewResult
 from src.review.validation import (
     validate_claim_references,
+    validate_claim_structure,
     validate_evidence_quality,
 )
 from src.schemas import ResearchResult
@@ -40,6 +41,7 @@ def run_basic_review(
     """
     raw_issues = validate_claim_references(draft, research_result)
     raw_issues += validate_evidence_quality(draft, research_result)
+    raw_issues += validate_claim_structure(draft)
 
     issues: list[ReviewIssue] = []
 
@@ -71,6 +73,7 @@ def run_basic_review(
         checks_performed=(
             "claim_references",
             "evidence_quality",
+            "claim_structure",
         ),
         research_fingerprint=calculate_research_fingerprint(
             research_result
