@@ -248,3 +248,51 @@ def test_failed_publication_can_be_retried(tmp_path):
         render_report_markdown(draft, approved=True)
     )
     assert len(list(tmp_path.iterdir())) == 1
+
+@pytest.mark.parametrize(
+    ("field_name", "new_value"),
+    [
+        ("metric_id", "another_metric"),
+        ("reported_value", 50.0),
+        ("reported_unit", "EUR/year"),
+    ],
+)
+def test_changed_metric_reference_invalidates_approval(
+    field_name, new_value, tmp_path
+):
+    """Cambiar datos numéricos invalida la aprobación anterior."""
+    from src.reporting.models import ReportClaim
+
+    claim = ReportClaim(
+        claim_id="claim_average_price",
+        text="La cuota mensual media es de 45 EUR.",
+        kind="fact",
+        evidence_ids=["price_a", "price_b"],
+        metric_id="scenario_base.average_monthly_price_eur",
+        reported_value=45.0,
+        reported_unit="EUR/month",
+    )
+    draft = ReportDraft(
+        title="Informe ficticio de prueba",
+        study_area="Zona de prueba",
+        claims=[claim],
+    )
+
+    # Aprobación simulada del contenido original.
+    approval = make_approved_record(draft)
+
+    # Alteramos un campo sin cambiar el texto ni la versión.
+    setattr(claim, field_name, new_value)
+
+    output_dir = tmp_path / "reports"
+
+    with pytest.raises(ValueError, match="contenido cambió"):
+        export_markdown(
+            draft,
+            approval,
+            approval.run_id,
+            output_dir,
+        )
+
+    # El rechazo debe producirse antes de crear la carpeta.
+    assert not output_dir.exists()
