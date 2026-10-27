@@ -1,12 +1,14 @@
 """Compara las cifras declaradas con los resultados del análisis."""
 
-from src.analysis.contracts import CalculatedMetric, ReportedMetric
+from decimal import Decimal
+
+from src.analysis.contracts import CalculatedMetric
 from src.review.models import ReviewIssue
-from src.reporting.models import ReportDraft
+from src.reporting.models import ReportClaim
 
 def validate_reported_metrics(
-    reported_metrics: list[ReportedMetric],
-    calculated_metrics: list[CalculatedMetric],
+    claims: list[ReportClaim],
+    calculated_metrics: list[CalculatedMetric] | None,
 ) -> list[ReviewIssue]:
     """
     Comprueba que cada cifra declarada coincide con su cálculo.
@@ -19,11 +21,10 @@ def validate_reported_metrics(
     # Agrupamos por identificador para detectar también duplicados.
     metrics_by_id: dict[str, list[CalculatedMetric]] = {}
 
-    for metric in calculated_metrics:
+    for metric in calculated_metrics or []:
         metrics_by_id.setdefault(metric.metric_id, []).append(metric)
 
-    for reported in reported_metrics:
-        matches = metrics_by_id.get(reported.metric_id, [])
+    for reported in claims:
 
         def add_issue(
             code: str,
@@ -39,6 +40,21 @@ def validate_reported_metrics(
                     correction_stage=stage,
                 )
             )
+
+        if not has_numeric_reference(reported):
+            continue
+
+        # Las dataclasses son mutables: comprobamos también cambios posteriores.
+        try:
+            reported.__post_init__()
+        except (ValueError, TypeError, OverflowError) as exc:
+            add_issue("invalid_numeric_reference", str(exc))
+            continue
+
+        if calculated_metrics is None:
+            continue
+
+        matches = metrics_by_id.get(reported.metric_id, [])
 
         if not matches:
             add_issue(
@@ -75,7 +91,7 @@ def validate_reported_metrics(
                 f"'{calculated.unit}'.",
             )
 
-        if reported.reported_value != calculated.value:
+        if Decimal(str(reported.reported_value)) != calculated.value:
             add_issue(
                 "metric_value_mismatch",
                 f"La afirmación '{reported.claim_id}' presenta "
@@ -85,47 +101,9 @@ def validate_reported_metrics(
 
     return issues
 
-def validate_numeric_claim_links(
-    draft: ReportDraft,
-) -> list[ReviewIssue]:
-    """Comprueba que cada cifra pertenece a una afirmación del borrador."""
-    issues: list[ReviewIssue] = []
-    claim_ids = {claim.claim_id for claim in draft.claims}
-    seen_links: set[tuple[str, str]] = set()
 
-    for reported in draft.reported_metrics:
-        if reported.claim_id not in claim_ids:
-            issues.append(
-                ReviewIssue(
-                    code="numeric_claim_not_found",
-                    reference_id=reported.claim_id,
-                    message=(
-                        "La cifra estructurada está asociada a una "
-                        "afirmación que no existe en el borrador."
-                    ),
-                    severity="error",
-                    correction_stage="writing",
-                )
-            )
-
-        # Una afirmación puede contener varios indicadores,
-        # pero no debe repetir el mismo vínculo.
-        link = (reported.claim_id, reported.metric_id)
-
-        if link in seen_links:
-            issues.append(
-                ReviewIssue(
-                    code="duplicate_numeric_claim_link",
-                    reference_id=reported.claim_id,
-                    message=(
-                        "La afirmación repite una referencia al "
-                        f"indicador '{reported.metric_id}'."
-                    ),
-                    severity="error",
-                    correction_stage="writing",
-                )
-            )
-
-        seen_links.add(link)
-
-    return issues
+def has_numeric_reference(claim: ReportClaim) -> bool:
+    """Incluye referencias parciales para que no eludan la validación."""
+    return any(value is not None for value in (
+        claim.metric_id, claim.reported_value, claim.reported_unit,
+    ))

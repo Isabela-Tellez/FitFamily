@@ -211,7 +211,8 @@ Esta llamada de enrutamiento se repite antes de presentar la aprobación,
 utilizando el estado actual y sin reiniciar el contador.
 
 `calculated_metrics` es una lista de `CalculatedMetric` suministrada por
-el análisis. Las cifras declaradas están en `draft.reported_metrics`.
+el análisis. Las cifras declaradas están en cada elemento de `draft.claims`, en los
+campos `metric_id`, `reported_value` y `reported_unit`.
 
 Si hay cifras declaradas pero falta el análisis, la revisión genera una
 incidencia. Si cambia el análisis después de revisar, el control de
@@ -221,3 +222,36 @@ El control numérico compara campos estructurados. No comprueba por sí
 solo que todas las cifras del texto estén registradas ni que el texto
 coincida con esos campos. Tampoco valida aún la procedencia completa
 de los cálculos.
+
+## Formato numérico único
+
+Cada afirmación admite como máximo un indicador. Para presentar dos
+indicadores, se crean dos afirmaciones.
+
+```python
+claim = ReportClaim(
+    claim_id="average_price",
+    text="La cuota media de la muestra ficticia es de 45 euros al mes.",
+    kind="inference",
+    evidence_ids=["demo_price"],
+    metric_id="market.average_monthly_price_eur",
+    reported_value=45.0,
+    reported_unit="EUR/month",
+)
+```
+
+No existe una lista numérica separada en el borrador ni un contrato
+ReportedMetric. El comparador recibe las afirmaciones del borrador.
+CalculatedMetric se conserva para los resultados del análisis.
+Los valores declarados son int/float finitos; para compararlos con Decimal
+se utiliza Decimal(str(valor)), sin introducir una tolerancia implícita.
+
+La revisión vuelve a comprobar las referencias numéricas mutables.
+Un valor no finito modificado después de crear una afirmación impide
+calcular una huella JSON válida y rechaza la revisión mediante ValueError.
+Hay que corregirlo antes de revisar de nuevo.
+
+Este cambio requiere volver a revisar y aprobar los borradores existentes.
+No convierte archivos de datos guardados con el formato anterior.
+La comparación no extrae cifras del texto ni verifica la procedencia
+completa de los cálculos.

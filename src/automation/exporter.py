@@ -25,13 +25,7 @@ def calculate_draft_fingerprint(draft: ReportDraft) -> str:
     """
     payload = asdict(draft)
 
-    # Convertimos los modelos Pydantic a datos compatibles con JSON.
-    # Los Decimal se representan como cadenas, sin perder precisión.
-    payload["reported_metrics"] = [
-        metric.model_dump(mode="json")
-        for metric in draft.reported_metrics
-    ]
-
+    # asdict incluye los campos numéricos de cada ReportClaim.
     serialized = json.dumps(
         payload,
         ensure_ascii=False,

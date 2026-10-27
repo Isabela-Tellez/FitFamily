@@ -5,7 +5,8 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from src.analysis.contracts import CalculatedMetric, ReportedMetric
+from src.analysis.contracts import CalculatedMetric
+from src.reporting.models import ReportClaim
 from src.analysis.market_analysis import summarize_competitors
 from src.review.numeric_validation import validate_reported_metrics
 
@@ -36,12 +37,14 @@ def make_calculated_metric() -> CalculatedMetric:
     )
 
 
-def make_reported_metric() -> ReportedMetric:
+def make_reported_metric() -> ReportClaim:
     """Representa una cifra que el informe quiere presentar."""
-    return ReportedMetric(
+    return ReportClaim(
+        text="La cuota media ficticia es 45 euros.",
+        kind="inference",
         claim_id="average_price_claim",
         metric_id="market.average_monthly_price_eur",
-        reported_value=Decimal("45.00"),
+        reported_value=45.0,
         reported_unit="EUR/month",
     )
 
@@ -63,7 +66,7 @@ def test_correct_value_matches_real_calculation():
     [
         (
             "reported_value",
-            Decimal("50"),
+            50.0,
             "metric_value_mismatch",
         ),
         (
@@ -85,9 +88,8 @@ def test_incorrect_report_requires_writing_correction(
 ):
     """Detecta cifras, unidades y referencias incorrectas."""
     calculated = make_calculated_metric()
-    reported = make_reported_metric().model_copy(
-        update={field: value}
-    )
+    reported = make_reported_metric()
+    setattr(reported, field, value)
 
     issues = validate_reported_metrics([reported], [calculated])
 

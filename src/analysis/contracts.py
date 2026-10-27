@@ -19,13 +19,3 @@ class CalculatedMetric(BaseModel):
     calculation: str = Field(min_length=1)
     evidence_ids: list[str] = Field(default_factory=list)
 
-
-class ReportedMetric(BaseModel):
-    """El valor que una afirmación del informe presenta al lector."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    claim_id: str = Field(min_length=1)
-    metric_id: str = Field(min_length=1)
-    reported_value: Decimal = Field(allow_inf_nan=False)
-    reported_unit: str = Field(min_length=1)

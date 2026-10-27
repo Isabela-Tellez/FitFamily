@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from src.analysis.contracts import CalculatedMetric, ReportedMetric
+from src.analysis.contracts import CalculatedMetric
 from src.graph.review_routes import choose_review_route_for_context
 from src.reporting.models import ReportClaim, ReportDraft
 from src.review.quality_checks import run_basic_review
@@ -46,13 +46,8 @@ def make_case():
                 text="La cuota media de la muestra ficticia es de 45 euros.",
                 kind="fact",
                 evidence_ids=["demo_price"],
-            )
-        ],
-        reported_metrics=[
-            ReportedMetric(
-                claim_id="average_price",
                 metric_id="market.average_monthly_price_eur",
-                reported_value=Decimal("45.00"),
+                reported_value=45.0,
                 reported_unit="EUR/month",
             )
         ],
@@ -89,11 +84,7 @@ def test_matching_number_remains_pending_human_review():
 def test_wrong_number_returns_to_writing():
     draft, research, metrics = make_case()
 
-    draft.reported_metrics[0] = (
-        draft.reported_metrics[0].model_copy(
-            update={"reported_value": Decimal("50.00")}
-        )
-    )
+    draft.claims[0].reported_value = 50.0
     draft.claims[0].text = (
         "La cuota media de la muestra ficticia es de 50 euros."
     )
@@ -123,14 +114,10 @@ def test_missing_analysis_does_not_pass_numeric_review():
     assert get_route(review, draft, research, None) == "revise_analysis"
 
 
-def test_number_must_belong_to_an_existing_claim():
+def test_partial_reference_after_creation_requires_correction():
     draft, research, metrics = make_case()
 
-    draft.reported_metrics[0] = (
-        draft.reported_metrics[0].model_copy(
-            update={"claim_id": "nonexistent_claim"}
-        )
-    )
+    draft.claims[0].metric_id = None
 
     review = run_basic_review(
         draft,
@@ -139,7 +126,7 @@ def test_number_must_belong_to_an_existing_claim():
     )
 
     assert any(
-        issue.code == "numeric_claim_not_found"
+        issue.code == "invalid_numeric_reference"
         for issue in review.issues
     )
     assert get_route(review, draft, research, metrics) == "revise_writing"
@@ -148,9 +135,7 @@ def test_number_must_belong_to_an_existing_claim():
 def test_duplicate_numeric_link_requires_correction():
     draft, research, metrics = make_case()
 
-    draft.reported_metrics.append(
-        draft.reported_metrics[0].model_copy(deep=True)
-    )
+    draft.claims.append(replace(draft.claims[0]))
 
     review = run_basic_review(
         draft,
@@ -159,7 +144,7 @@ def test_duplicate_numeric_link_requires_correction():
     )
 
     assert any(
-        issue.code == "duplicate_numeric_claim_link"
+        issue.code == "duplicate_claim_id"
         for issue in review.issues
     )
     assert get_route(review, draft, research, metrics) == "revise_writing"
@@ -232,3 +217,65 @@ def test_new_review_detects_changed_calculation():
     assert get_route(
         new_review, draft, research, metrics
     ) == "revise_writing"
+
+@pytest.mark.parametrize("field,value", [
+    ("metric_id", ""),
+    ("metric_id", None),
+    ("reported_unit", " "),
+    ("reported_unit", None),
+    ("reported_value", None),
+    ("reported_value", True),
+    ("reported_value", "45"),
+])
+def test_mutated_numeric_fields_are_revalidated(field, value):
+    draft, research, metrics = make_case()
+    setattr(draft.claims[0], field, value)
+    review = run_basic_review(draft, research, calculated_metrics=metrics)
+    assert any(i.code == "invalid_numeric_reference" for i in review.issues)
+    assert get_route(review, draft, research, metrics) == "revise_writing"
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_mutation_cannot_receive_review(value):
+    draft, research, metrics = make_case()
+    draft.claims[0].reported_value = value
+    with pytest.raises(ValueError):
+        run_basic_review(draft, research, calculated_metrics=metrics)
+
+
+def test_decimal_comparison_uses_string_conversion():
+    draft, research, metrics = make_case()
+    draft.claims[0].reported_value = 0.1
+    metrics[0] = metrics[0].model_copy(update={"value": Decimal("0.1")})
+    review = run_basic_review(draft, research, calculated_metrics=metrics)
+    assert review.issues == ()
+
+
+def test_zero_is_a_numeric_value():
+    draft, research, metrics = make_case()
+    draft.claims[0].reported_value = 0
+    metrics[0] = metrics[0].model_copy(update={"value": Decimal("0")})
+    review = run_basic_review(draft, research, calculated_metrics=metrics)
+    assert review.issues == ()
+
+
+def test_missing_metric_in_explicit_empty_analysis_is_reported():
+    draft, research, _ = make_case()
+    review = run_basic_review(draft, research, calculated_metrics=[])
+    assert any(i.code == "missing_calculated_metric" for i in review.issues)
+    assert get_route(review, draft, research, []) == "revise_writing"
+
+
+def test_non_numeric_claim_needs_no_analysis():
+    draft, research, _ = make_case()
+    draft.claims[0].metric_id = None
+    draft.claims[0].reported_value = None
+    draft.claims[0].reported_unit = None
+    review = run_basic_review(draft, research)
+    assert review.issues == ()
+    assert get_route(review, draft, research, None) == "pending_review"
+
+
+def test_old_separate_list_is_no_longer_accepted():
+    with pytest.raises(TypeError):
+        ReportDraft(title="Demo", study_area="Demo", reported_metrics=[])

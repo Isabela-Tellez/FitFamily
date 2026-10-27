@@ -6,7 +6,6 @@ from decimal import Decimal
 
 import pytest
 
-from src.analysis.contracts import ReportedMetric
 from src.automation.exporter import (
     calculate_draft_fingerprint,
     validate_export_approval,
@@ -42,13 +41,8 @@ def make_case():
                 text="La cuota mensual ficticia es de 45 euros.",
                 kind="fact",
                 evidence_ids=["demo_price"],
-            )
-        ],
-        reported_metrics=[
-            ReportedMetric(
-                claim_id="price_claim",
                 metric_id="demo.monthly_price",
-                reported_value=Decimal("45.00"),
+                reported_value=45.0,
                 reported_unit="EUR/month",
             )
         ],
@@ -63,12 +57,12 @@ def test_drafts_have_independent_metric_lists():
     second = ReportDraft(title="B", study_area="Prueba")
     example, _ = make_case()
 
-    first.reported_metrics.append(example.reported_metrics[0])
+    first.claims.append(example.claims[0])
 
-    assert second.reported_metrics == []
+    assert second.claims == []
 
 
-def test_fingerprint_accepts_decimal_and_preserves_draft():
+def test_fingerprint_includes_claim_metrics_and_preserves_draft():
     """La huella admite las cifras y no modifica el informe."""
     draft, _ = make_case()
     original = deepcopy(draft)
@@ -83,7 +77,7 @@ def test_fingerprint_accepts_decimal_and_preserves_draft():
 @pytest.mark.parametrize(
     "field,value",
     [
-        ("reported_value", Decimal("50.00")),
+        ("reported_value", 50.0),
         ("reported_unit", "EUR/year"),
         ("metric_id", "another.metric"),
         ("claim_id", "another_claim"),
@@ -94,11 +88,7 @@ def test_metric_change_invalidates_review(field, value):
     draft, research = make_case()
     review = run_basic_review(draft, research)
 
-    draft.reported_metrics[0] = (
-        draft.reported_metrics[0].model_copy(
-            update={field: value}
-        )
-    )
+    setattr(draft.claims[0], field, value)
 
     with pytest.raises(ValueError, match="contenido cambió"):
         choose_review_route_for_context(
@@ -124,11 +114,7 @@ def test_metric_change_invalidates_export_approval():
         decided_at=datetime.now(timezone.utc),
     )
 
-    draft.reported_metrics[0] = (
-        draft.reported_metrics[0].model_copy(
-            update={"reported_value": Decimal("50.00")}
-        )
-    )
+    draft.claims[0].reported_value = 50.0
 
     with pytest.raises(ValueError, match="contenido cambió"):
         validate_export_approval(

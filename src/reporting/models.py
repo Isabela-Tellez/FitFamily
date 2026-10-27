@@ -8,7 +8,6 @@ rastrear las afirmaciones hasta las evidencias utilizadas.
 from dataclasses import dataclass, field
 from typing import Literal
 from uuid import uuid4
-from src.analysis.contracts import ReportedMetric
 from math import isfinite
 
 
@@ -77,6 +76,8 @@ class ReportClaim:
             or not isfinite(self.reported_value)
         ):
             raise ValueError("reported_value debe ser un número finito.")
+
+
 @dataclass
 class ReportDraft:
     """
@@ -110,5 +111,3 @@ class ReportDraft:
     version: int = 1
     claims: list[ReportClaim] = field(default_factory=list)
 
-    # Cifras estructuradas que deben compararse con el análisis.
-    reported_metrics: list[ReportedMetric] = field(default_factory=list)

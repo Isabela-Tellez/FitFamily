@@ -12,7 +12,7 @@ from src.review.validation import (
 from src.schemas import ResearchResult
 from src.analysis.contracts import CalculatedMetric
 from src.review.numeric_validation import (
-    validate_numeric_claim_links,
+    has_numeric_reference,
     validate_reported_metrics,
 )
 
@@ -104,9 +104,9 @@ def run_basic_review(
 
     # Activamos la revisión numérica si hay cifras declaradas
     # o si el controlador nos proporciona resultados de análisis.
-    if draft.reported_metrics or calculated_metrics is not None:
-        checks_performed.append("numeric_claim_links")
-        issues.extend(validate_numeric_claim_links(draft))
+    if any(has_numeric_reference(c) for c in draft.claims) or calculated_metrics is not None:
+        checks_performed.append("numeric_claim_fields")
+        issues.extend(validate_reported_metrics(draft.claims, calculated_metrics))
 
         if calculated_metrics is None:
             # Hay cifras en el informe, pero no recibimos el análisis.
@@ -126,12 +126,7 @@ def run_basic_review(
             )
         else:
             checks_performed.append("numeric_values")
-            issues.extend(
-                validate_reported_metrics(
-                    draft.reported_metrics,
-                    calculated_metrics,
-                )
-            )
+
 
     return ReviewResult(
         draft_id=draft.draft_id,
