@@ -74,8 +74,8 @@ def create_initial_state(
     El run_id debe mantenerse al recuperar o reanudar la investigación.
     La persistencia del estado se gestiona por separado mediante LangGraph.
     """
-    if not run_id or not run_id.strip():
-        raise ValueError("run_id no puede estar vacío.")
+    if not isinstance(run_id, str) or not run_id.strip():
+        raise ValueError("run_id debe ser una cadena no vacía.")
 
     if not isinstance(brief, dict) or not brief:
         raise ValueError("brief debe ser un diccionario no vacío.")
