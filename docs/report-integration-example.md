@@ -31,16 +31,22 @@ El controlador debe conservar `draft`. No debe volver a llamar a `build_report` 
 
 ## 2. Ejecutar la revisión básica
 
-```python
 from src.review.quality_checks import run_basic_review
-from src.graph.review_routes import choose_review_route
+from src.graph.review_routes import choose_review_route_for_context
 
 review = run_basic_review(draft, research_result)
 
-# El controlador conserva este contador entre pasos.
+# Se inicializa una sola vez al comenzar la ejecución.
+# El controlador debe conservarlo durante las correcciones.
 revision_count = 0
-route = choose_review_route(review, revision_count)
-```
+
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
+)
 
 El controlador muestra las incidencias de `review.issues`.
 
@@ -52,23 +58,19 @@ El controlador muestra las incidencias de `review.issues`.
 
 Si se corrige el borrador, se conserva su identificador, se incrementa su versión y se ejecuta una revisión nueva. La aprobación anterior no se reutiliza.
 
-## 3. Comprobar que la revisión corresponde al borrador
+## 3. Comprobar que la revisión sigue vigente
 
-Antes de presentar la decisión humana, el controlador comprueba identidad, versión y contenido:
+Antes de presentar la decisión humana, el controlador vuelve a comprobar
+que la revisión corresponde al borrador y a la investigación actuales:
 
 ```python
-from src.automation.exporter import calculate_draft_fingerprint
-
-review_matches = (
-    review.draft_id == draft.draft_id
-    and review.draft_version == draft.version
-    and review.draft_fingerprint == calculate_draft_fingerprint(draft)
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
 )
-
-if not review_matches:
-    raise ValueError(
-        "El borrador ha cambiado: es necesario revisarlo de nuevo."
-    )
 
 if route != "pending_review":
     raise ValueError(
@@ -76,7 +78,18 @@ if route != "pending_review":
     )
 ```
 
-Estas comprobaciones no sustituyen la revisión humana del contenido.
+Si cambia el borrador o la investigación, la función lanza `ValueError`.
+El controlador debe detener el avance hacia la aprobación y ejecutar
+una nueva revisión con los datos actuales.
+
+Volver a revisar no concede aprobación ni garantiza que desaparezcan
+los errores. Tampoco debe reiniciar el contador de correcciones.
+
+Los errores de configuración, como un contador inválido, deben
+corregirse; no deben provocar reintentos automáticos ilimitados.
+
+Esta comprobación todavía no incluye los resultados de análisis
+guardados por separado de `ResearchResult`.
 
 ## 4. Recoger la decisión humana
 
@@ -86,7 +99,7 @@ Solo después de recibir una aprobación humana explícita, el controlador crea 
 
 ```python
 from datetime import datetime, timezone
-
+from src.automation.exporter import calculate_draft_fingerprint
 from src.automation.models import ApprovalRecord
 
 # run_id debe existir desde el comienzo de la ejecución.

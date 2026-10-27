@@ -8,7 +8,7 @@ rastrear las afirmaciones hasta las evidencias utilizadas.
 from dataclasses import dataclass, field
 from typing import Literal
 from uuid import uuid4
-
+from src.analysis.contracts import ReportedMetric
 
 @dataclass
 class ReportClaim:
@@ -63,3 +63,6 @@ class ReportDraft:
     draft_id: str = field(default_factory=lambda: uuid4().hex)
     version: int = 1
     claims: list[ReportClaim] = field(default_factory=list)
+
+    # Cifras estructuradas que deben compararse con el análisis.
+    reported_metrics: list[ReportedMetric] = field(default_factory=list)
