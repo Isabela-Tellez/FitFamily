@@ -127,6 +127,16 @@ Reglas:
 - La revisión inicial empieza con `revision_count=0`; por defecto se permiten 2 rondas.
 - La función solo decide la ruta: no ejecuta agentes ni modifica el contador.
 
+## Funciones de vigencia
+
+### `choose_review_route_for_draft`
+
+Comprueba que la revisión corresponda al borrador actual antes de llamar a `choose_review_route`. Lanza `ValueError` si cambió el borrador.
+
+### `choose_review_route_for_context`
+
+Punto de entrada recomendado para el grafo. Comprueba primero la investigación y después el borrador. Lanza `ValueError` si alguno cambió; en ese caso hay que repetir `run_basic_review(draft, research_result)`.
+
 ## Flujo
 
 ```text

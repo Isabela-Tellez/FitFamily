@@ -35,7 +35,7 @@ El estado debe permitir reconstruir por qué se exportó un borrador: `run_id`, 
 | `analysis` | `summarize_competitors` + `calculate_break_even_clients` | Laura |
 | `writing` | `build_report(brief, research_result, use_llm=...)` | Gema |
 | `review` | `run_basic_review(draft, research_result)` | María |
-| `route_review` | `choose_review_route(review, revision_count)` | María |
+| `route_review` | `choose_review_route_for_context(review, draft, research_result, revision_count)` | María |
 | `revise_research` | Volver a investigar con las incidencias | Juan |
 | `revise_analysis` | Recalcular el análisis | Laura |
 | `revise_writing` | Regenerar el borrador | Gema |
@@ -74,6 +74,7 @@ flowchart TD
 5. **Huella del borrador.** La aprobación se valida contra `calculate_draft_fingerprint(draft)`; si el borrador cambió, se vuelve a revisar.
 6. **Acciones explícitas.** El `ApprovalRecord` debe incluir las acciones autorizadas; el exportador rechaza cualquier acción no listada.
 7. **Rechazo.** Si la persona rechaza, el grafo termina en `blocked` sin crear archivos.
+8. **Revisión vigente.** `route_review` usa `choose_review_route_for_context`, que valida que la revisión corresponda al borrador y a la investigación actuales. Si detecta cambios, lanza `ValueError`; el flujo debe repetir `run_basic_review(draft, research_result)` antes de continuar hacia `approval`.
 
 ## Punto de integración con Streamlit
 
@@ -101,6 +102,7 @@ La UI de [streamlit-approval.md](streamlit-approval.md) es la que construye el `
 - Acordar con Juan el adaptador `ResearchResult → DataFrame` para el nodo `analysis`.
 - Acordar con Gema si la ruta LLM (`use_llm=True`) es un parámetro del grafo o una elección de la UI.
 - Definir la telemetría: LangSmith ya está configurado de forma básica en `.env.example`.
+- Acordar con María, Laura y Gema cómo pasar `analysis` al revisor para validar cifras del informe (metric_id, value, unit).
 
 ## Criterios de aceptación
 
