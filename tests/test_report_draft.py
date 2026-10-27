@@ -6,6 +6,7 @@ almacenan correctamente la información.
 """
 
 import unittest
+import pytest
 
 from src.reporting.models import ReportDraft
 
@@ -111,3 +112,93 @@ def test_draft_keeps_claim_and_evidence_reference():
 # Permite ejecutar las pruebas directamente con Python.
 if __name__ == "__main__":
     unittest.main()
+
+def test_claim_can_reference_an_analysis_metric():
+    """Conserva la métrica y el valor utilizado en el informe."""
+    from src.reporting.models import ReportClaim
+
+    claim = ReportClaim(
+        claim_id="claim_average_price",
+        text="La cuota mensual media es de 45 EUR.",
+        kind="fact",
+        evidence_ids=["price_a", "price_b"],
+        metric_id="scenario_base.average_monthly_price_eur",
+        reported_value=45.0,
+        reported_unit="EUR/month",
+    )
+
+    assert claim.metric_id == "scenario_base.average_monthly_price_eur"
+    assert claim.reported_value == 45.0
+    assert claim.reported_unit == "EUR/month"
+    assert claim.evidence_ids == ["price_a", "price_b"]
+
+
+def test_claim_without_metric_keeps_optional_fields_empty():
+    """Las afirmaciones existentes no necesitan una métrica."""
+    from src.reporting.models import ReportClaim
+
+    claim = ReportClaim(
+        claim_id="claim_assumption",
+        text="Se plantea ofrecer una ludoteca.",
+        kind="assumption",
+    )
+
+    assert claim.metric_id is None
+    assert claim.reported_value is None
+    assert claim.reported_unit is None
+
+@pytest.mark.parametrize(
+    "metric_fields",
+    [
+        # Falta el valor y la unidad.
+        {"metric_id": "average_price"},
+        # Falta el identificador.
+        {"reported_value": 45.0, "reported_unit": "EUR/month"},
+        # Identificador vacío.
+        {
+            "metric_id": " ",
+            "reported_value": 45.0,
+            "reported_unit": "EUR/month",
+        },
+        # Unidad vacía.
+        {
+            "metric_id": "average_price",
+            "reported_value": 45.0,
+            "reported_unit": " ",
+        },
+        # Un booleano no debe aceptarse como cifra.
+        {
+            "metric_id": "average_price",
+            "reported_value": True,
+            "reported_unit": "EUR/month",
+        },
+        # El valor debe ser numérico, no texto.
+        {
+            "metric_id": "average_price",
+            "reported_value": "45",
+            "reported_unit": "EUR/month",
+        },
+        # No admitimos valores infinitos ni indefinidos.
+        {
+            "metric_id": "average_price",
+            "reported_value": float("inf"),
+            "reported_unit": "EUR/month",
+        },
+        {
+            "metric_id": "average_price",
+            "reported_value": float("nan"),
+            "reported_unit": "EUR/month",
+        },
+    ],
+)
+def test_claim_rejects_invalid_metric_reference(metric_fields):
+    """Una referencia numérica debe estar completa y ser válida."""
+    from src.reporting.models import ReportClaim
+
+    with pytest.raises(ValueError):
+        ReportClaim(
+            claim_id="claim_invalid_metric",
+            text="Afirmación ficticia para comprobar la validación.",
+            kind="inference",
+            **metric_fields,
+        )
