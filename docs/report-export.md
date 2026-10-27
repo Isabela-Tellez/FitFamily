@@ -191,16 +191,88 @@ Tras un cierre brusco puede quedar un bloqueo o un temporal.
 Antes de retirar un bloqueo manualmente, se debe comprobar que
 no hay ninguna actualización activa y revisar el CSV conservado.
 
-La función no coordina por sí sola toda la entrega Markdown/PDF/CSV.
-Esa coordinación y la comunicación de resultados parciales corresponden
-al controlador.
+`update_tracking_csv` solo actualiza el seguimiento.
+La coordinación de los informes y el CSV se realiza mediante
+`export_approved_report`. El controlador conserva el resultado
+y comunica los éxitos y fallos a la persona usuaria.
+
+## Coordinación de la entrega aprobada
+
+`export_approved_report` está en `src/automation/delivery.py`.
+Recibe el mismo borrador aprobado y ejecuta únicamente las acciones
+autorizadas en `ApprovalRecord.actions`.
+
+```python
+from src.automation.delivery import export_approved_report
+
+result = export_approved_report(
+    draft,
+    approval,
+    run_id=approval.run_id,
+    output_dir="reports/generated",
+    csv_path="reports/generated/tracking.csv",
+)
+```
+
+Antes de escribir, valida la aprobación de todas las acciones.
+Si se solicita seguimiento, exige una ruta CSV y al menos un
+formato de informe autorizado.
+
+Intenta primero Markdown y PDF, y después actualiza el CSV.
+Un fallo controlado de un formato no elimina el otro informe.
+
+Devuelve un `DeliveryResult` con:
+
+- Identidad, versión y huella del borrador.
+- Acciones solicitadas, completadas y fallidas.
+- Rutas de los archivos logrados.
+- Mensajes de error asociados a cada acción.
+- `complete`: verdadero únicamente si terminaron todas las acciones.
+
+Si los informes se generan pero falla el CSV, la entrega no se
+comunica como completamente terminada.
+
+### Reintentos
+
+El controlador debe conservar el resultado anterior y pasarlo
+al reintentar, manteniendo el borrador y la aprobación:
+
+```python
+retry_result = export_approved_report(
+    draft,
+    approval,
+    run_id=approval.run_id,
+    output_dir="reports/generated",
+    csv_path="reports/generated/tracking.csv",
+    previous_result=result,
+)
+```
+
+Se rechaza un resultado anterior de otra ejecución, borrador,
+versión, huella o conjunto de acciones.
+
+Los informes completados que siguen existiendo se reutilizan.
+Los que faltan se vuelven a intentar. El CSV se actualiza de nuevo
+para reflejar el estado más reciente sin duplicar la fila.
+
+`previous_result` debe proceder del controlador. La reutilización
+comprueba la existencia de los informes, pero no vuelve a verificar
+sus bytes: se presupone que los archivos publicados se conservan
+sin modificaciones externas.
+
+La función no realiza reintentos automáticos ni persiste
+`DeliveryResult`. El controlador decide cuándo reintentar,
+conserva el resultado y muestra los mensajes a la persona usuaria.
+
+Esta coordinación no sustituye al flujo global ni a la interfaz:
+no investiga, redacta, revisa ni concede aprobación.
 
 ## Pruebas
 
 Ejecutar desde la raíz del proyecto:
 
 ```bash
-python -m pytest tests/test_pdf_exporter.py tests/test_exporter.py tests/test_markdown_renderer.py -q
+python -m pytest tests/test_delivery.py tests/test_tracking.py tests/test_exporter.py tests/test_pdf_exporter.py tests/test_markdown_renderer.py -q
 ```
 
 Las pruebas comprueban aprobación, huella, creación de archivos, repeticiones, rechazo de sobrescrituras y reintento de publicación Markdown tras un fallo simulado. Para PDF también comprueban que la generación no modifique el borrador y produzca los mismos bytes en el mismo entorno.
