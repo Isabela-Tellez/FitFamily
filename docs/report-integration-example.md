@@ -31,16 +31,22 @@ El controlador debe conservar `draft`. No debe volver a llamar a `build_report` 
 
 ## 2. Ejecutar la revisión básica
 
-```python
 from src.review.quality_checks import run_basic_review
-from src.graph.review_routes import choose_review_route
+from src.graph.review_routes import choose_review_route_for_context
 
 review = run_basic_review(draft, research_result)
 
-# El controlador conserva este contador entre pasos.
+# Se inicializa una sola vez al comenzar la ejecución.
+# El controlador debe conservarlo durante las correcciones.
 revision_count = 0
-route = choose_review_route(review, revision_count)
-```
+
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
+)
 
 El controlador muestra las incidencias de `review.issues`.
 
@@ -52,23 +58,19 @@ El controlador muestra las incidencias de `review.issues`.
 
 Si se corrige el borrador, se conserva su identificador, se incrementa su versión y se ejecuta una revisión nueva. La aprobación anterior no se reutiliza.
 
-## 3. Comprobar que la revisión corresponde al borrador
+## 3. Comprobar que la revisión sigue vigente
 
-Antes de presentar la decisión humana, el controlador comprueba identidad, versión y contenido:
+Antes de presentar la decisión humana, el controlador vuelve a comprobar
+que la revisión corresponde al borrador y a la investigación actuales:
 
 ```python
-from src.automation.exporter import calculate_draft_fingerprint
-
-review_matches = (
-    review.draft_id == draft.draft_id
-    and review.draft_version == draft.version
-    and review.draft_fingerprint == calculate_draft_fingerprint(draft)
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
 )
-
-if not review_matches:
-    raise ValueError(
-        "El borrador ha cambiado: es necesario revisarlo de nuevo."
-    )
 
 if route != "pending_review":
     raise ValueError(
@@ -76,7 +78,17 @@ if route != "pending_review":
     )
 ```
 
-Estas comprobaciones no sustituyen la revisión humana del contenido.
+Si cambia el borrador o la investigación, la función lanza `ValueError`.
+El controlador debe detener el avance hacia la aprobación y ejecutar
+una nueva revisión con los datos actuales.
+
+Volver a revisar no concede aprobación ni garantiza que desaparezcan
+los errores. Tampoco debe reiniciar el contador de correcciones.
+
+Los errores de configuración, como un contador inválido, deben
+corregirse; no deben provocar reintentos automáticos ilimitados.
+
+Para incluir resultados de análisis guardados por separado, deben proporcionarse mediante calculated_metrics, como se explica al final de este documento.
 
 ## 4. Recoger la decisión humana
 
@@ -86,7 +98,7 @@ Solo después de recibir una aprobación humana explícita, el controlador crea 
 
 ```python
 from datetime import datetime, timezone
-
+from src.automation.exporter import calculate_draft_fingerprint
 from src.automation.models import ApprovalRecord
 
 # run_id debe existir desde el comienzo de la ejecución.
@@ -172,3 +184,74 @@ El coordinador no persiste el resultado ni reintenta automáticamente. Esas deci
 Los fragmentos describen puntos de integración; no forman una aplicación ejecutable completa.
 
 Quedan pendientes la interfaz, la persistencia del estado, la gestión global de correcciones y la integración del contrato de análisis de Laura.
+
+## Revisión con resultados del análisis
+
+Cuando el controlador dispone de indicadores calculados, debe pasar
+la misma lista actual tanto a la revisión como al enrutamiento:
+
+```python
+review = run_basic_review(
+    draft,
+    research_result,
+    calculated_metrics=calculated_metrics,
+)
+
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
+    calculated_metrics=calculated_metrics,
+)
+```
+
+Esta llamada de enrutamiento se repite antes de presentar la aprobación,
+utilizando el estado actual y sin reiniciar el contador.
+
+`calculated_metrics` es una lista de `CalculatedMetric` suministrada por
+el análisis. Las cifras declaradas están en cada elemento de `draft.claims`, en los
+campos `metric_id`, `reported_value` y `reported_unit`.
+
+Si hay cifras declaradas pero falta el análisis, la revisión genera una
+incidencia. Si cambia el análisis después de revisar, el control de
+vigencia exige una nueva revisión.
+
+El control numérico compara campos estructurados. No comprueba por sí
+solo que todas las cifras del texto estén registradas ni que el texto
+coincida con esos campos. Tampoco valida aún la procedencia completa
+de los cálculos.
+
+## Formato numérico único
+
+Cada afirmación admite como máximo un indicador. Para presentar dos
+indicadores, se crean dos afirmaciones.
+
+```python
+claim = ReportClaim(
+    claim_id="average_price",
+    text="La cuota media de la muestra ficticia es de 45 euros al mes.",
+    kind="inference",
+    evidence_ids=["demo_price"],
+    metric_id="market.average_monthly_price_eur",
+    reported_value=45.0,
+    reported_unit="EUR/month",
+)
+```
+
+No existe una lista numérica separada en el borrador ni un contrato
+ReportedMetric. El comparador recibe las afirmaciones del borrador.
+CalculatedMetric se conserva para los resultados del análisis.
+Los valores declarados son int/float finitos; para compararlos con Decimal
+se utiliza Decimal(str(valor)), sin introducir una tolerancia implícita.
+
+La revisión vuelve a comprobar las referencias numéricas mutables.
+Un valor no finito modificado después de crear una afirmación impide
+calcular una huella JSON válida y rechaza la revisión mediante ValueError.
+Hay que corregirlo antes de revisar de nuevo.
+
+Este cambio requiere volver a revisar y aprobar los borradores existentes.
+No convierte archivos de datos guardados con el formato anterior.
+La comparación no extrae cifras del texto ni verifica la procedencia
+completa de los cálculos.

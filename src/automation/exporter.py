@@ -18,13 +18,16 @@ from src.reporting.markdown_renderer import render_report_markdown
 
 def calculate_draft_fingerprint(draft: ReportDraft) -> str:
     """
-    Calcula una huella del contenido completo del borrador.
+    Calcula la huella del borrador, incluidas sus cifras estructuradas.
 
-    Permite comprobar si el borrador sigue siendo el mismo
-    que recibió la aprobación. No concede ninguna aprobación.
+    Si cambia una cifra, la revisión y la aprobación anteriores
+    dejan de corresponder al contenido actual.
     """
+    payload = asdict(draft)
+
+    # asdict incluye los campos numéricos de cada ReportClaim.
     serialized = json.dumps(
-        asdict(draft),
+        payload,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
