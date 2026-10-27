@@ -1,10 +1,15 @@
 """Decisiones de enrutamiento para la revisión de FitFamily."""
 
 from typing import Literal
-from src.review.models import ReviewResult
+
+from src.analysis.contracts import CalculatedMetric
 from src.reporting.models import ReportDraft
-from src.review.quality_checks import validate_review_matches_draft
-from src.review.quality_checks import validate_review_matches_research
+from src.review.models import ReviewResult
+from src.review.quality_checks import (
+    validate_review_matches_analysis,
+    validate_review_matches_draft,
+    validate_review_matches_research,
+)
 from src.schemas import ResearchResult
 
 ReviewRoute = Literal[
@@ -99,13 +104,16 @@ def choose_review_route_for_context(
     research_result: ResearchResult,
     revision_count: int,
     max_revisions: int = 2,
+    *,
+    calculated_metrics: list[CalculatedMetric] | None = None,
 ) -> ReviewRoute:
     """
-    Comprueba la investigación y el borrador antes de decidir la ruta.
+    Comprueba investigación, análisis y borrador antes de decidir la ruta.
 
-    Una revisión desactualizada debe repetirse antes de continuar.
+    Si algún contenido ha cambiado, es necesario revisar de nuevo.
     """
     validate_review_matches_research(review, research_result)
+    validate_review_matches_analysis(review, calculated_metrics)
 
     return choose_review_route_for_draft(
         review,

@@ -29,6 +29,7 @@ class ReviewResult:
     issues: tuple[ReviewIssue, ...]
     checks_performed: tuple[str, ...]
     research_fingerprint: str = ""
+    analysis_fingerprint: str = ""
     
     @property
     def status(self) -> Literal["needs_revision", "pending_review"]:

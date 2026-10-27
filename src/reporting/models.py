@@ -76,6 +76,8 @@ class ReportClaim:
             or not isfinite(self.reported_value)
         ):
             raise ValueError("reported_value debe ser un número finito.")
+
+
 @dataclass
 class ReportDraft:
     """
@@ -108,3 +110,4 @@ class ReportDraft:
     draft_id: str = field(default_factory=lambda: uuid4().hex)
     version: int = 1
     claims: list[ReportClaim] = field(default_factory=list)
+
