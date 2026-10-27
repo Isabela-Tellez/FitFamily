@@ -63,6 +63,7 @@ def build_report(
     research_result: ResearchResult,
     *,
     use_llm: bool = False,
+    calculated_metrics=None,
 ) -> ReportDraft:
     """
     Genera un borrador y comprueba sus referencias.
@@ -73,11 +74,17 @@ def build_report(
     if use_llm:
         from src.agents.strategic_writer import run_writing
 
-        draft = run_writing(brief, research_result)
+        if calculated_metrics is None:
+            draft = run_writing(brief, research_result)
+        else:
+            draft = run_writing(brief, research_result, calculated_metrics=calculated_metrics)
     else:
         from src.agents.writer_agent import WriterAgent
 
         draft = WriterAgent().create_draft(brief, research_result)
+        if calculated_metrics is not None:
+            from src.reporting.metric_binding import bind_metrics
+            bind_metrics(draft, research_result, calculated_metrics)
 
     validate_report_references(draft, research_result)
 
@@ -89,6 +96,7 @@ def build_report_markdown(
     research_result: ResearchResult,
     *,
     use_llm: bool = False,
+    calculated_metrics=None,
 ) -> str:
     """
     Genera el borrador validado y devuelve su Markdown.
@@ -101,6 +109,7 @@ def build_report_markdown(
         brief,
         research_result,
         use_llm=use_llm,
+        calculated_metrics=calculated_metrics,
     )
 
     return render_report_markdown(draft)

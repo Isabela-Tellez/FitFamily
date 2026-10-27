@@ -1,3 +1,4 @@
+from src.reporting.numeric_text import render_claim, render_section
 """
 Presentación de borradores de FitFamily en formato Markdown.
 
@@ -41,7 +42,7 @@ def render_report_markdown(
     # El Writer actual guarda cada sección como un texto:
     # primera línea = título; líneas siguientes = contenido.
     for section in draft.sections:
-        clean_section = section.strip()
+        clean_section = render_section(section, draft.claims).strip()
         if not clean_section:
             continue
 
@@ -87,7 +88,7 @@ def render_report_markdown(
                 "",
                 f"**Tipo:** {label}",
                 "",
-                claim.text,
+                render_claim(claim),
                 "",
             ])
 

@@ -37,7 +37,7 @@ def make_case():
         claims=[
             ReportClaim(
                 claim_id="claim_1",
-                text="La cuota mensual es de 45 euros.",
+                text="Existe una cuota mensual documentada.",
                 kind="fact",
                 evidence_ids=["price_1"],
             )

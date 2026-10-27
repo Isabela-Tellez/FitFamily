@@ -1,3 +1,4 @@
+from src.reporting.numeric_text import render_claim, render_section
 """Genera la presentación PDF de un informe sin guardar archivos."""
 
 from io import BytesIO
@@ -140,7 +141,7 @@ def render_report_pdf(
     # Seguimos el formato actual de ReportDraft:
     # la primera línea de cada sección contiene su título.
     for section in draft.sections:
-        clean_section = section.strip()
+        clean_section = render_section(section, draft.claims).strip()
         if not clean_section:
             continue
 
@@ -184,7 +185,7 @@ def render_report_pdf(
     for claim in draft.claims:
         add_text(claim.claim_id, "ReportHeading")
         add_text(f"Tipo: {kind_labels.get(claim.kind, claim.kind)}")
-        add_text(claim.text)
+        add_text(render_claim(claim))
         references = ", ".join(dict.fromkeys(claim.evidence_ids))
         add_text(
             f"Evidencias: {references or 'sin referencias registradas.'}"

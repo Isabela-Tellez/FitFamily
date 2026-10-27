@@ -24,6 +24,7 @@ def calculate_draft_fingerprint(draft: ReportDraft) -> str:
     dejan de corresponder al contenido actual.
     """
     payload = asdict(draft)
+    payload["_review_policy"] = "numeric-traceability-v2"
 
     # asdict incluye los campos numéricos de cada ReportClaim.
     serialized = json.dumps(
@@ -88,6 +89,12 @@ def validate_export_approval(
         or approval.decided_at.utcoffset() is None
     ):
         raise ValueError("La fecha de aprobación debe incluir zona horaria.")
+
+    from src.reporting.numeric_text import validate_numeric_text
+    problems = validate_numeric_text(draft)
+    if problems:
+        raise ValueError("Texto numérico sin control: " + "; ".join(i.message for i in problems))
+
 
 def export_markdown(
     draft: ReportDraft,
