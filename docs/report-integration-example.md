@@ -88,8 +88,7 @@ los errores. Tampoco debe reiniciar el contador de correcciones.
 Los errores de configuración, como un contador inválido, deben
 corregirse; no deben provocar reintentos automáticos ilimitados.
 
-Esta comprobación todavía no incluye los resultados de análisis
-guardados por separado de `ResearchResult`.
+Para incluir resultados de análisis guardados por separado, deben proporcionarse mediante calculated_metrics, como se explica al final de este documento.
 
 ## 4. Recoger la decisión humana
 
@@ -185,3 +184,40 @@ El coordinador no persiste el resultado ni reintenta automáticamente. Esas deci
 Los fragmentos describen puntos de integración; no forman una aplicación ejecutable completa.
 
 Quedan pendientes la interfaz, la persistencia del estado, la gestión global de correcciones y la integración del contrato de análisis de Laura.
+
+## Revisión con resultados del análisis
+
+Cuando el controlador dispone de indicadores calculados, debe pasar
+la misma lista actual tanto a la revisión como al enrutamiento:
+
+```python
+review = run_basic_review(
+    draft,
+    research_result,
+    calculated_metrics=calculated_metrics,
+)
+
+route = choose_review_route_for_context(
+    review,
+    draft,
+    research_result,
+    revision_count=revision_count,
+    max_revisions=2,
+    calculated_metrics=calculated_metrics,
+)
+```
+
+Esta llamada de enrutamiento se repite antes de presentar la aprobación,
+utilizando el estado actual y sin reiniciar el contador.
+
+`calculated_metrics` es una lista de `CalculatedMetric` suministrada por
+el análisis. Las cifras declaradas están en `draft.reported_metrics`.
+
+Si hay cifras declaradas pero falta el análisis, la revisión genera una
+incidencia. Si cambia el análisis después de revisar, el control de
+vigencia exige una nueva revisión.
+
+El control numérico compara campos estructurados. No comprueba por sí
+solo que todas las cifras del texto estén registradas ni que el texto
+coincida con esos campos. Tampoco valida aún la procedencia completa
+de los cálculos.

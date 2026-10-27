@@ -2,7 +2,7 @@
 
 from src.analysis.contracts import CalculatedMetric, ReportedMetric
 from src.review.models import ReviewIssue
-
+from src.reporting.models import ReportDraft
 
 def validate_reported_metrics(
     reported_metrics: list[ReportedMetric],
@@ -82,5 +82,50 @@ def validate_reported_metrics(
                 f"{reported.reported_value}, pero el análisis calcula "
                 f"{calculated.value}.",
             )
+
+    return issues
+
+def validate_numeric_claim_links(
+    draft: ReportDraft,
+) -> list[ReviewIssue]:
+    """Comprueba que cada cifra pertenece a una afirmación del borrador."""
+    issues: list[ReviewIssue] = []
+    claim_ids = {claim.claim_id for claim in draft.claims}
+    seen_links: set[tuple[str, str]] = set()
+
+    for reported in draft.reported_metrics:
+        if reported.claim_id not in claim_ids:
+            issues.append(
+                ReviewIssue(
+                    code="numeric_claim_not_found",
+                    reference_id=reported.claim_id,
+                    message=(
+                        "La cifra estructurada está asociada a una "
+                        "afirmación que no existe en el borrador."
+                    ),
+                    severity="error",
+                    correction_stage="writing",
+                )
+            )
+
+        # Una afirmación puede contener varios indicadores,
+        # pero no debe repetir el mismo vínculo.
+        link = (reported.claim_id, reported.metric_id)
+
+        if link in seen_links:
+            issues.append(
+                ReviewIssue(
+                    code="duplicate_numeric_claim_link",
+                    reference_id=reported.claim_id,
+                    message=(
+                        "La afirmación repite una referencia al "
+                        f"indicador '{reported.metric_id}'."
+                    ),
+                    severity="error",
+                    correction_stage="writing",
+                )
+            )
+
+        seen_links.add(link)
 
     return issues
