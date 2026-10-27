@@ -157,3 +157,60 @@ def validate_evidence_quality(
             )
 
     return issues
+
+def validate_claim_structure(
+    draft: ReportDraft,
+) -> list[dict[str, str]]:
+    """
+    Comprueba la estructura de las afirmaciones del informe.
+
+    No determina si una afirmación es verdadera ni si está
+    correctamente clasificada desde el punto de vista semántico.
+    """
+    issues: list[dict[str, str]] = []
+    allowed_kinds = ("fact", "assumption", "inference")
+
+    for position, claim in enumerate(draft.claims, start=1):
+        # Si falta el identificador, indicamos la posición
+        # para que la persona pueda localizar la afirmación.
+        valid_id = (
+            isinstance(claim.claim_id, str)
+            and bool(claim.claim_id.strip())
+        )
+        reference_id = (
+            claim.claim_id
+            if valid_id
+            else f"claim_position_{position}"
+        )
+
+        if not valid_id:
+            issues.append({
+                "code": "empty_claim_id",
+                "reference_id": reference_id,
+                "message": (
+                    f"La afirmación en la posición {position} "
+                    "necesita un identificador no vacío."
+                ),
+            })
+
+        if not isinstance(claim.text, str) or not claim.text.strip():
+            issues.append({
+                "code": "empty_claim_text",
+                "reference_id": reference_id,
+                "message": (
+                    f"La afirmación '{reference_id}' "
+                    "no tiene un texto válido."
+                ),
+            })
+
+        if claim.kind not in allowed_kinds:
+            issues.append({
+                "code": "invalid_claim_kind",
+                "reference_id": reference_id,
+                "message": (
+                    f"La afirmación '{reference_id}' debe clasificarse "
+                    "como fact, assumption o inference."
+                ),
+            })
+
+    return issues

@@ -96,6 +96,7 @@ def test_review_preserves_inputs_and_identifies_reviewed_content():
     assert result.checks_performed == (
         "claim_references",
         "evidence_quality",
+        "claim_structure",
     )
 
     # Aunque alguien olvide incrementar la versión, la huella
