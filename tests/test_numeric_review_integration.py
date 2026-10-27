@@ -32,7 +32,7 @@ def make_case():
             metric_id="market.average_monthly_price_eur",
             value=Decimal("45.00"),
             unit="EUR/month",
-            calculation="src.analysis.market_analysis.summarize_competitors",
+            calculation="summarize_competitors",
             evidence_ids=["demo_price"],
         )
     ]
@@ -43,7 +43,7 @@ def make_case():
         claims=[
             ReportClaim(
                 claim_id="average_price",
-                text="Resultado documentado: {{value}} {{unit}}.",
+                text="La cuota media de la muestra ficticia es de 45 euros.",
                 kind="fact",
                 evidence_ids=["demo_price"],
                 metric_id="market.average_monthly_price_eur",
@@ -213,10 +213,10 @@ def test_new_review_detects_changed_calculation():
         calculated_metrics=metrics,
     )
 
-    # El resultado alterado tampoco coincide con las evidencias de origen.
+    # La revisión es actual, pero el informe sigue indicando 45.
     assert get_route(
         new_review, draft, research, metrics
-    ) == "revise_analysis"
+    ) == "revise_writing"
 
 @pytest.mark.parametrize("field,value", [
     ("metric_id", ""),
@@ -245,7 +245,6 @@ def test_nonfinite_mutation_cannot_receive_review(value):
 
 def test_decimal_comparison_uses_string_conversion():
     draft, research, metrics = make_case()
-    research.evidences[0].value = 0.1
     draft.claims[0].reported_value = 0.1
     metrics[0] = metrics[0].model_copy(update={"value": Decimal("0.1")})
     review = run_basic_review(draft, research, calculated_metrics=metrics)
@@ -254,7 +253,6 @@ def test_decimal_comparison_uses_string_conversion():
 
 def test_zero_is_a_numeric_value():
     draft, research, metrics = make_case()
-    research.evidences[0].value = 0
     draft.claims[0].reported_value = 0
     metrics[0] = metrics[0].model_copy(update={"value": Decimal("0")})
     review = run_basic_review(draft, research, calculated_metrics=metrics)
@@ -270,7 +268,6 @@ def test_missing_metric_in_explicit_empty_analysis_is_reported():
 
 def test_non_numeric_claim_needs_no_analysis():
     draft, research, _ = make_case()
-    draft.claims[0].text = "Hay una tarifa documentada."
     draft.claims[0].metric_id = None
     draft.claims[0].reported_value = None
     draft.claims[0].reported_unit = None

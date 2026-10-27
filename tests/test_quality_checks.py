@@ -97,7 +97,6 @@ def test_review_preserves_inputs_and_identifies_reviewed_content():
         "claim_references",
         "evidence_quality",
         "claim_structure",
-        "numeric_text",
     )
 
     # Aunque alguien olvide incrementar la versión, la huella

@@ -47,16 +47,12 @@ def build_writing_task(
     brief: ResearchBrief,
     research_result: ResearchResult,
     agent: Agent,
-    calculated_metrics=None,
 ) -> Task:
     """Prepara la tarea de redacción sin ejecutarla."""
     payload = json.dumps(
         {
             "brief": brief.model_dump(mode="json"),
             "research": research_result.model_dump(mode="json"),
-            "calculated_metrics": [
-                m.model_dump(mode="json") for m in (calculated_metrics or [])
-            ],
         },
         ensure_ascii=False,
     )
@@ -83,13 +79,8 @@ def build_writing_task(
             "- Distingue fact, assumption e inference.\n"
             "- No deduzcas ausencia de competencia a partir de "
             "resultados vacíos.\n"
-            "- No calcules indicadores nuevos ni afirmes rentabilidad.\n"
-            "- Para citar un indicador recibido, incluye metric_id, reported_value "
-            "y reported_unit sin alterarlos, junto con sus evidence_ids.\n"
-            "- Su text debe ser exactamente: Resultado documentado: {{value}} {{unit}}.\n"
-            "- En sections cita esa afirmación con {{claim:claim_001}} (posición "
-            "de la afirmación, comenzando en claim_001). No escribas cifras literales "
-            "ni números en palabras. No insertes cifras en afirmaciones sin indicador.\n"
+            "- No calcules indicadores nuevos ni afirmes rentabilidad: "
+            "todavía no se han proporcionado resultados del analista.\n"
             "- Cada elemento de sections debe contener un título "
             "en su primera línea y el contenido debajo.\n\n"
             "Incluye objetivo y alcance, resultados disponibles, "
@@ -107,7 +98,6 @@ def build_writing_task(
 def run_writing(
     brief: ResearchBrief,
     research_result: ResearchResult,
-    *, calculated_metrics=None,
 ) -> ReportDraft:
     """
     Ejecuta el redactor con LLM y devuelve un borrador validado.
@@ -115,13 +105,8 @@ def run_writing(
     Esta primera versión recibe investigación, sin análisis financiero.
     No aprueba ni exporta el informe.
     """
-    if calculated_metrics is not None:
-        from src.analysis.provenance import validate_metric_provenance
-        problems = validate_metric_provenance(calculated_metrics, research_result)
-        if problems:
-            raise ValueError("; ".join(i.message for i in problems))
     agent = build_writer()
-    task = build_writing_task(brief, research_result, agent, calculated_metrics=calculated_metrics)
+    task = build_writing_task(brief, research_result, agent)
 
     crew = Crew(
         agents=[agent],
@@ -159,9 +144,6 @@ def run_writing(
                 text=claim.text,
                 kind=claim.kind,
                 evidence_ids=list(dict.fromkeys(claim.evidence_ids)),
-                metric_id=claim.metric_id,
-                reported_value=claim.reported_value,
-                reported_unit=claim.reported_unit,
             )
         )
 

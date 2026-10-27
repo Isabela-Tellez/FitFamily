@@ -255,12 +255,3 @@ Este cambio requiere volver a revisar y aprobar los borradores existentes.
 No convierte archivos de datos guardados con el formato anterior.
 La comparación no extrae cifras del texto ni verifica la procedencia
 completa de los cálculos.
-
-## Flujo recomendado con cifras trazables
-
-La integración completa y sus restricciones están en
-[numeric-traceability.md](numeric-traceability.md).
-Usar prepare_reviewed_report y export_reviewed_report del módulo
-src.graph.report_pipeline; conservar el mismo contexto y el contador de revisiones.
-Las cifras del texto anterior deben sustituirse por plantillas y referencias
-antes de considerar un borrador apto para aprobación.

@@ -14,7 +14,6 @@ from src.automation.models import ApprovalRecord
 from src.graph.review_routes import choose_review_route_for_context
 from src.reporting.markdown_renderer import render_report_markdown
 from src.reporting.report_builder import build_report
-from src.analysis.provenance import calculate_observed_metrics
 from src.review.quality_checks import run_basic_review
 from src.schemas import Evidence, ResearchBrief, ResearchResult
 
@@ -44,18 +43,17 @@ def test_research_draft_review_and_delivery(tmp_path):
     )
 
     # Generamos una sola vez y conservamos su identidad y contenido.
-    metrics = calculate_observed_metrics(research)
-    draft = build_report(brief, research, calculated_metrics=metrics)
+    draft = build_report(brief, research)
     fingerprint = calculate_draft_fingerprint(draft)
     preview = render_report_markdown(draft)
 
     # Evitamos que el recorrido pase con un borrador sin afirmaciones.
     assert len(draft.claims) == 1
     assert draft.claims[0].evidence_ids == [evidence.evidence_id]
-    assert "40 EUR/month" in preview
+    assert evidence.claim in preview
 
     # La revisión real comprueba el borrador generado.
-    review = run_basic_review(draft, research, calculated_metrics=metrics)
+    review = run_basic_review(draft, research)
 
     assert review.issues == ()
     # Comprueba que la revisión corresponde a los datos actuales.
@@ -64,7 +62,6 @@ def test_research_draft_review_and_delivery(tmp_path):
         draft,
         research,
         revision_count=0,
-        calculated_metrics=metrics,
     )
     assert route == "pending_review"
     assert review.draft_id == draft.draft_id
@@ -110,7 +107,7 @@ def test_research_draft_review_and_delivery(tmp_path):
     markdown_path = Path(result.markdown_path)
     pdf_path = Path(result.pdf_path)
 
-    assert "40 EUR/month" in markdown_path.read_text(encoding="utf-8")
+    assert evidence.claim in markdown_path.read_text(encoding="utf-8")
     assert pdf_path.read_bytes().startswith(b"%PDF-")
     assert Path(result.tracking_path) == tracking_path
 

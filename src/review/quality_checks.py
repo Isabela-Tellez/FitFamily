@@ -1,8 +1,6 @@
 """Ejecución de las comprobaciones básicas del revisor."""
 import hashlib
 import json
-from src.analysis.provenance import validate_metric_provenance
-from src.reporting.numeric_text import validate_numeric_text
 from src.automation.exporter import calculate_draft_fingerprint
 from src.reporting.models import ReportDraft
 from src.review.models import ReviewIssue, ReviewResult
@@ -103,21 +101,6 @@ def run_basic_review(
         "evidence_quality",
         "claim_structure",
     ]
-
-    issues.extend(validate_numeric_text(draft))
-    checks_performed.append("numeric_text")
-    if calculated_metrics is not None:
-        issues.extend(validate_metric_provenance(calculated_metrics, research_result))
-        checks_performed.append("metric_provenance")
-        metrics_by_id = {m.metric_id: m for m in calculated_metrics}
-        for claim in draft.claims:
-            metric = metrics_by_id.get(claim.metric_id)
-            if metric and set(claim.evidence_ids) != set(metric.evidence_ids):
-                issues.append(ReviewIssue(
-                    code="metric_claim_evidence_mismatch", reference_id=claim.claim_id,
-                    message="La afirmación debe citar las evidencias utilizadas por su indicador.",
-                    severity="error", correction_stage="writing",
-                ))
 
     # Activamos la revisión numérica si hay cifras declaradas
     # o si el controlador nos proporciona resultados de análisis.

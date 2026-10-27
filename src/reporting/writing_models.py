@@ -18,9 +18,6 @@ class WritingClaim(BaseModel):
     text: str = Field(min_length=1)
     kind: Literal["fact", "assumption", "inference"]
     evidence_ids: list[str] = Field(default_factory=list)
-    metric_id: str | None = None
-    reported_value: float | None = Field(default=None, allow_inf_nan=False, strict=True)
-    reported_unit: str | None = None
 
 
 class WritingOutput(BaseModel):

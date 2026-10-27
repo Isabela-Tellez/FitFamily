@@ -10,7 +10,7 @@ from src.automation.exporter import (
     export_pdf,
 )
 from src.automation.models import ApprovalRecord
-from src.reporting.models import ReportDraft, ReportClaim
+from src.reporting.models import ReportDraft
 from src.reporting.pdf_renderer import render_report_pdf
 
 
@@ -20,11 +20,7 @@ def draft():
     return ReportDraft(
         title="Investigación de FitFamily",
         study_area="El Cañaveral",
-        sections=["Datos de prueba\n{{claim:price}}"],
-        claims=[ReportClaim(
-            "price", "Resultado documentado: {{value}} {{unit}}.", "inference",
-            ["evidence_price"], "evidence.evidence_price", 45.0, "EUR/month",
-        )],
+        sections=["Datos de prueba\nCuota ficticia: 45 € al mes."],
         sources=["https://example.com"],
         limitations=["Datos ficticios para pruebas."],
     )

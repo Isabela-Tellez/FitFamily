@@ -19,6 +19,3 @@ class CalculatedMetric(BaseModel):
     calculation: str = Field(min_length=1)
     evidence_ids: list[str] = Field(default_factory=list)
 
-
-    # Función de cada entrada del cálculo financiero.
-    input_evidence_ids: dict[str, str] = Field(default_factory=dict)
