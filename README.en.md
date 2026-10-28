@@ -25,6 +25,9 @@
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
+  <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-436%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
 > **What it is and what it isn't (open project, updated).** FitFamily is a research prototype with automatic workflow (`workflows.py`), analysis contract (`calculation-review-contract.md`) and SQLite persistence. It is not a closed business plan, does not compute an investment recommendation, **not finished** and **still requires human approval UI and export**.
@@ -44,7 +47,7 @@ The project starts from a concrete problem: opening a gym with a playroom in a y
 | Does it review the report? | Yes, references and structural quality; it does not verify semantic truth. |
 | Does it export? | Yes, Markdown and PDF, only after a valid `ApprovalRecord`. |
 | Does it have a UI? | **No.** `src/ui/` is empty; there is no Streamlit app and there are no UI screenshots. |
-| Does it have a fully automated flow? | **No.** Modules are called separately; there is no `main.py`, CLI, or runnable graph. |
+| Does it have a fully automated flow? | **Partial.** `workflows.py` connects analysis → writing → review; UI and full controller still missing. |
 
 ## The problem it addresses
 

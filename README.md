@@ -25,7 +25,13 @@
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
+  <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-436%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
+
+> [!NOTE]
+> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite. La interfaz web (`streamlit`) sigue pendiente como paso final.
 
 > **Qué es y qué no es (proyecto abierto, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). No es un plan de negocio cerrado ni calcula una recomendación de inversión, **no está terminado en su interfaz** y **todavía requiere el controlador humano y la exportación completa** con aprobación.
 
@@ -43,8 +49,10 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 | ¿Redacta un informe? | Sí, con un redactor determinista o con un LLM opcional (Groq). |
 | ¿Revisa el informe? | Sí, referencias y calidad estructural; no verifica la verdad semántica. |
 | ¿Exporta? | Sí, Markdown y PDF, solo después de un `ApprovalRecord` válido. |
+| ¿Tiene flujo automático? | Sí — `workflows.py` conecta análisis → redacción → revisión; falta UI completa. |
 | ¿Tiene UI? | **No.** `src/ui/` vacío; `streamlit-approval.md` documenta diseño pero no hay aplicación web. El workflow (`workflows.py`) existe pero requiere controlador. |
-| ¿Tiene un flujo automático completo? | **Parcial.** Existe un workflow de `LangGraph` (`src/graph/workflow.py`) que conecta investigación → análisis → redacción → revisión, con persistencia SQLite. Falta el controlador humano y la interfaz web. |
+
+**Tecnologías / Temas:** Python 3.13 · Pydantic · LangGraph · SQLite (persistencia) · MCP stdio · CrewAI / Groq (opcional) · pytest · Markdown / PDF · cálculo económico estructurado (`calculation-review-contract.md`).
 
 ## El problema que resuelve
 
