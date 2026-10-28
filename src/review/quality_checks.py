@@ -10,6 +10,7 @@ from src.review.validation import (
     validate_evidence_quality,
 )
 from src.schemas import ResearchResult
+from src.review.calculation_validation import validate_calculation_contexts
 from src.analysis.contracts import CalculatedMetric
 from src.review.numeric_validation import (
     has_numeric_reference,
@@ -126,6 +127,34 @@ def run_basic_review(
             )
         else:
             checks_performed.append("numeric_values")
+            issues.extend(validate_calculation_contexts(calculated_metrics, research_result))
+            if any(m.context is not None for m in calculated_metrics):
+                checks_performed.append("calculation_context")
+                from src.analysis.calculation_adapter import metric_context_notes
+                for claim in draft.claims:
+                    matches = [m for m in calculated_metrics if m.metric_id == claim.metric_id]
+                    if len(matches) != 1 or matches[0].context is None:
+                        continue
+                    metric = matches[0]
+                    if set(claim.evidence_ids) != set(metric.evidence_ids):
+                        issues.append(ReviewIssue(
+                            code="calculation_claim_evidence_mismatch", reference_id=claim.claim_id,
+                            message="La afirmación debe conservar las referencias del cálculo.",
+                            severity="error", correction_stage="writing",
+                        ))
+                    if any(i.input_type == "assumption" for i in metric.context.calculation_result.inputs) and claim.kind == "fact":
+                        issues.append(ReviewIssue(
+                            code="scenario_presented_as_fact", reference_id=claim.claim_id,
+                            message="Un resultado basado en supuestos debe identificarse como inferencia o supuesto.",
+                            severity="error", correction_stage="writing",
+                        ))
+                    if not set(metric_context_notes(metric)).issubset(draft.limitations):
+                        issues.append(ReviewIssue(
+                            code="missing_calculation_notes", reference_id=claim.claim_id,
+                            message="Faltan supuestos o limitaciones del cálculo en el informe.",
+                            severity="error", correction_stage="writing",
+                        ))
+
 
 
     return ReviewResult(
