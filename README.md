@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-fitfamily.png" alt="FitFamily: investigación de mercado para un gimnasio con ludoteca" width="360">
+  <img src="assets/banner-fitfamily.svg" alt="FitFamily — investigación de mercado y bienestar familiar" width="100%" style="max-width:800px; height:auto; border-radius:12px;">
 </p>
 
 <h1 align="center">FitFamily</h1>
@@ -23,6 +23,7 @@
 
 <p align="center">
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-persistence-003B5C?logo=sqlite&amp;logoColor=white">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
   <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
