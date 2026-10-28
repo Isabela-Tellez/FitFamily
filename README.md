@@ -86,6 +86,22 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
                             📄 Exportación Markdown / PDF
 ```
 
+```mermaid
+flowchart LR
+    A[ResearchBrief] --> B[Investigación]
+    B --> C[Análisis workflows.py]
+    C --> D[Redacción + Adapter]
+    D --> E[Revisión numérica]
+    E --> F{Aprobación ApprovalRecord}
+    F -->|Sí| G[Exportar Markdown/PDF]
+    F -->|No| D
+    style C fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
+    style F fill:#D7A96B,stroke:#172B2A,stroke-width:2px
+    style E fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
+```
+
+> **Nota técnica:** Las conexiones verdes (`workflows.py`, `calculation_adapter.py`, `persistence.py`) están implementadas (PR #30). La aprobación humana y la interfaz web (`streamlit`) son pasos manuales o pendientes.
+
 ## El problema que resuelve
 
 Una decisión de localización suele fallar por una de estas razones:
