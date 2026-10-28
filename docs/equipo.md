@@ -53,7 +53,7 @@ FitFamily se construye entre cinco personas con responsabilidades separadas y co
 
 **Interfaces que produce.** Un diccionario de indicadores (`competitor_count`, precios conocidos, media de precios y estado de ludoteca) y un entero de clientes mínimos para el punto de equilibrio.
 
-**Estado real.** El análisis descriptivo y el punto de equilibrio están implementados. La conexión automática desde un `ResearchResult` a `DataFrame` sigue pendiente; hoy requiere un adaptador explícito o partir del registro versionado.
+**Estado real.** El análisis descriptivo y el punto de equilibrio están implementados (`calculation_adapter.py`, `calculation-review-contract.md`). El adaptador explícito (`ResearchResult → DataFrame`) está disponible; la conexión automática completa (`workflows.py`) está implementada (PR #30).
 
 **Documentación.** [analysis.md](analysis.md).
 

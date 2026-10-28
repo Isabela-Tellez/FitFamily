@@ -2,7 +2,7 @@
 
 Responsable: **Isabella (Persona 5)**.
 
-> **Estado: diseño pendiente.** LangGraph no está en `requirements.txt` y no existe un grafo implementado. Este documento define el estado, los nodos y las transiciones que debe seguir la orquestación cuando se implemente.
+> **Estado: implementado (PR #30)**. `workflows.py`, `persistence.py`, `state.py` y `events.py` están activos; `langgraph-checkpoint-sqlite==3.1.2` está en `requirements.txt`. Falta el controlador humano y la interfaz web completa.
 
 ## Objetivo
 

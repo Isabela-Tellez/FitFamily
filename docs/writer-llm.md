@@ -10,7 +10,7 @@ Se conserva el WriterAgent determinista existente.
 El constructor permite elegir explícitamente el redactor con LLM.
 Por defecto conserva el modo determinista para mantener compatibilidad.
 
-La conexión con la interfaz y el flujo global sigue pendiente.
+La conexión con la interfaz (`streamlit`) sigue pendiente; el flujo global (`workflows.py`) está implementado (PR #30) y conecta la redacción con análisis y revisión.
 
 > **Revisión documental del 26 de octubre de 2026.** No se ha ejecutado una llamada real a Groq. Las pruebas de esta revisión usan respuestas simuladas; la ejecución real descrita más abajo es histórica y no se ha reproducido. El CI no tiene una clave de proveedor.
 
