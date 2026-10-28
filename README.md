@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong><br>
-  <sub><strong>Proyecto abierto — documentación renovada; código sin cambios (16 oct 2026)</strong></sub>
+  <sub><strong>Proyecto abierto — actualizado tras fusión de análisis, revisión y workflow (oct 2026)</strong></sub>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
 </p>
 
-> **Qué es y qué no es (proyecto abierto).** FitFamily es un prototipo de investigación y documentación en desarrollo para decidir si tiene sentido abrir un gimnasio con ludoteca en El Cañaveral. No es un plan de negocio cerrado, no calcula una recomendación de inversión, **no está terminado** y **todavía no tiene interfaz ni orquestador**. El valor actual está en la trazabilidad de los datos, los contratos entre módulos y las comprobaciones que impiden inventar cifras.
+> **Qué es y qué no es (proyecto abierto, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). No es un plan de negocio cerrado ni calcula una recomendación de inversión, **no está terminado en su interfaz** y **todavía requiere el controlador humano y la exportación completa** con aprobación.
 
 ## Qué es FitFamily
 
@@ -43,8 +43,8 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 | ¿Redacta un informe? | Sí, con un redactor determinista o con un LLM opcional (Groq). |
 | ¿Revisa el informe? | Sí, referencias y calidad estructural; no verifica la verdad semántica. |
 | ¿Exporta? | Sí, Markdown y PDF, solo después de un `ApprovalRecord` válido. |
-| ¿Tiene UI? | **No.** `src/ui/` está vacío; no hay Streamlit ni capturas de interfaz. |
-| ¿Tiene un flujo automático completo? | **No.** Los módulos se llaman por separado; no hay `main.py`, CLI ni grafo ejecutable. |
+| ¿Tiene UI? | **No.** `src/ui/` vacío; `streamlit-approval.md` documenta diseño pero no hay aplicación web. El workflow (`workflows.py`) existe pero requiere controlador. |
+| ¿Tiene un flujo automático completo? | **Parcial.** Existe un workflow de `LangGraph` (`src/graph/workflow.py`) que conecta investigación → análisis → redacción → revisión, con persistencia SQLite. Falta el controlador humano y la interfaz web. |
 
 ## El problema que resuelve
 

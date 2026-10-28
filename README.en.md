@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Traceable market research and report generation for a gym with a playroom in El Cañaveral, Madrid</strong><br>
-  <sub><strong>Open project — documentation renewed; no code changed (26 Oct 2026)</strong></sub>
+  <sub><strong>Open project — updated after analysis, review and workflow merge (Oct 2026)</strong></sub>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
 </p>
 
-> **What it is and what it isn't (open project).** FitFamily is a research and documentation prototype in development for deciding whether opening a gym with a playroom in El Cañaveral makes sense. It is not a closed business plan, it does not compute an investment recommendation, **it is not finished** and **still has no UI or orchestrator**. The current value is in data traceability, module contracts, and checks that prevent invented figures.
+> **What it is and what it isn't (open project, updated).** FitFamily is a research prototype with automatic workflow (`workflows.py`), analysis contract (`calculation-review-contract.md`) and SQLite persistence. It is not a closed business plan, does not compute an investment recommendation, **not finished** and **still requires human approval UI and export**.
 
 ## What FitFamily is
 
