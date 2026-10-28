@@ -135,3 +135,54 @@ def test_pdf_export_never_overwrites_different_content(
 
     assert target.read_bytes() == b"contenido diferente"
     assert not list(tmp_path.glob(".report_*.tmp"))
+
+def test_pdf_includes_metric_reference_without_changing_draft(monkeypatch):
+    """Incluye los campos numéricos en los párrafos del PDF."""
+    from copy import deepcopy
+
+    from reportlab.platypus import Paragraph, SimpleDocTemplate
+
+    from src.reporting.models import ReportClaim, ReportDraft
+    from src.reporting.pdf_renderer import render_report_pdf
+
+    draft = ReportDraft(
+        title="Informe ficticio",
+        study_area="Zona de prueba",
+        claims=[
+            ReportClaim(
+                claim_id="claim_break_even",
+                text="Bajo estos supuestos se necesitan 25 clientes.",
+                kind="inference",
+                metric_id="scenario_intermediate.break_even_clients",
+                reported_value=25.0,
+                reported_unit="clients",
+            )
+        ],
+    )
+    original = deepcopy(draft)
+    paragraphs = []
+
+    # Observamos los párrafos sin sustituir la generación real.
+    real_build = SimpleDocTemplate.build
+
+    def capture_and_build(document, flowables, *args, **kwargs):
+        paragraphs.extend(
+            item.getPlainText()
+            for item in flowables
+            if isinstance(item, Paragraph)
+        )
+        return real_build(document, flowables, *args, **kwargs)
+
+    monkeypatch.setattr(SimpleDocTemplate, "build", capture_and_build)
+
+    content = render_report_pdf(draft)
+
+    assert content.startswith(b"%PDF-")
+    assert (
+        "Métrica: scenario_intermediate.break_even_clients"
+        in paragraphs
+    )
+    assert "Valor declarado: 25.0" in paragraphs
+    assert "Unidad: clients" in paragraphs
+    assert "Bajo estos supuestos se necesitan 25 clientes." in paragraphs
+    assert draft == original
