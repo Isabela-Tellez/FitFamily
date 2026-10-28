@@ -4,6 +4,9 @@ Funciones para construir y comprobar borradores de informes.
 
 from src.reporting.models import ReportDraft
 from src.schemas import ResearchResult, ResearchBrief
+from src.analysis.contracts import CalculatedMetric
+from src.analysis.calculation_adapter import metric_context_notes
+from src.reporting.calculated_claims import build_break_even_claim
 
 
 def find_missing_evidence_ids(
@@ -63,13 +66,20 @@ def build_report(
     research_result: ResearchResult,
     *,
     use_llm: bool = False,
+    calculated_metrics: list[CalculatedMetric] | None = None,
 ) -> ReportDraft:
-    """
-    Genera un borrador y comprueba sus referencias.
+    """Genera un borrador y añade puntos de equilibrio recibidos.
 
-    Por defecto utiliza el Writer determinista.
-    use_llm=True ejecuta el agente con el proveedor configurado.
+    Las frases numéricas se construyen desde las métricas,
+    sin pedir al LLM que reproduzca o recalcule sus valores.
     """
+    metrics = list(calculated_metrics or [])
+
+    # Evitamos identificar dos resultados distintos con el mismo nombre.
+    metric_ids = [metric.metric_id for metric in metrics]
+    if len(metric_ids) != len(set(metric_ids)):
+        raise ValueError("Hay identificadores de métricas duplicados.")
+
     if use_llm:
         from src.agents.strategic_writer import run_writing
 
@@ -79,6 +89,52 @@ def build_report(
 
         draft = WriterAgent().create_draft(brief, research_result)
 
+    numeric_texts: list[str] = []
+    existing_claim_ids = {claim.claim_id for claim in draft.claims}
+
+    for index, metric in enumerate(metrics, start=1):
+        claim_id = f"calculated_break_even_{index}"
+
+        if claim_id in existing_claim_ids:
+            raise ValueError(
+                f"El identificador de afirmación ya existe: {claim_id}"
+            )
+
+        # Esta primera integración solo admite puntos de equilibrio.
+        # La función rechaza otros tipos o contextos incompletos.
+        claim = build_break_even_claim(
+            metric,
+            claim_id=claim_id,
+        )
+
+        # Conservamos los supuestos y las limitaciones originales.
+        for note in metric_context_notes(metric):
+            if note not in draft.limitations:
+                draft.limitations.append(note)
+
+        if claim is None:
+            # Un resultado ausente se explica, nunca se convierte en cero.
+            message = (
+                f"Resultado no disponible para {metric.metric_id}. "
+                "No se presenta una cifra de punto de equilibrio."
+            )
+            numeric_texts.append(message)
+
+            if message not in draft.limitations:
+                draft.limitations.append(message)
+            continue
+
+        draft.claims.append(claim)
+        existing_claim_ids.add(claim.claim_id)
+        numeric_texts.append(claim.text)
+
+    if numeric_texts:
+        draft.sections.append(
+            "Punto de equilibrio por escenario\n"
+            + "\n\n".join(numeric_texts)
+        )
+
+    # Incluimos también las referencias de las afirmaciones nuevas.
     validate_report_references(draft, research_result)
 
     return draft
@@ -89,11 +145,13 @@ def build_report_markdown(
     research_result: ResearchResult,
     *,
     use_llm: bool = False,
+    calculated_metrics: list[CalculatedMetric] | None = None,
 ) -> str:
-    """
-    Genera el borrador validado y devuelve su Markdown.
+    """Genera el borrador con sus métricas y devuelve su Markdown.
 
     No escribe archivos ni concede aprobación.
+    Para revisar y aprobar, el controlador debe conservar
+    el ReportDraft obtenido mediante build_report().
     """
     from src.reporting.markdown_renderer import render_report_markdown
 
@@ -101,6 +159,7 @@ def build_report_markdown(
         brief,
         research_result,
         use_llm=use_llm,
+        calculated_metrics=calculated_metrics,
     )
 
     return render_report_markdown(draft)
