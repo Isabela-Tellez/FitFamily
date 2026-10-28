@@ -1,23 +1,23 @@
 """Workflow principal de investigación de FitFamily mediante LangGraph."""
 
-from typing import Any
 from decimal import Decimal
 from math import isfinite
+from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
 from src.agents.researcher import run_research
-from src.agents.strategic_writer import run_writing
-from src.graph.state import ResearchState
-from src.reporting.models import ReportDraft
-from src.review.quality_checks import run_basic_review
-from src.schemas import ResearchBrief, ResearchResult
+from src.analysis.calculation_adapter import metric_from_break_even
 from src.analysis.contracts import CalculatedMetric
-
 from src.analysis.scenarios import (
     create_economic_scenario,
     evaluate_economic_scenario,
 )
+from src.graph.state import ResearchState
+from src.reporting.models import ReportDraft
+from src.reporting.report_builder import build_report
+from src.review.quality_checks import run_basic_review
+from src.schemas import ResearchBrief, ResearchResult
 
 
 def research_node(state: ResearchState) -> dict[str, Any]:
@@ -30,6 +30,7 @@ def research_node(state: ResearchState) -> dict[str, Any]:
         "current_stage": "writing",
         "updated_at": _utc_now(),
     }
+
 
 def analysis_node(state: ResearchState) -> dict[str, Any]:
     """Calcula indicadores económicos a partir de parámetros validados."""
@@ -63,8 +64,8 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
             "updated_at": _utc_now(),
         }
 
-    # No aceptamos booleanos como números ni conversiones ambiguas.
-    numeric_params = {}
+    # No aceptamos booleanos como números ni valores no finitos.
+    numeric_params: dict[str, int | float] = {}
 
     for name in required:
         value = params[name]
@@ -91,7 +92,7 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
 
     scenario = create_economic_scenario(
         scenario_type="intermediate",
-        expected_clients=numeric_params["expected_clients"],
+        expected_clients=expected_clients,
         monthly_fee=numeric_params["monthly_fee"],
         fixed_costs=numeric_params["fixed_costs"],
         variable_cost_per_client=numeric_params[
@@ -111,23 +112,35 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
         ],
     )
 
-    metrics = []
-    for calculation in calculations:
-        result = calculation.result
+    metrics: list[CalculatedMetric] = []
 
-        metrics.append(
-            CalculatedMetric(
+    for calculation in calculations:
+        if calculation.calculation_type == "break_even":
+            # Conserva el escenario y el cálculo original.
+            metric = metric_from_break_even(
+                scenario,
+                calculation,
+            )
+        else:
+            result = calculation.result
+
+            metric = CalculatedMetric(
                 metric_id=calculation.calculation_type,
                 value=(
                     Decimal(str(result.value))
                     if result is not None
                     else None
                 ),
-                unit=result.unit if result is not None else "unknown",
+                unit=(
+                    result.unit
+                    if result is not None
+                    else "unknown"
+                ),
                 calculation=calculation.operation,
-                evidence_ids=calculation.evidence_ids,
+                evidence_ids=list(calculation.evidence_ids),
             )
-        )
+
+        metrics.append(metric)
 
     return {
         "analysis_result": {
@@ -144,11 +157,13 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
                 metric.model_dump(mode="json")
                 for metric in metrics
             ],
-            "limitations": [
-                limitation
-                for calculation in calculations
-                for limitation in calculation.limitations
-            ],
+            "limitations": list(
+                dict.fromkeys(
+                    limitation
+                    for calculation in calculations
+                    for limitation in calculation.limitations
+                )
+            ),
         },
         "current_stage": "writing",
         "updated_at": _utc_now(),
@@ -156,11 +171,41 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
 
 
 def writing_node(state: ResearchState) -> dict[str, Any]:
-    """Genera un borrador utilizando la investigación disponible."""
+    """Genera un borrador con investigación y métricas calculadas."""
     brief = ResearchBrief.model_validate(state["brief"])
     research = ResearchResult.model_validate(state["research_result"])
 
-    draft = run_writing(brief, research)
+    analysis = state.get("analysis_result") or {}
+    metrics_data = analysis.get("calculated_metrics", [])
+
+    # Conservamos todas las métricas para el estado y la revisión.
+    metrics = [
+        CalculatedMetric.model_validate(item)
+        for item in metrics_data
+    ]
+
+    # build_report solo admite actualmente métricas de punto de equilibrio.
+    break_even_metrics = [
+        metric
+        for metric in metrics
+        if (
+            metric.context is not None
+            and metric.context.calculation_result.calculation_type
+            == "break_even"
+        )
+    ]
+
+    draft = build_report(
+        brief,
+        research,
+        use_llm=True,
+        calculated_metrics=break_even_metrics,
+    )
+
+    # Conservamos las limitaciones del análisis.
+    for limitation in analysis.get("limitations", []):
+        if limitation not in draft.limitations:
+            draft.limitations.append(limitation)
 
     return {
         "report_draft": _draft_to_dict(draft),
@@ -178,6 +223,7 @@ def review_node(state: ResearchState) -> dict[str, Any]:
     analysis = state.get("analysis_result") or {}
     metrics_data = analysis.get("calculated_metrics", [])
 
+    # La revisión recibe las cuatro métricas, no solo el punto de equilibrio.
     metrics = [
         CalculatedMetric.model_validate(item)
         for item in metrics_data
@@ -191,7 +237,11 @@ def review_node(state: ResearchState) -> dict[str, Any]:
 
     return {
         "review_result": _review_to_dict(review),
-        "status": "awaiting_approval" if not review.issues else "failed",
+        "status": (
+            "awaiting_approval"
+            if not review.issues
+            else "failed"
+        ),
         "current_stage": "review",
         "updated_at": _utc_now(),
     }
@@ -201,13 +251,11 @@ def build_workflow(*, checkpointer: Any = None) -> Any:
     """Construye y compila el workflow de investigación."""
     builder = StateGraph(ResearchState)
 
-    # Registrar los nodos del workflow.
     builder.add_node("research", research_node)
     builder.add_node("analysis", analysis_node)
     builder.add_node("writing", writing_node)
     builder.add_node("review", review_node)
 
-    # Conectar las etapas en orden.
     builder.add_edge(START, "research")
     builder.add_edge("research", "analysis")
     builder.add_edge("analysis", "writing")

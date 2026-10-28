@@ -25,7 +25,7 @@ def initial_state():
 @pytest.fixture
 def analysis_state():
     """Estado con parámetros económicos válidos para el análisis."""
-    state = create_initial_state(
+    return create_initial_state(
         run_id="analysis-test-001",
         brief={
             "business_type": "gimnasio con ludoteca",
@@ -40,18 +40,17 @@ def analysis_state():
             },
         },
     )
-    return state
 
 
 @pytest.fixture
 def simulated_pipeline():
-    """Simula investigación, redacción y revisión."""
+    """Simula las dependencias del workflow sin ejecutar agentes."""
     with (
         patch("src.graph.workflow.run_research") as research,
-        patch("src.graph.workflow.run_writing") as writing,
+        patch("src.graph.workflow.build_report") as build_report,
         patch("src.graph.workflow.run_basic_review") as review,
     ):
-        yield research, writing, review
+        yield research, build_report, review
 
 
 def test_workflow_builds_successfully():
@@ -65,16 +64,14 @@ def test_workflow_runs_research_writing_and_review(
     initial_state,
     simulated_pipeline,
 ):
-    """Comprueba la ruta actual de investigación a revisión."""
-    research, writing, review = simulated_pipeline
+    """Comprueba que construir el grafo no ejecuta sus dependencias."""
+    research, build_report, review = simulated_pipeline
 
-    # Se definirán resultados válidos en el siguiente ajuste de estas
-    # pruebas, utilizando los modelos reales del proyecto.
     graph = build_workflow()
 
     assert graph is not None
     research.assert_not_called()
-    writing.assert_not_called()
+    build_report.assert_not_called()
     review.assert_not_called()
 
 
@@ -83,7 +80,6 @@ def test_workflow_can_be_compiled_with_checkpointer():
     graph = build_workflow(checkpointer=None)
 
     assert graph is not None
-
 
 
 def test_analysis_node_calculates_economic_metrics(analysis_state):
@@ -101,10 +97,30 @@ def test_analysis_node_calculates_economic_metrics(analysis_state):
         for metric in analysis["calculated_metrics"]
     }
 
+    # Ingresos mensuales: 200 clientes * 40 euros.
     assert float(metrics["monthly_revenue"]["value"]) == 8000.0
+    assert metrics["monthly_revenue"]["unit"] == "EUR/month"
+
+    # Costes variables: 200 clientes * 10 euros.
     assert float(metrics["monthly_variable_costs"]["value"]) == 2000.0
+    assert metrics["monthly_variable_costs"]["unit"] == "EUR/month"
+
+    # Resultado mensual: 8000 - 2000 - 6000.
     assert float(metrics["monthly_result"]["value"]) == 0.0
-    assert float(metrics["break_even"]["value"]) == 200
+    assert metrics["monthly_result"]["unit"] == "EUR/month"
+
+    # Punto de equilibrio: 6000 / (40 - 10) = 200 clientes.
+    break_even_metric = metrics["scenario_intermediate.break_even_clients"]
+
+    assert float(break_even_metric["value"]) == 200
+    assert break_even_metric["unit"] == "clients"
+    assert break_even_metric["context"]["scenario"]["scenario_id"] == (
+        "scenario_intermediate"
+    )
+    assert (
+        break_even_metric["context"]["calculation_result"]["calculation_type"]
+        == "break_even"
+    )
 
 
 @pytest.mark.parametrize(
