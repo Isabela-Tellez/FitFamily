@@ -5,6 +5,17 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+from src.analysis.calculation_models import CalculationResult, EconomicScenario
+
+
+class CalculationContext(BaseModel):
+    """Procedencia original y supuestos; incluidos en la huella del análisis."""
+    model_config = ConfigDict(extra="forbid")
+    scenario: EconomicScenario
+    calculation_result: CalculationResult
+    input_evidence_ids: dict[str, str] = Field(default_factory=dict)
+
+
 class CalculatedMetric(BaseModel):
     """Un resultado producido por el código de análisis."""
 
@@ -19,3 +30,5 @@ class CalculatedMetric(BaseModel):
     calculation: str = Field(min_length=1)
     evidence_ids: list[str] = Field(default_factory=list)
 
+
+    context: CalculationContext | None = None
