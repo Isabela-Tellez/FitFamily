@@ -17,6 +17,17 @@ una cifra ni sustituirlo por cero.
 Estos campos forman parte de la huella del borrador. Cambiar cualquiera
 de ellos invalida una aprobación anterior.
 
+## Presentación
+
+Markdown y PDF muestran metric_id, reported_value y reported_unit
+en el registro de afirmaciones cuando la afirmación tiene una métrica.
+
+La presentación no recalcula valores, no modifica el borrador
+ni sustituye la revisión numérica.
+
+Verificación: pruebas de ambos formatos y revisión visual de un PDF
+con datos ficticios.
+
 ## Estado
 
 Implementados el almacenamiento, la validación al crear la afirmación
@@ -25,7 +36,6 @@ y las pruebas de invalidación de aprobación.
 Pendientes:
 - Recibir los resultados estructurados del análisis.
 - Generar el texto numérico de forma coherente con estos campos.
-- Mostrar las referencias numéricas en Markdown y PDF.
 - Comparar valor y unidad con el análisis desde el revisor.
 - Acordar el tratamiento del redondeo entre los tres módulos.
 

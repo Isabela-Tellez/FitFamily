@@ -190,6 +190,12 @@ def render_report_pdf(
             f"Evidencias: {references or 'sin referencias registradas.'}"
         )
 
+        # Mostramos la referencia numérica sin recalcularla.
+        if claim.metric_id is not None:
+            add_text(f"Métrica: {claim.metric_id}")
+            add_text(f"Valor declarado: {claim.reported_value}")
+            add_text(f"Unidad: {claim.reported_unit}")
+
     if not draft.claims:
         add_text(
             "No se han registrado afirmaciones "
