@@ -33,7 +33,7 @@
 
 <p align="center">
   <strong>FitFamily — Investigación · Análisis · Revisión · Exportación</strong><br>
-  <sub>Flujo automático con persistencia SQLite · Contrato de cálculo estructurado · Revisión numérica</sub>
+  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica (PR #30) · Redacción LLM (PR #35, pendiente) · Prototipo activo</sub>
 </p>
 
 > [!NOTE]

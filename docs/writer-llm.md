@@ -1,11 +1,11 @@
 # Redactor con LLM
 
-## Estado actual
+## Estado actual (actualizado tras PR #30 y PR #35)
 
-Primera integración de CrewAI con Groq para redactar un borrador
-a partir de ResearchBrief y ResearchResult.
-
-Se conserva el WriterAgent determinista existente.
+- PR #30 implementa `workflows.py`, `persistence.py` y conecta análisis, redacción y revisión.
+- PR #35 corrige la redacción con LLM (CrewAI + Groq): solicita JSON, valida localmente, evita duplicar evidencias, divide investigaciones grandes en lotes, comprueba presupuesto de tokens y elimina `cache_breakpoint` (no admitido por Groq).
+- 475 tests pasados. Ejecución real con Groq: 11 apartados, punto de equilibrio de 25 clientes, revisión con `pending_review`, sin incidencias automáticas.
+- No concede aprobación humana ni exporta entregables (pendiente en workflow completo de Isabela).
 
 El constructor permite elegir explícitamente el redactor con LLM.
 Por defecto conserva el modo determinista para mantener compatibilidad.
