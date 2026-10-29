@@ -1,4 +1,3 @@
-
 """Persistencia SQLite para las ejecuciones de FitFamily."""
 
 from contextlib import contextmanager

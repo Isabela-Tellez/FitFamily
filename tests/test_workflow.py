@@ -48,7 +48,7 @@ def simulated_pipeline():
     """Simula investigación, redacción y revisión."""
     with (
         patch("src.graph.workflow.run_research") as research,
-        patch("src.graph.workflow.run_writing") as writing,
+        patch("src.graph.workflow.build_report") as writing,
         patch("src.graph.workflow.run_basic_review") as review,
     ):
         yield research, writing, review
@@ -104,7 +104,10 @@ def test_analysis_node_calculates_economic_metrics(analysis_state):
     assert float(metrics["monthly_revenue"]["value"]) == 8000.0
     assert float(metrics["monthly_variable_costs"]["value"]) == 2000.0
     assert float(metrics["monthly_result"]["value"]) == 0.0
-    assert float(metrics["break_even"]["value"]) == 200
+
+    break_even = metrics["scenario_intermediate.break_even_clients"]
+    assert float(break_even["value"]) == 200
+    assert break_even["unit"] == "clients"
 
 
 @pytest.mark.parametrize(
