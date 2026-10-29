@@ -1,12 +1,27 @@
 <p align="center">
-  <img src="assets/logo-fitfamily.png" alt="FitFamily: market research for a gym with a playroom" width="360">
+  <a href="README.md">Versión en español</a>
+  ·
+  <a href="#current-status">Estado</a>
+  ·
+  <a href="#offline-demo">Demo</a>
+  ·
+  <a href="#setup">Setup</a>
+  ·
+  <a href="#documentation">Documentación</a>
 </p>
 
-<h1 align="center">FitFamily</h1>
+<p align="center">
+  <img src="assets/logo-fitfamily.png" alt="FitFamily logo" width="240" style="opacity:0.92; border-radius:10px;">
+</p>
 
 <p align="center">
-  <strong>Traceable market research and report generation for a gym with a playroom in El Cañaveral, Madrid</strong><br>
-  <sub><strong>Open project — updated after analysis, review and workflow merge (Oct 2026)</strong></sub>
+  <img src="assets/banner-fitfamily.svg" alt="FitFamily — investigación de mercado y bienestar familiar" width="100%" style="max-width:400px; height:auto; opacity:0.9;">
+</p>
+
+<h1 align="center" style="margin-top:6px; font-family:system-ui,sans-serif; font-weight:800; letter-spacing:-1px;">FitFamily</h1>
+<p align="center" style="color:#172B2A; font-size:15px; font-weight:500;">
+  Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en <strong>El Cañaveral, Madrid</strong><br>
+  <sub>Proyecto abierto · Flujo automático con persistencia SQLite · Contrato de cálculo estructurado · Actualizado oct 2026</sub>
 </p>
 
 <p align="center">
@@ -30,11 +45,12 @@
   <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
-> **What it is and what it isn't (open project, updated).** FitFamily is a research prototype with automatic workflow (`workflows.py`), analysis contract (`calculation-review-contract.md`) and SQLite persistence. It is not a closed business plan, does not compute an investment recommendation, **not finished** and **still requires human approval UI and export**.
+> [!NOTE]
+> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite. La interfaz web (`streamlit`) sigue pendiente como paso final.
 
-## What FitFamily is
+## Qué es FitFamily
 
-FitFamily takes a research brief (`ResearchBrief`), gathers evidence from the web and official municipal data, structures competitors, and produces a report draft. The draft can then be structurally reviewed, a human decision can be recorded, and the report can be exported to Markdown or PDF.
+FitFamily recibe un encargo de investigación (`ResearchBrief`), recopila evidencias de fuentes web y de datos municipales oficiales, estructura competidores y produce un borrador de informe. Después puede revisarse la estructura del borrador, registrar una decisión humana y exportarlo a Markdown o PDF.
 
 The project starts from a concrete problem: opening a gym with a playroom in a young Madrid neighbourhood requires combining population, households, premises, licences, sports supply, prices, and financial assumptions. Those data are scattered, belong to different periods, and are sometimes unavailable. FitFamily makes explicit **what was observed, what was derived, what is an assumption, and what is missing**.
 
