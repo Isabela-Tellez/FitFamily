@@ -4,8 +4,19 @@ from unittest.mock import patch
 
 import pytest
 
-from src.graph.state import create_initial_state
-from src.graph.workflow import analysis_node, build_workflow
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command
+
+from src.graph.persistence import (
+    build_thread_config,
+    open_checkpointer,
+)
+from src.graph.state import ResearchState, create_initial_state
+from src.graph.workflow import (
+    analysis_node,
+    approval_node,
+    build_workflow,
+)
 
 
 @pytest.fixture
@@ -163,3 +174,167 @@ def test_analysis_node_accepts_zero_clients(analysis_state):
     assert float(metrics["monthly_revenue"]["value"]) == 0.0
     assert float(metrics["monthly_variable_costs"]["value"]) == 0.0
     assert float(metrics["monthly_result"]["value"]) == -6000.0
+
+
+
+def make_approval_state():
+    """Construye un estado mínimo válido para solicitar aprobación."""
+    state = create_initial_state(
+        run_id="approval-test-001",
+        brief={
+            "business_type": "gimnasio con ludoteca",
+            "location": "Madrid",
+            "study_area": "El Cañaveral",
+            "questions": [],
+        },
+    )
+
+    state.update(
+        status="awaiting_approval",
+        current_stage="review",
+        report_version_id="draft-001:1",
+        report_draft={
+            "draft_id": "draft-001",
+            "version": 1,
+            "title": "Informe de prueba",
+        },
+        review_result={"issues": []},
+    )
+
+    return state
+
+
+def build_approval_test_graph(checkpointer):
+    """Construye un grafo mínimo con el nodo real de aprobación."""
+    builder = StateGraph(ResearchState)
+    builder.add_node("approval", approval_node)
+    builder.add_edge(START, "approval")
+    builder.add_edge("approval", END)
+
+    return builder.compile(checkpointer=checkpointer)
+
+
+def test_approval_interrupts_and_can_be_resumed(tmp_path):
+    """La aprobación se pausa y después puede reanudarse."""
+    db_path = tmp_path / "approval.sqlite"
+    thread_id = "approval-thread-001"
+    config = build_thread_config(thread_id)
+
+    with open_checkpointer(db_path) as checkpointer:
+        graph = build_approval_test_graph(checkpointer)
+
+        graph.invoke(make_approval_state(), config=config)
+
+        snapshot = graph.get_state(config)
+
+        assert snapshot.next == ("approval",)
+        assert len(snapshot.interrupts) == 1
+
+        request = snapshot.interrupts[0].value
+
+        assert request["type"] == "human_approval"
+        assert request["run_id"] == "approval-test-001"
+        assert request["report_version_id"] == "draft-001:1"
+        assert request["allowed_decisions"] == ["approved", "rejected"]
+
+        result = graph.invoke(
+            Command(
+                resume={
+                    "decision": "approved",
+                    "report_version_id": "draft-001:1",
+                }
+            ),
+            config=config,
+        )
+
+        assert result["status"] == "completed"
+        assert result["approval_decision"] == "approved"
+        assert result["approved_version_id"] == "draft-001:1"
+        assert result["current_stage"] == "completed"
+
+
+def test_approval_can_be_rejected(tmp_path):
+    """Rechazar el informe no registra una versión aprobada."""
+    db_path = tmp_path / "rejected.sqlite"
+    config = build_thread_config("approval-thread-rejected")
+
+    with open_checkpointer(db_path) as checkpointer:
+        graph = build_approval_test_graph(checkpointer)
+        graph.invoke(make_approval_state(), config=config)
+
+        result = graph.invoke(
+            Command(
+                resume={
+                    "decision": "rejected",
+                    "report_version_id": "draft-001:1",
+                }
+            ),
+            config=config,
+        )
+
+        assert result["status"] == "rejected"
+        assert result["approval_decision"] == "rejected"
+        assert result["approved_version_id"] is None
+        assert result["current_stage"] == "rejected"
+
+
+@pytest.mark.parametrize(
+    "decision",
+    ["pending", "invalid", "", None],
+)
+def test_approval_rejects_invalid_decisions(tmp_path, decision):
+    """No se admiten decisiones fuera del contrato de aprobación."""
+    db_path = tmp_path / "invalid-decision.sqlite"
+    config = build_thread_config(f"invalid-{decision!r}")
+
+    with open_checkpointer(db_path) as checkpointer:
+        graph = build_approval_test_graph(checkpointer)
+        graph.invoke(make_approval_state(), config=config)
+
+        with pytest.raises(ValueError, match="decisión"):
+            graph.invoke(
+                Command(
+                    resume={
+                        "decision": decision,
+                        "report_version_id": "draft-001:1",
+                    }
+                ),
+                config=config,
+            )
+
+
+def test_approval_rejects_a_different_report_version(tmp_path):
+    """Una decisión no puede aplicarse a otra versión del informe."""
+    db_path = tmp_path / "wrong-version.sqlite"
+    config = build_thread_config("approval-wrong-version")
+
+    with open_checkpointer(db_path) as checkpointer:
+        graph = build_approval_test_graph(checkpointer)
+        graph.invoke(make_approval_state(), config=config)
+
+        with pytest.raises(ValueError, match="versión actual"):
+            graph.invoke(
+                Command(
+                    resume={
+                        "decision": "approved",
+                        "report_version_id": "draft-001:2",
+                    }
+                ),
+                config=config,
+            )
+
+
+def test_approval_rejects_a_review_with_errors(tmp_path):
+    """Un informe con errores no puede solicitar aprobación."""
+    db_path = tmp_path / "review-errors.sqlite"
+    config = build_thread_config("approval-review-errors")
+    state = make_approval_state()
+    state["review_result"] = {
+        "issues": [{"severity": "error"}],
+    }
+
+    with open_checkpointer(db_path) as checkpointer:
+        graph = build_approval_test_graph(checkpointer)
+
+        with pytest.raises(ValueError, match="errores pendientes"):
+            graph.invoke(state, config=config)
