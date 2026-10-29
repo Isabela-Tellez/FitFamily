@@ -10,6 +10,10 @@ No calcula la viabilidad financiera ni inventa información ausente.
 
 from src.reporting.models import ReportDraft, ReportClaim
 from src.schemas import ResearchBrief, ResearchResult
+from src.reporting.templates import (
+    arrange_deterministic_sections,
+    validate_report_sections,
+)
 
 
 class WriterAgent:
@@ -47,7 +51,7 @@ class WriterAgent:
         for competitor in research_result.competitors:
             evidences.extend(competitor.evidences)
 
-                # Reunimos las evidencias generales y las de cada competidor.
+        # Reunimos las evidencias generales y las de cada competidor.
         evidences = list(research_result.evidences)
         for competitor in research_result.competitors:
             evidences.extend(competitor.evidences)
@@ -155,6 +159,10 @@ class WriterAgent:
             "Borrador generado sin LLM a partir de los datos recibidos. "
             "No constituye una conclusión de viabilidad financiera.",
         )
+
+        # Ordenamos el contenido con la estructura común.
+        sections = arrange_deterministic_sections(sections)
+        validate_report_sections(sections)
 
         return ReportDraft(
             title=title,
