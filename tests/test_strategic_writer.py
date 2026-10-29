@@ -8,6 +8,10 @@ import pytest
 from src.agents.strategic_writer import run_writing
 from src.reporting.writing_models import WritingClaim, WritingOutput
 from src.schemas import Evidence, ResearchBrief, ResearchResult
+from src.reporting.templates import (
+    MISSING_SECTION_TEXT,
+    REPORT_SECTION_TITLES,
+)
 
 
 @pytest.fixture
@@ -47,7 +51,15 @@ def test_writer_preserves_references_and_pending_questions(
 
     simulated_response.return_value = SimpleNamespace(
         pydantic=WritingOutput(
-            sections=["Resultados\nCuota mensual de 45 euros."],
+            sections=[
+                f"{title}\n"
+                + (
+                    "Cuota mensual de 45 euros."
+                    if title == "Precios y servicios"
+                    else MISSING_SECTION_TEXT
+                )
+                for title in REPORT_SECTION_TITLES
+            ],
             claims=[
                 WritingClaim(
                     text="Cuota mensual de 45 euros.",
@@ -115,3 +127,31 @@ def test_writer_rejects_unstructured_response(
 
     with pytest.raises(ValueError, match="salida estructurada"):
         run_writing(brief, ResearchResult())
+
+def test_writing_task_requests_common_report_structure(brief):
+    """La tarea solicita los apartados comunes sin ejecutar el LLM."""
+    from src.agents.strategic_writer import build_writing_task
+    from src.reporting.templates import (
+        MISSING_SECTION_TEXT,
+        REPORT_SECTION_TITLES,
+    )
+
+    # Capturamos los argumentos de la tarea sin crear un agente
+    # ni ejecutar CrewAI o Groq.
+    with patch("src.agents.strategic_writer.Task") as task_class:
+        build_writing_task(
+            brief,
+            ResearchResult(),
+            agent=object(),
+        )
+
+    description = task_class.call_args.kwargs["description"]
+
+    expected_outline = "\n".join(
+        f"- {title}" for title in REPORT_SECTION_TITLES
+    )
+
+    assert expected_outline in description
+    assert MISSING_SECTION_TEXT in description
+    assert "No inventes contenido para completar la estructura." in description
+    assert "el constructor incorporará después" in description

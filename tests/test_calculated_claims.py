@@ -1,4 +1,10 @@
-"""Prueba compartida con datos ficticios, sin LLM ni Internet."""
+"""Pruebas con datos ficticios y cálculos reales.
+
+El redactor LLM se simula cuando corresponde.
+No se realizan llamadas externas.
+"""
+
+import pytest
 
 from src.analysis.calculation_adapter import (
     metric_context_notes,
@@ -240,3 +246,88 @@ def test_markdown_builder_includes_calculated_text_and_notes():
 
     for note in metric_context_notes(metric):
         assert note in markdown
+
+@pytest.mark.parametrize(
+    "existing_body",
+    [
+        "Información cualitativa del escenario.",
+        None,
+    ],
+)
+def test_calculations_keep_common_outline_without_duplicate_sections(
+    existing_body,
+):
+    """Inserta el cálculo en su apartado y conserva el resto del informe."""
+    from unittest.mock import patch
+
+    from src.reporting.report_builder import build_report
+    from src.reporting.templates import (
+        MISSING_SECTION_TEXT,
+        REPORT_SECTION_TITLES,
+    )
+    from src.schemas import ResearchBrief
+
+    scenario = create_economic_scenario(
+        scenario_type="intermediate",
+        expected_clients=100,
+        monthly_fee=50,
+        fixed_costs=1000,
+        variable_cost_per_client=10,
+    )
+    calculation = create_break_even_calculation(
+        fixed_costs=1000,
+        monthly_fee=50,
+        variable_cost_per_client=10,
+    )
+    metric = metric_from_break_even(scenario, calculation)
+
+    sections = [
+        f"{title}\n{MISSING_SECTION_TEXT}"
+        for title in REPORT_SECTION_TITLES
+    ]
+    economic_index = REPORT_SECTION_TITLES.index("Escenarios económicos")
+
+    if existing_body is not None:
+        sections[economic_index] = (
+            f"Escenarios económicos\n{existing_body}"
+        )
+
+    simulated_draft = ReportDraft(
+        title="Informe ficticio",
+        study_area="Zona de prueba",
+        sections=list(sections),
+    )
+
+    # Simulamos el redactor; el constructor y el cálculo son reales.
+    with patch(
+        "src.agents.strategic_writer.run_writing",
+        return_value=simulated_draft,
+    ):
+        draft = build_report(
+            ResearchBrief(
+                business_type="gimnasio",
+                location="Madrid",
+                study_area="Zona de prueba",
+            ),
+            ResearchResult(),
+            use_llm=True,
+            calculated_metrics=[metric],
+        )
+
+    titles = [
+        section.partition("\n")[0]
+        for section in draft.sections
+    ]
+    assert titles == list(REPORT_SECTION_TITLES)
+
+    economic_section = draft.sections[economic_index]
+    assert economic_section.count("25 clientes") == 1
+    assert MISSING_SECTION_TEXT not in economic_section
+
+    if existing_body is not None:
+        assert existing_body in economic_section
+
+    # Los demás apartados conservan exactamente su contenido.
+    for index, section in enumerate(sections):
+        if index != economic_index:
+            assert draft.sections[index] == section
