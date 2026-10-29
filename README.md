@@ -1,9 +1,5 @@
 <p align="center">
-  <img src="assets/logo-fitfamily.png" alt="FitFamily logo" width="240" style="opacity:0.92; border-radius:10px;">
-</p>
-
-<p align="center">
-  <img src="assets/banner-fitfamily.svg" alt="FitFamily — investigación de mercado y bienestar familiar" width="100%" style="max-width:400px; height:auto; opacity:0.9;">
+  <img src="assets/logo-fitfamily.png" alt="FitFamily logo" width="600" style="opacity:0.95; border-radius:12px; max-width:100%;">
 </p>
 
 <h1 align="center">FitFamily</h1>
