@@ -39,4 +39,16 @@ Se conservan el contenido existente, los supuestos y las limitaciones.
 58 pruebas pasadas del conjunto seleccionado de redacción,
 construcción, estructura, integración, presentación y entrega.
 
-Pendiente comprobar la estructura con una ejecución real de Groq.
+## Comprobación real con Groq
+
+Se realiza una ejecución con CrewAI y Groq,
+utilizando datos sintéticos y response_format={"type": "json_object"}.
+
+La ejecución superó la validación de los once apartados y las referencias.
+Conservó la identificación de datos ficticios, las limitaciones y la
+pregunta pendiente sobre demanda. No interpretó coverage_percentage=0.0
+como cobertura del mercado.
+
+Una ejecución correcta no garantiza ausencia de fallos posteriores.
+Quedan pendientes la validación con datos reales y el recorrido integrado
+con análisis y workflow.

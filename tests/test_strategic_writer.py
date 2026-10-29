@@ -13,6 +13,11 @@ from src.reporting.templates import (
     REPORT_SECTION_TITLES,
 )
 
+def simulated_crew_result(*, output):
+    """Simula el JSON de CrewAI sin ejecutar el proveedor."""
+    return SimpleNamespace(
+        raw=output.model_dump_json() if output is not None else None
+    )
 
 @pytest.fixture
 def brief():
@@ -49,8 +54,8 @@ def test_writer_preserves_references_and_pending_questions(
         unresolved_questions=["¿Dispone de ludoteca?"],
     )
 
-    simulated_response.return_value = SimpleNamespace(
-        pydantic=WritingOutput(
+    simulated_response.return_value = simulated_crew_result(
+        output=WritingOutput(
             sections=[
                 f"{title}\n"
                 + (
@@ -84,8 +89,8 @@ def test_writer_preserves_references_and_pending_questions(
 
 
 def test_writer_rejects_invented_reference(brief, simulated_response):
-    simulated_response.return_value = SimpleNamespace(
-        pydantic=WritingOutput(
+    simulated_response.return_value = simulated_crew_result(
+        output=WritingOutput(
             sections=["Resultados\nAfirmación de prueba."],
             claims=[
                 WritingClaim(
@@ -104,8 +109,8 @@ def test_writer_rejects_invented_reference(brief, simulated_response):
 def test_writer_rejects_fact_without_references(
     brief, simulated_response
 ):
-    simulated_response.return_value = SimpleNamespace(
-        pydantic=WritingOutput(
+    simulated_response.return_value = simulated_crew_result(
+        output=WritingOutput(
             sections=["Resultados\nAfirmación sin respaldo."],
             claims=[
                 WritingClaim(
@@ -123,7 +128,7 @@ def test_writer_rejects_fact_without_references(
 def test_writer_rejects_unstructured_response(
     brief, simulated_response
 ):
-    simulated_response.return_value = SimpleNamespace(pydantic=None)
+    simulated_response.return_value = simulated_crew_result(output=None)
 
     with pytest.raises(ValueError, match="salida estructurada"):
         run_writing(brief, ResearchResult())
@@ -155,3 +160,24 @@ def test_writing_task_requests_common_report_structure(brief):
     assert MISSING_SECTION_TEXT in description
     assert "No inventes contenido para completar la estructura." in description
     assert "el constructor incorporará después" in description
+
+def test_writer_llm_requests_json_output():
+    """Configura JSON sin realizar llamadas al proveedor."""
+    from src.agents.writer_llm import build_writer_llm
+
+    with (
+        patch("src.agents.writer_llm.load_dotenv"),
+        patch.dict(
+            "os.environ",
+            {
+                "WRITER_LLM_MODEL": "groq/openai/gpt-oss-120b",
+                "GROQ_API_KEY": "test-key-not-real",
+            },
+        ),
+        patch("src.agents.writer_llm.LLM") as llm_class,
+    ):
+        build_writer_llm()
+
+    assert llm_class.call_args.kwargs["response_format"] == {
+        "type": "json_object"
+    }
