@@ -1,4 +1,4 @@
-# Demo del revisor de María — guion de cinco minutos
+# Demo del revisor — guion de cinco minutos
 
 Base revisada: dev 4b52500, 29 de octubre de 2026. Usa los cálculos y el adaptador
 de análisis, el constructor y Markdown de Gema, y la revisión y rutas de María.
