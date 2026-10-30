@@ -4,7 +4,8 @@
 
 - PR #30 implementa `workflows.py`, `persistence.py` y conecta análisis, redacción y revisión.
 - PR #35 corrige la redacción con LLM (CrewAI + Groq): solicita JSON, valida localmente, evita duplicar evidencias, divide investigaciones grandes en lotes, comprueba presupuesto de tokens y elimina `cache_breakpoint` (no admitido por Groq).
-- 475 tests pasados. Ejecución real con Groq: 11 apartados, punto de equilibrio de 25 clientes, revisión con `pending_review`, sin incidencias automáticas.
+- PR #35 (Gema): MERGEADO por María (2:55). Gema (2:35): reforzado 11 campos obligatorios, títulos/order fijos, diagnóstico mejorado. 498 tests OK; ejecución real Groq exitosa (11 apartados, sin incidencias automáticas). Pendiente: workflow completo de aprobación con Isabela.
+- 498 tests pasados. Ejecución real con Groq: 11 apartados correctos, sin incidencias automáticas de revisión.
 - No concede aprobación humana ni exporta entregables (pendiente en workflow completo de Isabela).
 
 El constructor permite elegir explícitamente el redactor con LLM.
