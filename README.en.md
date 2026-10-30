@@ -42,7 +42,7 @@
 </p>
 
 > [!NOTE]
-> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite. La interfaz web (`streamlit`) sigue pendiente como paso final.
+> This project integrates traceable research, economic analysis (`calculation-review-contract.md`), numeric review (`numeric_validation.py`), and automatic workflow (`workflows.py`) with SQLite persistence.
 
 ## Qué es FitFamily
 

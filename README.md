@@ -33,13 +33,13 @@
 
 <p align="center">
   <strong>FitFamily — Investigación · Análisis · Revisión · Exportación</strong><br>
-  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica (PR #30) · Redacción LLM (PR #35, pendiente) · Prototipo activo</sub>
+  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica · Redacción LLM · Prototipo activo</sub>
 </p>
 
 > [!NOTE]
-> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite. La interfaz web (`streamlit`) sigue pendiente como paso final.
+> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite.
 
-> **Qué es y qué no es (proyecto activo, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). Es un sistema operativo de análisis de viabilidad, no un producto de inversión terminado: requiere aprobación humana y exportación completa para publicar resultados, con la interfaz web (`streamlit`) documentada y en preparación.
+> **Qué es y qué no es (proyecto activo, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). Es un sistema operativo de análisis de viabilidad, no un producto de inversión terminado: requiere aprobación humana y exportación completa para publicar resultados.
 
 ## Qué es FitFamily
 
@@ -101,7 +101,7 @@ flowchart LR
     style E fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
 ```
 
-> **Nota técnica:** Las conexiones verdes (`workflows.py`, `calculation_adapter.py`, `persistence.py`) están implementadas (PR #30). La aprobación humana y la interfaz web (`streamlit`) son pasos manuales o pendientes.
+> **Nota técnica:** Las conexiones verdes (`workflows.py`, `calculation_adapter.py`, `persistence.py`) están implementadas (PR #30).
 
 ## El problema que resuelve
 
