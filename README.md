@@ -126,7 +126,7 @@ No se presenta como terminado lo que no lo está. Esta es la clasificación real
 
 | Estado | Qué incluye |
 |---|---|
-| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; redactor determinista; renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección. |
+| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; gráficos de precios y escenarios (`src/analysis/charts.py`, PR #37, Laura); redactor determinista; renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección. |
 | **Implementado, pero aislado o condicionado** | Investigación web (necesita red); registro de competidores (foto versionada, sin precios ni ludoteca confirmada); ruta LLM (necesita Groq y solo se ha probado con mocks); MCP (herramienta local separada, no conectada automáticamente a la investigación); `coverage_percentage` (siempre `0.0`). |
 | **Diseñado, no implementado** | Streamlit; LangGraph; controlador de aprobación; actualización automática de datos; CSV de seguimiento; autenticación; despliegue; trazas de auditoría. |
 | **Fuera de alcance actual** | Recomendación de inversión, modelo financiero completo, estudio de demanda con renta, garantía de viabilidad, app multiusuario. |

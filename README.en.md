@@ -84,7 +84,7 @@ Nothing is presented as finished when it is not. This is the real classification
 
 | Status | What it includes |
 |---|---|
-| **Implemented and covered by tests** | Pydantic contracts; search, page-reading, competitor and source-discovery tools; official registry; local MCP; descriptive analysis and break-even; deterministic writer; Markdown/PDF rendering; approval-gated export; structural review and correction routes. |
+| **Implemented and covered by tests** | Pydantic contracts; search, page-reading, competitor and source-discovery tools; official registry; local MCP; descriptive analysis, break-even, price and economic scenario charts (`src/analysis/charts.py`, PR #37, Laura); deterministic writer; Markdown/PDF rendering; approval-gated export; structural review and correction routes. |
 | **Implemented but isolated or conditional** | Web research (needs network); competitor registry (a versioned snapshot with no prices or confirmed playrooms); LLM route (needs Groq and has only been tested with mocks); MCP (a separate local tool, not automatically connected to research); `coverage_percentage` (always `0.0`). |
 | **Designed, not implemented** | Streamlit; LangGraph; approval controller; scheduled data refresh; tracking CSV; authentication; deployment; audit trails. |
 | **Out of current scope** | Investment recommendation, full financial model, income-based demand study, viability guarantee, multi-user application. |
