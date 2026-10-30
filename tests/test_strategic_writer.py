@@ -178,6 +178,6 @@ def test_writer_llm_requests_json_output():
     ):
         build_writer_llm()
 
-    assert llm_class.call_args.kwargs["response_format"] == {
-        "type": "json_object"
-    }
+    response_format = llm_class.call_args.kwargs["additional_params"]["response_format"]
+    assert response_format["type"] == "json_schema"
+    assert response_format["json_schema"]["strict"] is True

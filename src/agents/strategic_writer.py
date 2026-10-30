@@ -16,7 +16,9 @@ from src.agents.writer_budget import (
     count_writer_tokens,
 )
 from src.agents.writer_payload import compact_writer_payload, partition_writer_research
-from src.reporting.writing_models import WritingOutput
+from src.reporting.writing_models import (
+    parse_writing_output, writer_response_format, writer_response_schema,
+)
 from src.schemas import ResearchBrief, ResearchResult
 from src.reporting.models import ReportClaim, ReportDraft
 from src.reporting.report_builder import validate_report_references
@@ -102,15 +104,16 @@ def _writing_task_content(
             "resultados vacíos.\n"
             "- No calcules indicadores nuevos ni afirmes rentabilidad: "
             "todavía no se han proporcionado resultados del analista.\n"
-            "- Cada elemento de sections debe contener un título "
-            "en su primera línea y el contenido debajo.\n\n"
+            "- sections debe ser un objeto con los títulos exactos como "
+            "claves y el cuerpo de cada apartado como valor. "
+            "No repitas el título dentro del cuerpo.\n\n"
             "ESTRUCTURA OBLIGATORIA:\n"
             + "\n".join(
                 f"- {title}" for title in REPORT_SECTION_TITLES
             )
             + "\n\n"
-            "Devuelve exactamente una sección por cada título anterior, "
-            "en ese orden y utilizando el título exacto en la primera línea.\n"
+            "Devuelve exactamente una clave por cada título anterior; "
+            "ninguna puede faltar ni repetirse. El código fija su orden.\n"
             "Distribuye la información recibida sin repetirla "
             "innecesariamente entre apartados.\n"
             "Si no tienes información para un apartado, escribe: "
@@ -132,17 +135,27 @@ def _writing_task_content(
             "No devuelvas una llamada a herramientas. "
             "Los saltos de línea dentro de cadenas deben escaparse "
             "correctamente como exige JSON. "
-            "El objeto debe cumplir este esquema JSON:\n"
-            + json.dumps(
-                WritingOutput.model_json_schema(),
-                ensure_ascii=False, separators=(",", ":"),
-            )
+            "Incluye sections (objeto con los once títulos exactos y cuerpos "
+            "de texto), claims (lista de text, kind y evidence_ids) y "
+            "limitations (lista de textos). Devuelve listas vacías cuando "
+            "corresponda; no omitas esos campos."
         ),
     )
 
 def build_writing_task(brief, research_result, agent) -> Task:
     """Prepara una tarea con el contexto compacto y las mismas validaciones."""
     return Task(**_writing_task_content(brief, research_result, agent))
+
+
+def count_writing_task_tokens(content: dict, model: str) -> int:
+    """Incluye el esquema que se enviará fuera del texto del prompt."""
+    response_format = writer_response_format(model)
+    # En JSON mode el esquema se incluye en el prompt; en modo estricto,
+    # se envía como response_format. Se reserva en ambos casos.
+    schema = response_format if response_format["type"] == "json_schema" else writer_response_schema()
+    return count_writer_tokens([{"role": "user", "content":
+        content["description"] + "\n" + content["expected_output"] + "\n"
+        + json.dumps(schema, ensure_ascii=False, separators=(",", ":"))}], model)
 
 
 def run_writing(brief: ResearchBrief, research_result: ResearchResult) -> ReportDraft:
@@ -154,10 +167,7 @@ def run_writing(brief: ResearchBrief, research_result: ResearchResult) -> Report
 
     def fits(research):
         content = _writing_task_content(brief, research, agent)
-        return count_writer_tokens(
-            [{"role": "user", "content": content["description"] + "\n" + content["expected_output"]}],
-            model,
-        ) <= WRITER_TASK_TOKEN_LIMIT
+        return count_writing_task_tokens(content, model) <= WRITER_TASK_TOKEN_LIMIT
 
     batches = partition_writer_research(research_result, fits)
     drafts = [_run_writing_single(brief, batch, agent) for batch in batches]
@@ -231,8 +241,8 @@ def _run_writing_single(
     # Validamos directamente el JSON, sin otra llamada al modelo.
     # No extraemos ni reparamos fragmentos de una respuesta incorrecta.
     try:
-        output = WritingOutput.model_validate_json(raw_output)
-    except ValidationError as exc:
+        output = parse_writing_output(raw_output)
+    except (ValidationError, ValueError) as exc:
         raise ValueError(
             "El redactor no devolvió una salida estructurada válida: "
             "el JSON no cumple el formato requerido."

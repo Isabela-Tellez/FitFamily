@@ -13,8 +13,13 @@ y el registro de afirmaciones.
 
 ## Redactor con LLM
 
-La tarea solicita los títulos comunes y un máximo de 900 palabras.
+La tarea solicita los títulos comunes y un máximo de 600 palabras.
 El límite de palabras es una instrucción, no una validación automática.
+
+En el contrato actual, el modelo devuelve los cuerpos en once campos con los
+títulos como claves; el código construye su orden. Los modelos GPT-OSS admitidos
+usan esquema estricto y se mantienen las comprobaciones locales. Véanse los
+detalles y las pruebas en [writer-groq-budget.md](writer-groq-budget.md).
 
 Se rechazan respuestas con títulos ausentes, duplicados, adicionales,
 desordenados o apartados sin contenido.

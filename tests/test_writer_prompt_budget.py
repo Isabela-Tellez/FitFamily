@@ -11,7 +11,9 @@ from src.agents.writer_payload import compact_writer_payload, partition_writer_r
 from src.agents.writer_budget import (
     WRITER_ROLE, WRITER_TASK_TOKEN_LIMIT, count_writer_tokens,
 )
-from src.agents.strategic_writer import _writing_task_content, run_writing
+from src.agents.strategic_writer import (
+    _writing_task_content, run_writing, count_writing_task_tokens,
+)
 from src.agents.writer_llm import remove_groq_cache_breakpoints
 from src.reporting.models import ReportDraft, ReportClaim
 from src.reporting.templates import REPORT_SECTION_TITLES, MISSING_SECTION_TEXT
@@ -48,10 +50,7 @@ def make_research(size):
 
 def task_fits(brief, research):
     content = _writing_task_content(brief, research, None)
-    return count_writer_tokens(
-        [{"role": "user", "content": content["description"] + "\n" + content["expected_output"]}],
-        "groq/openai/gpt-oss-120b",
-    ) <= WRITER_TASK_TOKEN_LIMIT
+    return count_writing_task_tokens(content, "groq/openai/gpt-oss-120b") <= WRITER_TASK_TOKEN_LIMIT
 
 
 def test_payload_deduplicates_without_losing_fields_or_mutating(brief):
