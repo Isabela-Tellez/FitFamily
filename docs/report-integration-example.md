@@ -183,7 +183,7 @@ El coordinador no persiste el resultado ni reintenta automáticamente. Esas deci
 
 Los fragmentos describen puntos de integración; no forman una aplicación ejecutable completa.
 
-Quedan pendientes la interfaz, la persistencia del estado, la gestión global de correcciones y la integración del contrato de análisis de Laura.
+Quedan pendientes la interfaz (`streamlit`), la persistencia del estado global (`workflows.py` con `ApprovalRecord` aún pendiente), la gestión global de correcciones y la integración del contrato de análisis de Laura (`calculation_adapter.py` implementado; pendiente integración en flujo completo con `workflows.py` y PR #35).
 
 ## Revisión con resultados del análisis
 
