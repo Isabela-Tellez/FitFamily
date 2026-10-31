@@ -29,9 +29,15 @@ choose_review_route_for_context() mediante calculated_metrics.
 El constructor no sustituye la validación del cálculo y su procedencia
 que realiza el revisor. Tampoco concede aprobación ni exporta archivos.
 
-## Pendientes
+## Estado de entrega (31 de octubre de 2026)
 
-- Mostrar explícitamente las referencias numéricas en Markdown y PDF.
-- Ampliar la integración a otros tipos de cálculo.
-- Conectar el recorrido con la interfaz y el controlador global.
-- Verificar conjuntamente la ruta con LLM y datos reales.
+Markdown y PDF ya muestran la métrica, el valor declarado y la unidad. La
+previsualización reutilizable está disponible en src/ui/report_preview.py.
+La ejecución real de scripts/check_writer_groq.py ha comprobado el constructor
+y el revisor con una muestra municipal guardada y un escenario hipotético;
+no es una ejecución completa del workflow ni una validación de viabilidad.
+
+Quedan como integración del equipo: otros tipos de cálculo, datos visuales y
+gráficos, la interfaz y el controlador global. El contrato de esta primera
+entrega sigue limitado al punto de equilibrio con su contexto original.
+Véase [reporting-handoff.md](reporting-handoff.md).

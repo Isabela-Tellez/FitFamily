@@ -2,7 +2,7 @@
 
 Responsable: **Isabella (Persona 5)**.
 
-> **Estado: diseño pendiente.** No existe todavía una aplicación Streamlit ni código en `src/ui/` (solo `.gitkeep`). Este documento fija el contrato que debe respetar la interfaz cuando se implemente. No describe funcionalidad ya disponible.
+> **Estado: aplicación pendiente.** No existe todavía una aplicación Streamlit en `dev`. `src/ui/report_preview.py` aporta un adaptador reutilizable con Markdown, identidad, huella y opciones de entrega; no implementa la aplicación ni una segunda aprobación. Este documento fija el contrato que debe respetar la interfaz al integrarse.
 
 ## Objetivo
 
@@ -12,6 +12,7 @@ Dar a la persona usuaria una vista única del flujo —investigación, análisis
 
 | Pieza | Archivo | Uso desde la UI |
 |---|---|---|
+| `render_report_preview` | `src/ui/report_preview.py` | Mostrar una instantánea del borrador y las opciones de entrega |
 | `ApprovalRecord` | `src/automation/models.py` | Registrar la decisión humana |
 | `calculate_draft_fingerprint` | `src/automation/exporter.py` | Ligar la aprobación al contenido exacto |
 | `validate_export_approval` | `src/automation/exporter.py` | Validar la autorización antes de exportar |
