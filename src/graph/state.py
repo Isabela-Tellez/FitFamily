@@ -88,9 +88,6 @@ class ResearchState(TypedDict, total=False):
     approved_at: str | None
     authorized_actions: list[str]
 
-    # Fecha de la aprobación humana.
-    approved_at: str | None
-
     # --------------------------------------------------------
     # 5. CONTROL DE EJECUCIÓN
     # --------------------------------------------------------
@@ -98,6 +95,7 @@ class ResearchState(TypedDict, total=False):
     status: RunStatus
     current_stage: str
     pending_tasks: list[str]
+    stop_reason: str | None
 
     # --------------------------------------------------------
     # 6. EVENTOS Y ERRORES
@@ -118,15 +116,12 @@ class ResearchState(TypedDict, total=False):
     # --------------------------------------------------------
 
     delivery_result: dict[str, Any] | None
-    delivery_status: str
+    delivery_status: DeliveryStatus
     export_paths: list[str]
 
-    # Configuración de entrega controlada por el controlador.
+    # Configuración de entrega.
     delivery_output_dir: str
     delivery_csv_path: str
-
-    # Motivo de una interrupción o finalización anticipada.
-    stop_reason: str | None
 
 
 # ============================================================
