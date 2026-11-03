@@ -244,8 +244,8 @@ def test_markdown_builder_includes_calculated_text_and_notes():
     assert "Punto de equilibrio por escenario" in markdown
     assert "50 clientes" in markdown
 
-    for note in metric_context_notes(metric):
-        assert note.replace("[scenario_conservative] ", "Escenario conservador · ") in markdown
+    assert "Escenario conservador · Limitación del cálculo: Costes pendientes de contrastar." in markdown
+    assert "Supuesto de cálculo:" not in markdown
 
 @pytest.mark.parametrize(
     "existing_body",

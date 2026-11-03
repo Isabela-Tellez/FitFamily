@@ -6,7 +6,7 @@ from src.reporting.models import ReportDraft
 from src.schemas import ResearchResult, ResearchBrief
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.calculation_adapter import metric_context_notes
-from src.reporting.calculated_claims import SCENARIO_NAMES, build_scenario_claim
+from src.reporting.calculated_claims import SCENARIO_NAMES, build_scenario_claim, format_claim_title
 from src.reporting.templates import MISSING_SECTION_TEXT
 
 
@@ -111,7 +111,8 @@ def build_report(
         if scenario.scenario_id not in scenario_sections:
             name = SCENARIO_NAMES[scenario.scenario_type]
             scenario_sections[scenario.scenario_id] = [
-                f"Escenario {name} · {scenario.expected_clients} clientes previstos",
+                f"### Escenario {name}",
+                f"{scenario.expected_clients} clientes previstos.",
                 f"Cuota mensual por cliente: {scenario.monthly_fee:g} €. "
                 f"Costes fijos mensuales: {scenario.fixed_costs:g} €. "
                 f"Coste variable mensual por cliente: {scenario.variable_cost_per_client:g} €.",
@@ -138,14 +139,15 @@ def build_report(
 
         draft.claims.append(claim)
         existing_claim_ids.add(claim.claim_id)
-        numeric_texts.append(claim.text)
+        label, _, _ = format_claim_title(claim).partition(" · ")
+        numeric_texts.append(f"#### {label}"+ "\n" + claim.text)
 
     if scenario_sections:
         economic_title = "Escenarios económicos"
         calculated_text = (
-            ("Resultados económicos por escenario\n" if any(
+            ("Resultados económicos por escenario\n\n" if any(
                 not metric.metric_id.endswith(".break_even_clients") for metric in metrics
-            ) else "Punto de equilibrio por escenario\n")
+            ) else "Punto de equilibrio por escenario\n\n")
             + "\n\n".join("\n\n".join(texts) for texts in scenario_sections.values())
         )
 

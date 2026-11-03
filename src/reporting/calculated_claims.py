@@ -87,6 +87,7 @@ def build_break_even_claim(
         metric_id=metric.metric_id,
         reported_value=reported_value,
         reported_unit=metric.unit,
+        calculation_id=metric.calculation,
     )
 
 MONTHLY_LABELS = {
@@ -128,15 +129,19 @@ def build_scenario_claim(
         metric_id=metric.metric_id,
         reported_value=reported_value,
         reported_unit=metric.unit,
+        calculation_id=metric.calculation,
     )
 
 
-def format_scenario_note(note: str) -> str:
+def format_scenario_note(note: str) -> str | None:
     """Traduce el prefijo visible sin alterar la nota del borrador."""
     for scenario_type, name in SCENARIO_NAMES.items():
         prefix = f"[scenario_{scenario_type}] "
         if note.startswith(prefix):
-            return f"Escenario {name} · {note[len(prefix):]}"
+            detail = note[len(prefix):]
+            if detail.startswith(("Supuesto de cálculo: ", "Supuesto del escenario: ")):
+                return None
+            return f"Escenario {name} · {detail}"
     return note
 
 
@@ -151,3 +156,23 @@ def format_claim_title(claim: ReportClaim) -> str:
     if name and label:
         return f"{label} · Escenario {name}"
     return claim.claim_id
+
+
+ECONOMIC_TRACE_HEADERS = ("Escenario", "Métrica", "Valor", "Referencias")
+
+
+def economic_trace_row(claim: ReportClaim) -> tuple[str, str, str, str] | None:
+    """Resume una afirmación económica con las referencias del borrador."""
+    label, separator, scenario = format_claim_title(claim).partition(" · Escenario ")
+    if not separator or claim.reported_value is None:
+        return None
+    unit = {"clients": "clientes", "EUR/month": "€/mes"}.get(
+        claim.reported_unit, claim.reported_unit
+    )
+    value = str(claim.reported_value).removesuffix(".0").replace(".", ",")
+    evidence = ", ".join(dict.fromkeys(claim.evidence_ids))
+    references = f"Métrica: {claim.metric_id}"
+    if claim.calculation_id:
+        references += f"\nCálculo: {claim.calculation_id}"
+    references += f"\nEvidencias: {evidence or 'sin referencias registradas'}"
+    return scenario.capitalize(), label, f"{value} {unit}", references

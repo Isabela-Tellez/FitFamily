@@ -101,8 +101,6 @@ def test_markdown_shows_metric_reference_without_changing_draft():
 
     markdown = render_report_markdown(draft)
 
-    assert "**Métrica:** scenario_intermediate.break_even_clients" in markdown
-    assert "**Valor declarado:** 25.0" in markdown
-    assert "**Unidad:** clients" in markdown
-    assert "Bajo estos supuestos se necesitan 25 clientes." in markdown
+    assert "Métrica: scenario_intermediate.break_even_clients" in markdown
+    assert "| Intermedio | Punto de equilibrio | 25 clientes |" in markdown
     assert draft == original

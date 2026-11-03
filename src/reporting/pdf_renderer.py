@@ -13,9 +13,9 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import LongTable, Paragraph, SimpleDocTemplate, Spacer, TableStyle
 
-from src.reporting.calculated_claims import format_claim_title, format_scenario_note
+from src.reporting.calculated_claims import ECONOMIC_TRACE_HEADERS, economic_trace_row, format_scenario_note
 from src.reporting.models import ReportDraft
 
 
@@ -113,6 +113,15 @@ def render_report_pdf(
         splitLongWords=True,
     ))
 
+    styles.add(ParagraphStyle(
+        name="ScenarioHeading", parent=styles["ReportHeading"],
+        fontSize=14, leading=18,
+    ))
+    styles.add(ParagraphStyle(
+        name="MetricHeading", parent=styles["ReportHeading"],
+        fontSize=11, leading=14, spaceBefore=6, spaceAfter=3,
+    ))
+
     # ReportLab coloca estos elementos en orden y distribuye
     # el contenido entre las páginas disponibles.
     story = []
@@ -152,7 +161,16 @@ def render_report_pdf(
         # entre páginas sin tratar toda la sección como un bloque.
         for paragraph in body.split("\n\n"):
             if paragraph.strip():
-                add_text(paragraph.strip())
+                content = paragraph.strip()
+                title, _, details = content.partition("\n")
+                if heading == "Escenarios económicos" and title.startswith("### "):
+                    add_text(title[4:], "ScenarioHeading")
+                elif heading == "Escenarios económicos" and title.startswith("#### "):
+                    add_text(title[5:], "MetricHeading")
+                    if details:
+                        add_text(details)
+                else:
+                    add_text(content)
 
     # Eliminamos duplicados al mostrar las fuentes, manteniendo
     # su orden original y sin modificar la lista del borrador.
@@ -165,9 +183,14 @@ def render_report_pdf(
     # Conservamos las limitaciones para que también estén presentes
     # en el documento que recibe la persona usuaria.
     add_text("Limitaciones", "ReportHeading")
-    for limitation in dict.fromkeys(draft.limitations):
-        add_text(format_scenario_note(limitation))
-    if not draft.limitations:
+    limitations = [
+        visible
+        for note in dict.fromkeys(draft.limitations)
+        if (visible := format_scenario_note(note)) is not None
+    ]
+    for limitation in limitations:
+        add_text(limitation)
+    if not limitations:
         add_text(
             "No se han registrado limitaciones. "
             "Esto no implica que el estudio carezca de ellas."
@@ -182,8 +205,13 @@ def render_report_pdf(
         "inference": "Inferencia",
     }
 
+    economic_rows = []
     for claim in draft.claims:
-        add_text(format_claim_title(claim), "ReportHeading")
+        row = economic_trace_row(claim)
+        if row is not None:
+            economic_rows.append(row)
+            continue
+        add_text(claim.claim_id, "ReportHeading")
         add_text(f"Tipo: {kind_labels.get(claim.kind, claim.kind)}")
         add_text(claim.text)
         references = ", ".join(dict.fromkeys(claim.evidence_ids))
@@ -196,6 +224,19 @@ def render_report_pdf(
             add_text(f"Métrica: {claim.metric_id}")
             add_text(f"Valor declarado: {claim.reported_value}")
             add_text(f"Unidad: {claim.reported_unit}")
+
+    if economic_rows:
+        rows = [
+            [Paragraph(_paragraph_text(cell), styles["ReportBody"]) for cell in row]
+            for row in [ECONOMIC_TRACE_HEADERS, *economic_rows]
+        ]
+        table = LongTable(rows, colWidths=[85, 99, 66, 215], repeatRows=1)
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), "#E9EFF5"),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.5, "#667788"),
+        ]))
+        story.append(table)
 
     if not draft.claims:
         add_text(
