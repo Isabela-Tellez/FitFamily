@@ -337,6 +337,9 @@ def _render_footer() -> None:
 # ---------------------------------------------------------------------------
 # Navegación
 # ---------------------------------------------------------------------------
+if "ff_navigation" not in st.session_state:
+    st.session_state["ff_navigation"] = "Visión general"
+
 with st.sidebar:
     st.markdown("<div style='font:800 1.55rem Manrope;color:#176b55;padding:8px 0 2px'>fit<span style='color:#ff8e70'>family</span>.</div>", unsafe_allow_html=True)
     st.caption("Inteligencia de mercado · El Cañaveral")
@@ -384,8 +387,7 @@ if page == "Visión general":
             st.markdown('<div class="ff-card"><div class="ff-card-label">Control humano</div><div class="ff-card-value">Explícito</div><div class="ff-card-foot">La publicación espera tu decisión.</div></div>', unsafe_allow_html=True)
         st.write("")
         if st.button("Empezar un nuevo estudio", type="primary", use_container_width=True):
-            st.session_state["ff_navigation"] = "Nuevo estudio"
-            st.rerun()
+            st.info("Usa la navegación lateral para cambiar a 'Nuevo estudio'.")
     with right:
         _render_mascot()
     st.write("")
