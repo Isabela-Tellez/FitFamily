@@ -107,7 +107,7 @@ st.markdown(
 )
 
 # Logo real
-st.image("assets/logo-fitfamily.png", width=200)
+st.image(r"C:\Users\JUAN\Downloads\logo_fitfamily.jpg", width=200)
 
 # ---------------------------------------------------------------------------
 # Estado de sesión y utilidades
