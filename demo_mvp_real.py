@@ -5,7 +5,6 @@ Genera investigacion real, analisis, borrador, revision y exportacion.
 """
 import os
 import crewai  # noqa: F401  (carga .env)
-os.environ["TAVILY_API_KEY"] = ""  # fuerza ddgs
 
 from datetime import datetime, timezone
 from pathlib import Path
