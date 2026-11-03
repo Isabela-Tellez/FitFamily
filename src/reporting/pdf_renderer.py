@@ -2,6 +2,7 @@
 
 from io import BytesIO
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from xml.sax.saxutils import escape
 
 import reportlab
@@ -13,7 +14,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import LongTable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, TableStyle
+from reportlab.platypus import Image, LongTable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, TableStyle
 
 from src.reporting.calculated_claims import ECONOMIC_TRACE_HEADERS, economic_trace_row, format_scenario_note
 from src.reporting.models import ReportDraft
@@ -208,6 +209,7 @@ def render_report_pdf(
 
         if heading == "Escenarios económicos":
             result_rows = []
+            chart_data = {}
             for claim in draft.claims:
                 if not (claim.metric_id or "").endswith(".monthly_result"):
                     continue
@@ -216,6 +218,10 @@ def render_report_pdf(
                     continue
                 scenario, _, value, _ = row
                 result = claim.reported_value
+                chart_data[scenario] = [{
+                    "calculation_type": "monthly_result",
+                    "result": {"value": result, "unit": claim.reported_unit},
+                }]
                 label = "Resultado estimado"
                 if result < 0:
                     label = "Pérdida estimada"
@@ -284,6 +290,20 @@ def render_report_pdf(
                     ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ]))
                 story.extend([table, Spacer(1, 10)])
+                from src.analysis.charts import build_scenario_chart
+
+                with TemporaryDirectory() as directory:
+                    chart_path = Path(directory) / "resultado-mensual.png"
+                    build_scenario_chart(chart_data, output_path=chart_path)
+                    chart = Image(BytesIO(chart_path.read_bytes()))
+                    chart.drawHeight = 435 * chart.imageHeight / chart.imageWidth
+                    chart.drawWidth = 435
+                add_text("Resultado mensual por escenario", "ReportHeading")
+                story.append(chart)
+                add_text(
+                    "Cada barra muestra el resultado mensual estimado de un escenario. "
+                    "Por debajo de cero hay pérdida y por encima hay beneficio."
+                )
                 add_text("Cómo leer la comparación", "ReportHeading")
                 add_text(
                     "Los resultados estimados dependen de la clientela, la cuota "
