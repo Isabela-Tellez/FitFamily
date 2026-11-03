@@ -56,3 +56,8 @@ data/raw/*.csv
 data/raw/*.xlsx
 data/raw/*.json.gz
 data/raw/cache/
+
+# Cobertura y salidas de demo
+.coverage
+reports/mvp/
+reports/mvp_real/
