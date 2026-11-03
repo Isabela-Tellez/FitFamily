@@ -275,6 +275,7 @@ def render_report_pdf(
                     [[Paragraph(_paragraph_text(value), styles["ReportBody"]) for value in row]
                      for row in cells],
                     colWidths=[165, *([300 / len(comparison)] * len(comparison))],
+                    rowSplitRange=(3, len(cells) - 2) if len(cells) >= 5 else None,
                     repeatRows=1,
                 )
                 table.setStyle(TableStyle([
