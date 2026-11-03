@@ -1,6 +1,6 @@
 # Fase pendiente — Renta neta media por sección censal (INE)
 
-> Estado: **documentado, no implementado**. Preparado para una segunda fase.
+> Estado: **documentado, pendiente real**. Intento de descarga desde datos.ine.es realizado (archivo `data/raw/ine_intento_real.json`). **No se inventan cifras**. Indicadores dependientes siguen `null`. Última verificación: 03/11/2026.
 > Responsable: Persona 1. Última verificación de metadatos: 21/10/2026 (ver §2).
 > En la revisión final del 21/10/2026 no se ha descargado ni imputado ningún valor de
 > renta; los indicadores que dependen de ella siguen en `null`.
