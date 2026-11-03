@@ -75,3 +75,34 @@ def test_rendering_does_not_modify_the_draft():
 
     assert draft == original
     assert first == second
+
+def test_markdown_shows_metric_reference_without_changing_draft():
+    """Muestra la referencia numérica sin modificar el borrador."""
+    from copy import deepcopy
+
+    from src.reporting.models import ReportClaim, ReportDraft
+    from src.reporting.markdown_renderer import render_report_markdown
+
+    draft = ReportDraft(
+        title="Informe ficticio",
+        study_area="Zona de prueba",
+        claims=[
+            ReportClaim(
+                claim_id="claim_break_even",
+                text="Bajo estos supuestos se necesitan 25 clientes.",
+                kind="inference",
+                metric_id="scenario_intermediate.break_even_clients",
+                reported_value=25.0,
+                reported_unit="clients",
+            )
+        ],
+    )
+    original = deepcopy(draft)
+
+    markdown = render_report_markdown(draft)
+
+    assert "**Métrica:** scenario_intermediate.break_even_clients" in markdown
+    assert "**Valor declarado:** 25.0" in markdown
+    assert "**Unidad:** clients" in markdown
+    assert "Bajo estos supuestos se necesitan 25 clientes." in markdown
+    assert draft == original

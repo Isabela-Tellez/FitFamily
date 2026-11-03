@@ -181,3 +181,10 @@ python -m pytest \
   tests/test_quality_checks.py \
   tests/test_review_routes.py -q
 ```
+
+## Demostracion y continuidad (cambios nuevos en dev)
+
+Ver [demo-review.md](demo-review.md) para la demostracion de tres casos y
+[maria-integration-status.md](maria-integration-status.md) para la version revisada,
+los archivos compartidos y los pendientes del workflow.
+

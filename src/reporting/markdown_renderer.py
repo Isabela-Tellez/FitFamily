@@ -101,6 +101,19 @@ def render_report_markdown(
                     "**Evidencias:** sin referencias registradas."
                 )
 
+            # Mostramos los campos numéricos sin recalcularlos.
+            if claim.metric_id is not None:
+                lines.extend([
+                    "",
+                    f"**Métrica:** {claim.metric_id}",
+                    "",
+                    f"**Valor declarado:** {claim.reported_value}",
+                    "",
+                    f"**Unidad:** {claim.reported_unit}",
+                ])
+
+            lines.append("")
+
             lines.append("")
     else:
         lines.append(

@@ -7,6 +7,7 @@ from src.schemas import ResearchResult, ResearchBrief
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.calculation_adapter import metric_context_notes
 from src.reporting.calculated_claims import build_break_even_claim
+from src.reporting.templates import MISSING_SECTION_TEXT
 
 
 def find_missing_evidence_ids(
@@ -129,10 +130,40 @@ def build_report(
         numeric_texts.append(claim.text)
 
     if numeric_texts:
-        draft.sections.append(
+        economic_title = "Escenarios económicos"
+        calculated_text = (
             "Punto de equilibrio por escenario\n"
             + "\n\n".join(numeric_texts)
         )
+
+        # Buscamos el apartado creado por el redactor.
+        for index, section in enumerate(draft.sections):
+            heading, _, body = section.strip().partition("\n")
+
+            if heading.strip() != economic_title:
+                continue
+
+            # Retiramos únicamente el aviso genérico de apartado pendiente.
+            # Conservamos cualquier otro contenido que ya exista.
+            existing_body = body.strip()
+            if existing_body == MISSING_SECTION_TEXT:
+                existing_body = ""
+
+            combined_body = "\n\n".join(
+                text
+                for text in (existing_body, calculated_text)
+                if text
+            )
+            draft.sections[index] = (
+                f"{economic_title}\n{combined_body}"
+            )
+            break
+        else:
+            # Compatibilidad con el redactor determinista, que todavía
+            # no genera la estructura completa.
+            draft.sections.append(
+                f"{economic_title}\n{calculated_text}"
+            )
 
     # Incluimos también las referencias de las afirmaciones nuevas.
     validate_report_references(draft, research_result)

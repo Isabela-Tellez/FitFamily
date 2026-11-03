@@ -1,12 +1,15 @@
 # Exportación de informes
 
-> Revisión documental: **26 de octubre de 2026**. La exportación Markdown y PDF y la actualización del CSV de seguimiento están implementadas a nivel de API. La integración con la interfaz y el controlador global sigue pendiente.
+> Revisión documental: **31 de octubre de 2026**. La exportación Markdown y PDF, el CSV y la previsualización reutilizable están implementados a nivel de API. La conexión con la aplicación y el controlador global sigue siendo una integración compartida.
 
 ## Estado actual
 
 - `export_markdown()` y `export_pdf()` validan un `ApprovalRecord` y publican un archivo.
 - `render_report_markdown()` y `render_report_pdf()` generan contenido en memoria y **no** validan aprobaciones.
-- No hay UI, controlador global ni botón de aprobación.
+- `render_report_preview()` devuelve Markdown, identidad, versión, huella y
+  opciones de entrega. No crea aprobaciones ni necesita Streamlit.
+- La aplicación, su botón de aprobación y el controlador global corresponden
+  a Persona 5. El adaptador de previsualización no los sustituye.
 - `update_tracking_csv()` valida la aprobación y registra o completa
   una entrega en el CSV sin duplicar su fila.
 
@@ -18,6 +21,9 @@
 - El exportador comprueba el registro antes de escribir el archivo.
 
 Crear un `ApprovalRecord` no demuestra por sí mismo que haya existido una aprobación humana. El controlador debe garantizar su procedencia.
+
+El contrato y ejemplo de integración con la previsualización se documentan en
+[reporting-handoff.md](reporting-handoff.md).
 
 ## Registro de aprobación
 

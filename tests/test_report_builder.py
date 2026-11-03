@@ -260,3 +260,44 @@ def test_markdown_uses_llm_when_requested():
     llm_writer.assert_called_once_with(brief, research)
     assert "# Informe redactado con LLM" in markdown
     assert "Contenido de prueba del redactor." in markdown
+
+def test_report_without_metrics_keeps_common_structure():
+    """Mantiene los once apartados aunque no se proporcione análisis."""
+    from src.reporting.report_builder import build_report
+    from src.reporting.templates import (
+        MISSING_SECTION_TEXT,
+        REPORT_SECTION_TITLES,
+        validate_report_sections,
+    )
+    from src.schemas import ResearchBrief, ResearchResult
+
+    draft = build_report(
+        ResearchBrief(
+            business_type="gimnasio con ludoteca",
+            location="Madrid",
+            study_area="Zona ficticia",
+        ),
+        ResearchResult(),
+    )
+
+    validate_report_sections(draft.sections)
+
+    titles = [
+        section.partition("\n")[0]
+        for section in draft.sections
+    ]
+    assert titles == list(REPORT_SECTION_TITLES)
+
+    # Sin análisis, no inventamos resultados económicos.
+    economic_section = next(
+        section
+        for section in draft.sections
+        if section.startswith("Escenarios económicos\n")
+    )
+    assert economic_section == (
+        f"Escenarios económicos\n{MISSING_SECTION_TEXT}"
+    )
+    assert not any(
+        claim.metric_id is not None
+        for claim in draft.claims
+    )
