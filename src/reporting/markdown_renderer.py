@@ -5,6 +5,7 @@ Este módulo genera texto en memoria.
 No escribe archivos ni ejecuta acciones de exportación.
 """
 
+from src.reporting.calculated_claims import format_claim_title, format_scenario_note
 from src.reporting.models import ReportDraft
 
 
@@ -64,7 +65,7 @@ def render_report_markdown(
 
     if draft.limitations:
         for limitation in dict.fromkeys(draft.limitations):
-            lines.append(f"- {limitation}")
+            lines.append(f"- {format_scenario_note(limitation)}")
     else:
         lines.append(
             "No se han registrado limitaciones. "
@@ -83,7 +84,7 @@ def render_report_markdown(
         for claim in draft.claims:
             label = kind_labels.get(claim.kind, claim.kind)
             lines.extend([
-                f"### {claim.claim_id}",
+                f"### {format_claim_title(claim)}",
                 "",
                 f"**Tipo:** {label}",
                 "",

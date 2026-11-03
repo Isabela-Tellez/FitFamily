@@ -15,6 +15,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
+from src.reporting.calculated_claims import format_claim_title, format_scenario_note
 from src.reporting.models import ReportDraft
 
 
@@ -165,7 +166,7 @@ def render_report_pdf(
     # en el documento que recibe la persona usuaria.
     add_text("Limitaciones", "ReportHeading")
     for limitation in dict.fromkeys(draft.limitations):
-        add_text(limitation)
+        add_text(format_scenario_note(limitation))
     if not draft.limitations:
         add_text(
             "No se han registrado limitaciones. "
@@ -182,7 +183,7 @@ def render_report_pdf(
     }
 
     for claim in draft.claims:
-        add_text(claim.claim_id, "ReportHeading")
+        add_text(format_claim_title(claim), "ReportHeading")
         add_text(f"Tipo: {kind_labels.get(claim.kind, claim.kind)}")
         add_text(claim.text)
         references = ", ".join(dict.fromkeys(claim.evidence_ids))

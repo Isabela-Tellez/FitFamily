@@ -129,3 +129,25 @@ def build_scenario_claim(
         reported_value=reported_value,
         reported_unit=metric.unit,
     )
+
+
+def format_scenario_note(note: str) -> str:
+    """Traduce el prefijo visible sin alterar la nota del borrador."""
+    for scenario_type, name in SCENARIO_NAMES.items():
+        prefix = f"[scenario_{scenario_type}] "
+        if note.startswith(prefix):
+            return f"Escenario {name} · {note[len(prefix):]}"
+    return note
+
+
+def format_claim_title(claim: ReportClaim) -> str:
+    """Muestra un título legible para las métricas económicas."""
+    scenario_id, _, suffix = (claim.metric_id or "").rpartition(".")
+    name = SCENARIO_NAMES.get(scenario_id.removeprefix("scenario_"))
+    label = (
+        "Punto de equilibrio" if suffix == "break_even_clients"
+        else MONTHLY_LABELS.get(suffix)
+    )
+    if name and label:
+        return f"{label} · Escenario {name}"
+    return claim.claim_id

@@ -245,7 +245,7 @@ def test_markdown_builder_includes_calculated_text_and_notes():
     assert "50 clientes" in markdown
 
     for note in metric_context_notes(metric):
-        assert note in markdown
+        assert note.replace("[scenario_conservative] ", "Escenario conservador · ") in markdown
 
 @pytest.mark.parametrize(
     "existing_body",
