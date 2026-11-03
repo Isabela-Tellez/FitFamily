@@ -189,7 +189,9 @@ def append_image_observations_to_report(
     if not observations:
         return draft
 
-    heading = "Análisis visual de gráficos"
+    from src.reporting.templates import MISSING_SECTION_TEXT
+
+    heading = "Análisis visual"
     entries = [heading]
     for item in observations:
         entries.append(
@@ -214,6 +216,9 @@ def append_image_observations_to_report(
         draft.sections.append(section_text)
     else:
         existing_section = draft.sections[existing_index]
+        _, _, body = existing_section.strip().partition("\n")
+        if body.strip() == MISSING_SECTION_TEXT:
+            existing_section = heading
         additions = [entry for entry in entries[1:] if entry not in existing_section]
         if additions:
             draft.sections[existing_index] = existing_section.rstrip() + "\n\n" + "\n\n".join(additions)

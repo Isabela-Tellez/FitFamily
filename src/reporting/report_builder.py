@@ -2,12 +2,17 @@
 Funciones para construir y comprobar borradores de informes.
 """
 
+from typing import TYPE_CHECKING
+
 from src.reporting.models import ReportDraft
 from src.schemas import ResearchResult, ResearchBrief
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.calculation_adapter import metric_context_notes
 from src.reporting.calculated_claims import build_break_even_claim
 from src.reporting.templates import MISSING_SECTION_TEXT
+
+if TYPE_CHECKING:
+    from src.multimodal.image_analyzer import ImageObservation
 
 
 def find_missing_evidence_ids(
@@ -68,6 +73,7 @@ def build_report(
     *,
     use_llm: bool = False,
     calculated_metrics: list[CalculatedMetric] | None = None,
+    image_observations: list["ImageObservation"] | None = None,
 ) -> ReportDraft:
     """Genera un borrador y añade puntos de equilibrio recibidos.
 
@@ -165,6 +171,11 @@ def build_report(
                 f"{economic_title}\n{calculated_text}"
             )
 
+    if image_observations:
+        from src.multimodal.image_analyzer import append_image_observations_to_report
+
+        append_image_observations_to_report(draft, image_observations)
+
     # Incluimos también las referencias de las afirmaciones nuevas.
     validate_report_references(draft, research_result)
 
@@ -177,6 +188,7 @@ def build_report_markdown(
     *,
     use_llm: bool = False,
     calculated_metrics: list[CalculatedMetric] | None = None,
+    image_observations: list["ImageObservation"] | None = None,
 ) -> str:
     """Genera el borrador con sus métricas y devuelve su Markdown.
 
@@ -191,6 +203,7 @@ def build_report_markdown(
         research_result,
         use_llm=use_llm,
         calculated_metrics=calculated_metrics,
+        image_observations=image_observations,
     )
 
     return render_report_markdown(draft)
