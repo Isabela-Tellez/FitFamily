@@ -27,7 +27,7 @@
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
   <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/pytest-436%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-509%20passed-2ea44f?logo=python&logoColor=white">
   <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
