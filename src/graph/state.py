@@ -20,8 +20,8 @@ RunStatus = Literal[
     "awaiting_approval",
     "completed",
     "rejected",
-    "budget_exceeded",
-    "insufficient_evidence",
+    "stopped_by_limit",
+    "stopped_insufficient_evidence",
     "failed",
 ]
 
@@ -71,12 +71,14 @@ class ResearchState(TypedDict, total=False):
     analysis_result: Any
     report_draft: Any
     review_result: Any
+    review_route: str | None
 
     # --------------------------------------------------------
     # 3. CONTROL DE VERSIONES DEL INFORME
     # --------------------------------------------------------
 
     report_version_id: str | None
+    delivery_version_id: str | None
     approved_version_id: str | None
 
     # --------------------------------------------------------
@@ -96,6 +98,9 @@ class ResearchState(TypedDict, total=False):
     current_stage: str
     pending_tasks: list[str]
     stop_reason: str | None
+
+    correction_rounds: int
+    automatic_retries: dict[str, int]
 
     # --------------------------------------------------------
     # 6. EVENTOS Y ERRORES
@@ -181,6 +186,7 @@ def create_initial_state(
         "analysis_result": None,
         "report_draft": None,
         "review_result": None,
+        "review_route": None,
 
         # Versionado.
         "report_version_id": None,
@@ -196,6 +202,8 @@ def create_initial_state(
         "status": "running",
         "current_stage": "research",
         "pending_tasks": [],
+        "correction_rounds": 0,
+        "automatic_retries": {},
 
         # Eventos y errores.
         "events": [],

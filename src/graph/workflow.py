@@ -1,599 +1,253 @@
-"""Workflow principal de investigación de FitFamily mediante LangGraph."""
+"""DefiniciÃ³n y compilaciÃ³n del workflow de FitFamily."""
 
-from dataclasses import asdict
-from datetime import datetime, timezone
-from decimal import Decimal
-from math import isfinite
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import interrupt
 
-from src.agents.researcher import run_research
-from src.analysis.calculation_adapter import metric_from_break_even
-from src.analysis.contracts import CalculatedMetric
-from src.analysis.scenarios import (
-    create_economic_scenario,
-    evaluate_economic_scenario,
-)
-from src.automation.delivery import (
-    ACTION_ORDER,
-    export_approved_report,
-)
-from src.automation.models import ApprovalRecord, DeliveryResult
+from src.config import settings
+
+from functools import wraps
+from langgraph.errors import GraphBubbleUp
+
 from src.graph.state import ResearchState
-from src.reporting.models import ReportClaim, ReportDraft
-from src.reporting.report_builder import build_report
-from src.automation.exporter import calculate_draft_fingerprint
-from src.review.quality_checks import run_basic_review
-from src.schemas import ResearchBrief, ResearchResult
+from src.graph.nodes import (
+    research_node,
+    analysis_node,
+    writing_node,
+    review_node,
+    approval_node,
+    delivery_node,
+)
+from src.runtime.events import emit_event
 
 
 # ============================================================
-# RESEARCH NODE
+# TRANSICIONES REALES
 # ============================================================
-def research_node(state: ResearchState) -> dict[str, Any]:
-    """Ejecuta la investigación y actualiza el estado compartido."""
-    brief = ResearchBrief.model_validate(state["brief"])
-    result = run_research(brief)
 
-    return {
-        "research_result": result.model_dump(mode="json"),
-        "current_stage": "analysis",
-        "updated_at": _utc_now(),
-    }
+def _resolve_transition(
+    stage: str,
+    state: ResearchState,
+    update: dict[str, Any],
+) -> str:
+    """Determina el destino a partir del estado actualizado."""
+
+    merged = {**state, **update}
+
+    if stage == "research":
+        return "analysis"
+
+    if stage == "analysis":
+        return "writing"
+
+    if stage == "writing":
+        return "review"
+
+    if stage == "review":
+        return merged.get("review_route") or "blocked"
+
+    if stage == "approval":
+        if merged.get("approval_decision") == "approved":
+            return "delivery"
+        return "end"
+
+    if stage == "delivery":
+        status = merged.get("delivery_status")
+
+        if status == "completed":
+            return "completed"
+
+        if status == "partial":
+            return "partial"
+
+        return "failed"
+
+    return "unknown"
 
 
 # ============================================================
-# ANALYSIS NODE
+# EVENTOS DEL WORKFLOW
 # ============================================================
-def analysis_node(state: ResearchState) -> dict[str, Any]:
-    """Calcula indicadores económicos a partir de parámetros validados."""
-    brief = ResearchBrief.model_validate(state["brief"])
-    params = brief.assumed_params or {}
 
-    required = (
-        "expected_clients",
-        "monthly_fee",
-        "fixed_costs",
-        "variable_cost_per_client",
+def _instrument_node(
+    stage: str,
+    node: Callable,
+    db_path: str | Path | None = None,
+) -> Callable:
+    """Instrumenta un nodo y registra sus eventos reales."""
+
+    resolved_db_path = (
+        Path(db_path)
+        if db_path is not None
+        else settings.events_db_path
     )
 
-    missing = [
-        name
-        for name in required
-        if name not in params or params[name] is None
-    ]
+    @wraps(node)
+    def wrapped_node(state: ResearchState) -> dict[str, Any]:
+        run_id = state.get("run_id")
 
-    if missing:
-        return {
-            "analysis_result": {
-                "scenarios": [],
-                "calculated_metrics": [],
-                "limitations": [
-                    "No se pudieron calcular los indicadores económicos. "
-                    f"Faltan parámetros: {', '.join(missing)}."
-                ],
-            },
-            "current_stage": "writing",
-            "updated_at": _utc_now(),
-        }
-
-    numeric_params: dict[str, int | float] = {}
-
-    for name in required:
-        value = params[name]
-
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not isfinite(value)
-        ):
+        if not isinstance(run_id, str) or not run_id.strip():
             raise ValueError(
-                f"El parámetro financiero {name!r} "
-                "debe ser un número finito."
+                "No se puede registrar un evento sin run_id."
             )
 
-        numeric_params[name] = value
-
-    expected_clients = numeric_params["expected_clients"]
-
-    if not isinstance(expected_clients, int):
-        raise ValueError(
-            "expected_clients debe ser un número entero."
+        emit_event(
+            run_id=run_id,
+            stage=stage,
+            event_type="stage_started",
+            message=f"Inicio de la etapa: {stage}",
+            details={
+                "current_stage": state.get("current_stage"),
+            },
+            db_path=resolved_db_path,
         )
 
-    scenario = create_economic_scenario(
-        scenario_type="intermediate",
-        expected_clients=expected_clients,
-        monthly_fee=numeric_params["monthly_fee"],
-        fixed_costs=numeric_params["fixed_costs"],
-        variable_cost_per_client=numeric_params[
-            "variable_cost_per_client"
-        ],
-        assumptions=[
-            f"{name} procede de assumed_params del encargo."
-            for name in required
-        ],
-    )
+        try:
+            update = node(state)
 
-    calculations = evaluate_economic_scenario(
-        scenario,
-        limitations=[
-            "Los resultados son proyecciones basadas en los parámetros "
-            "proporcionados; no garantizan la rentabilidad del negocio."
-        ],
-    )
+            if not isinstance(update, dict):
+                raise TypeError(
+                    f"El nodo {stage!r} no devolviÃ³ un diccionario."
+                )
 
-    metrics = []
-
-    for calculation in calculations:
-        if calculation.calculation_type == "break_even":
-            metric = metric_from_break_even(
-                scenario,
-                calculation,
+        except GraphBubbleUp:
+            # Las interrupciones de LangGraph no son fallos.
+            emit_event(
+                run_id=run_id,
+                stage=stage,
+                event_type="stage_interrupted",
+                message=f"InterrupciÃ³n de la etapa: {stage}",
+                details={
+                    "current_stage": state.get("current_stage"),
+                },
+                db_path=resolved_db_path,
             )
-        else:
-            result = calculation.result
+            raise
 
-            metric = CalculatedMetric(
-                metric_id=calculation.calculation_type,
-                value=(
-                    Decimal(str(result.value))
-                    if result is not None
-                    else None
+        except Exception as exc:
+            emit_event(
+                run_id=run_id,
+                stage=stage,
+                event_type="stage_failed",
+                message=f"Error en la etapa: {stage}",
+                details={
+                    "error": str(exc),
+                    "error_type": type(exc).__name__,
+                },
+                db_path=resolved_db_path,
+            )
+            raise
+
+        emit_event(
+            run_id=run_id,
+            stage=stage,
+            event_type="stage_completed",
+            message=f"Etapa completada: {stage}",
+            details={
+                "current_stage": update.get(
+                    "current_stage",
+                    state.get("current_stage"),
                 ),
-                unit=result.unit if result is not None else "unknown",
-                calculation=calculation.operation,
-                evidence_ids=calculation.evidence_ids,
+            },
+            db_path=resolved_db_path,
+        )
+
+        destination = _resolve_transition(
+            stage,
+            state,
+            update,
+        )
+
+        emit_event(
+            run_id=run_id,
+            stage=stage,
+            event_type="stage_transition",
+            message=f"TransiciÃ³n prevista: {stage} -> {destination}",
+            details={
+                "from": stage,
+                "to": destination,
+            },
+            db_path=resolved_db_path,
+        )
+
+        if stage == "approval":
+            decision = update.get("approval_decision")
+
+            if decision in ("approved", "rejected"):
+                emit_event(
+                    run_id=run_id,
+                    stage=stage,
+                    event_type=f"approval_{decision}",
+                    message=(
+                        "Informe aprobado."
+                        if decision == "approved"
+                        else "Informe rechazado."
+                    ),
+                    details={
+                        "report_version_id": state.get(
+                            "report_version_id"
+                        ),
+                        "actions": update.get(
+                            "authorized_actions", []
+                        ),
+                    },
+                    db_path=resolved_db_path,
+                )
+
+        if stage == "delivery":
+            delivery_status = update.get(
+                "delivery_status",
+                state.get("delivery_status"),
             )
 
-        metrics.append(metric)
+            if delivery_status in (
+                "completed",
+                "partial",
+                "failed",
+            ):
+                emit_event(
+                    run_id=run_id,
+                    stage=stage,
+                    event_type=f"delivery_{delivery_status}",
+                    message=f"Estado de entrega: {delivery_status}",
+                    details={
+                        "delivery_status": delivery_status,
+                        "export_paths": update.get(
+                            "export_paths", []
+                        ),
+                    },
+                    db_path=resolved_db_path,
+                )
 
-    return {
-        "analysis_result": {
-            "scenarios": [
-                {
-                    "scenario": scenario.model_dump(mode="json"),
-                    "calculations": [
-                        calculation.model_dump(mode="json")
-                        for calculation in calculations
-                    ],
-                }
-            ],
-            "calculated_metrics": [
-                metric.model_dump(mode="json")
-                for metric in metrics
-            ],
-            "limitations": [
-                limitation
-                for calculation in calculations
-                for limitation in calculation.limitations
-            ],
-        },
-        "current_stage": "writing",
-        "updated_at": _utc_now(),
-    }
+        if stage == "review" and destination == "blocked":
+            emit_event(
+                run_id=run_id,
+                stage=stage,
+                event_type="workflow_blocked",
+                message=(
+                    "Workflow bloqueado por el lÃ­mite de revisiÃ³n."
+                ),
+                details={
+                    "correction_rounds": update.get(
+                        "correction_rounds",
+                        state.get("correction_rounds", 0),
+                    ),
+                    "stop_reason": update.get("stop_reason"),
+                },
+                db_path=resolved_db_path,
+            )
 
+        return update
 
-# ============================================================
-# WRITING NODE
-# ============================================================
-def writing_node(state: ResearchState) -> dict[str, Any]:
-    """Genera un borrador nuevo e invalida autorizaciones anteriores."""
-    brief = ResearchBrief.model_validate(state["brief"])
-    research = ResearchResult.model_validate(state["research_result"])
-
-    analysis = state.get("analysis_result") or {}
-
-    metrics = [
-        CalculatedMetric.model_validate(item)
-        for item in analysis.get("calculated_metrics", [])
-    ]
-
-    draft = build_report(
-        brief,
-        research,
-        use_llm=True,
-        calculated_metrics=metrics,
-    )
-
-    return {
-        "report_draft": _draft_to_dict(draft),
-        "report_version_id": f"{draft.draft_id}:{draft.version}",
-        # Invalidamos cualquier aprobación anterior.
-        "approval_decision": None,
-        "approval_record": None,
-        "approved_version_id": None,
-        "approved_at": None,
-        "authorized_actions": [],
-        # Invalidamos también las entregas anteriores.
-        "delivery_result": None,
-        "delivery_status": "not_started",
-        "export_paths": [],
-        "current_stage": "review",
-        "updated_at": _utc_now(),
-    }
+    return wrapped_node
 
 
 # ============================================================
-# DRAFT RECONSTRUCTION
+# ROUTING
 # ============================================================
-def _draft_from_state(state: ResearchState) -> ReportDraft:
-    """Reconstruye el borrador conservando sus afirmaciones."""
-    draft_data = state.get("report_draft")
 
-    if not isinstance(draft_data, dict):
-        raise ValueError("No existe un borrador válido.")
-
-    return ReportDraft(
-        **{
-            **draft_data,
-            "claims": [
-                claim if isinstance(claim, ReportClaim)
-                else ReportClaim(**claim)
-                for claim in draft_data.get("claims", [])
-            ],
-        }
-    )
-
-
-def _delivery_result_from_state(
-    data: dict[str, Any] | None,
-) -> DeliveryResult | None:
-    """Reconstruye un resultado de entrega desde el estado persistido."""
-    if data is None:
-        return None
-
-    if not isinstance(data, dict):
-        raise ValueError(
-            "El resultado de entrega almacenado no es válido."
-        )
-
-    return DeliveryResult(
-        **{
-            **data,
-            "requested_actions": tuple(
-                data["requested_actions"]
-            ),
-            "completed_actions": tuple(
-                data["completed_actions"]
-            ),
-            "failed_actions": tuple(
-                data["failed_actions"]
-            ),
-            "errors": tuple(
-                tuple(error)
-                for error in data.get("errors", [])
-            ),
-        }
-    )
-
-
-# ============================================================
-# REVIEW NODE
-# ============================================================
-def review_node(state: ResearchState) -> dict[str, Any]:
-    """Revisa el borrador usando la investigación y el análisis."""
-    research = ResearchResult.model_validate(state["research_result"])
-    draft = _draft_from_state(state)
-    analysis = state.get("analysis_result") or {}
-
-    metrics = [
-        CalculatedMetric.model_validate(item)
-        for item in analysis.get("calculated_metrics", [])
-    ]
-
-    review = run_basic_review(
-        draft,
-        research,
-        calculated_metrics=metrics,
-    )
-
-    has_errors = any(
-        issue.severity == "error"
-        for issue in review.issues
-    )
-
-    status = "failed" if has_errors else "awaiting_approval"
-
-    return {
-        "review_result": _review_to_dict(review),
-        "status": status,
-        # Una nueva revisión invalida cualquier decisión anterior.
-        "approval_decision": None,
-        "approval_record": None,
-        "approved_version_id": None,
-        "approved_at": None,
-        "authorized_actions": [],
-        "current_stage": "review",
-        "updated_at": _utc_now(),
-    }
-
-
-# ============================================================
-# APPROVAL NODE
-# ============================================================
-def approval_node(state: ResearchState) -> dict[str, Any]:
-    """Solicita una decisión humana y registra su autorización."""
-    if state.get("status") != "awaiting_approval":
-        raise ValueError(
-            "El informe no está listo para solicitar aprobación."
-        )
-
-    draft = _draft_from_state(state)
-    report_version_id = state.get("report_version_id")
-    expected_version_id = f"{draft.draft_id}:{draft.version}"
-
-    if report_version_id != expected_version_id:
-        raise ValueError(
-            "La versión del informe no coincide con el borrador actual."
-        )
-
-    review_data = state.get("review_result")
-
-    if not review_data:
-        raise ValueError("No existe una revisión del informe.")
-
-    if any(
-        issue.get("severity") == "error"
-        for issue in review_data.get("issues", [])
-    ):
-        raise ValueError(
-            "No se puede solicitar aprobación con errores pendientes."
-        )
-
-    fingerprint = calculate_draft_fingerprint(draft)
-
-    # Pausa del workflow hasta recibir una decisión humana.
-    decision = interrupt(
-        {
-            "type": "human_approval",
-            "run_id": state["run_id"],
-            "report_version_id": report_version_id,
-            "draft_id": draft.draft_id,
-            "draft_version": draft.version,
-            "draft_fingerprint": fingerprint,
-            "draft": state["report_draft"],
-            "message": (
-                "¿Apruebas esta versión y sus acciones de entrega?"
-            ),
-            "allowed_decisions": ["approved", "rejected"],
-            "available_actions": list(ACTION_ORDER),
-        }
-    )
-
-    if not isinstance(decision, dict):
-        raise ValueError("La decisión de aprobación no es válida.")
-
-    decision_value = decision.get("decision")
-
-    if decision_value not in ("approved", "rejected"):
-        raise ValueError(
-            "La decisión debe ser 'approved' o 'rejected'."
-        )
-
-    if decision.get("report_version_id") != report_version_id:
-        raise ValueError(
-            "La decisión no corresponde a la versión actual."
-        )
-
-    # --------------------------------------------------------
-    # REJECTION
-    # --------------------------------------------------------
-    if decision_value == "rejected":
-        return {
-            "approval_decision": "rejected",
-            "approval_record": None,
-            "approved_version_id": None,
-            "approved_at": None,
-            "authorized_actions": [],
-            "status": "rejected",
-            "current_stage": "rejected",
-            "delivery_status": "not_started",
-            "updated_at": _utc_now(),
-        }
-
-    # --------------------------------------------------------
-    # APPROVED ACTIONS
-    # --------------------------------------------------------
-    actions = decision.get("actions")
-
-    if (
-        not isinstance(actions, list)
-        or not actions
-        or any(not isinstance(action, str) for action in actions)
-        or len(actions) != len(set(actions))
-        or not set(actions).issubset(ACTION_ORDER)
-    ):
-        raise ValueError(
-            "Debes indicar una lista válida de acciones autorizadas."
-        )
-
-    # El seguimiento requiere al menos un formato de informe.
-    if (
-        "update_tracking_csv" in actions
-        and not {
-            "export_markdown",
-            "export_pdf",
-        }.intersection(actions)
-    ):
-        raise ValueError(
-            "El seguimiento CSV requiere autorizar Markdown o PDF."
-        )
-
-    authorized_actions = tuple(
-        action
-        for action in ACTION_ORDER
-        if action in actions
-    )
-
-    decided_at = datetime.now(timezone.utc)
-
-    approval = ApprovalRecord(
-        run_id=state["run_id"],
-        draft_id=draft.draft_id,
-        draft_version=draft.version,
-        draft_fingerprint=fingerprint,
-        approved=True,
-        actions=authorized_actions,
-        decided_at=decided_at,
-    )
-
-    return {
-        "approval_decision": "approved",
-        "approval_record": {
-            **asdict(approval),
-            "decided_at": decided_at.isoformat(),
-        },
-        "approved_version_id": report_version_id,
-        "approved_at": decided_at.isoformat(),
-        "authorized_actions": list(authorized_actions),
-        # La aprobación no significa que la entrega esté completada.
-        "status": "running",
-        "current_stage": "delivery",
-        "delivery_status": "not_started",
-        "delivery_result": None,
-        "export_paths": [],
-        "updated_at": _utc_now(),
-    }
-
-
-# ============================================================
-# DELIVERY NODE
-# ============================================================
-def delivery_node(state: ResearchState) -> dict[str, Any]:
-    """Ejecuta la entrega real de un informe aprobado.
-
-    Coordina las exportaciones mediante automation.delivery.
-    Conserva los éxitos parciales para permitir reintentos.
-    """
-    if state.get("approval_decision") != "approved":
-        raise ValueError(
-            "No existe una aprobación válida."
-        )
-
-    if state.get("status") != "running":
-        raise ValueError(
-            "La ejecución no está preparada para entregar."
-        )
-
-    draft = _draft_from_state(state)
-
-    # Comprobamos la versión aprobada.
-    expected_version_id = f"{draft.draft_id}:{draft.version}"
-
-    if state.get("approved_version_id") != expected_version_id:
-        raise ValueError(
-            "La aprobación no corresponde al borrador actual."
-        )
-
-    # --------------------------------------------------------
-    # RECONSTRUCT APPROVAL
-    # --------------------------------------------------------
-    approval_data = state.get("approval_record")
-
-    if not isinstance(approval_data, dict):
-        raise ValueError(
-            "No existe un registro de aprobación."
-        )
-
-    decided_at = datetime.fromisoformat(
-        approval_data["decided_at"]
-    )
-
-    approval = ApprovalRecord(
-        run_id=approval_data["run_id"],
-        draft_id=approval_data["draft_id"],
-        draft_version=approval_data["draft_version"],
-        draft_fingerprint=approval_data["draft_fingerprint"],
-        approved=approval_data["approved"],
-        actions=tuple(approval_data["actions"]),
-        decided_at=decided_at,
-    )
-
-    # --------------------------------------------------------
-    # VALIDATE AUTHORIZED ACTIONS
-    # --------------------------------------------------------
-    if tuple(state.get("authorized_actions", [])) != approval.actions:
-        raise ValueError(
-            "Las acciones autorizadas no coinciden con la aprobación."
-        )
-
-    if approval.run_id != state["run_id"]:
-        raise ValueError(
-            "La aprobación pertenece a otra ejecución."
-        )
-
-    # --------------------------------------------------------
-    # PREVIOUS DELIVERY RESULT
-    # --------------------------------------------------------
-    previous_result = _delivery_result_from_state(
-        state.get("delivery_result")
-    )
-
-    # --------------------------------------------------------
-    # EXECUTE DELIVERY
-    # --------------------------------------------------------
-    result = export_approved_report(
-        draft=draft,
-        approval=approval,
-        run_id=state["run_id"],
-        output_dir=state.get(
-            "delivery_output_dir",
-            "outputs/reports",
-        ),
-        csv_path=state.get(
-            "delivery_csv_path",
-            "outputs/tracking.csv",
-        ),
-        previous_result=previous_result,
-    )
-
-    # --------------------------------------------------------
-    # DELIVERY STATUS
-    # --------------------------------------------------------
-    if result.complete:
-        delivery_status = "completed"
-        run_status = "completed"
-        current_stage = "completed"
-    elif result.completed_actions:
-        delivery_status = "partial"
-        run_status = "running"
-        current_stage = "delivery_partial"
-    else:
-        delivery_status = "failed"
-        run_status = "failed"
-        current_stage = "delivery_failed"
-
-    # --------------------------------------------------------
-    # EXPORTED PATHS
-    # --------------------------------------------------------
-    export_paths = [
-        path
-        for path in (
-            result.markdown_path,
-            result.pdf_path,
-            result.tracking_path,
-        )
-        if path
-    ]
-
-    return {
-        "delivery_result": asdict(result),
-        "delivery_status": delivery_status,
-        "status": run_status,
-        "current_stage": current_stage,
-        "export_paths": export_paths,
-        "updated_at": _utc_now(),
-    }
-
-
-# ============================================================
-# WORKFLOW ROUTING
-# ============================================================
 def _route_after_approval(state: ResearchState) -> str:
-    """Envía únicamente las aprobaciones a la entrega."""
     if state.get("approval_decision") == "approved":
         return "delivery"
 
@@ -601,76 +255,115 @@ def _route_after_approval(state: ResearchState) -> str:
 
 
 def _route_after_delivery(state: ResearchState) -> str:
-    """Finaliza según el resultado real de la entrega."""
-    if state.get("delivery_status") == "completed":
+    status = state.get("delivery_status")
+
+    if status == "completed":
         return "completed"
 
-    if state.get("delivery_status") == "partial":
+    if status == "partial":
         return "partial"
 
     return "failed"
 
 
+def _route_after_review(state: ResearchState) -> str:
+    return state.get("review_route") or "blocked"
+
+
+# ============================================================
+# WORKFLOW
+# ============================================================
+
 def build_workflow(
     *,
     checkpointer: Any = None,
+    events_db_path: str | Path | None = None,
 ) -> Any:
-    """Construye el workflow completo de FitFamily.
+    """Construye el workflow con registro persistente de eventos."""
 
-    Flujo:
-        Research
-            |
-        Analysis
-            |
-        Writing
-            |
-        Review
-            |
-        Approval (human interrupt)
-            |
-        Delivery
-            |
-        Completed / Partial / Failed
-    """
+    resolved_events_db_path = (
+        Path(events_db_path)
+        if events_db_path is not None
+        else settings.events_db_path
+    )
+
     builder = StateGraph(ResearchState)
 
-    # --------------------------------------------------------
-    # REGISTER NODES
-    # --------------------------------------------------------
-    builder.add_node("research", research_node)
-    builder.add_node("analysis", analysis_node)
-    builder.add_node("writing", writing_node)
-    builder.add_node("review", review_node)
-    builder.add_node("approval", approval_node)
-    builder.add_node("delivery", delivery_node)
+    # Nodos instrumentados.
+    builder.add_node(
+        "research",
+        _instrument_node(
+            "research",
+            research_node,
+            resolved_events_db_path,
+        ),
+    )
 
-    # --------------------------------------------------------
-    # MAIN FLOW
-    # --------------------------------------------------------
+    builder.add_node(
+        "analysis",
+        _instrument_node(
+            "analysis",
+            analysis_node,
+            resolved_events_db_path,
+        ),
+    )
+
+    builder.add_node(
+        "writing",
+        _instrument_node(
+            "writing",
+            writing_node,
+            resolved_events_db_path,
+        ),
+    )
+
+    builder.add_node(
+        "review",
+        _instrument_node(
+            "review",
+            review_node,
+            resolved_events_db_path,
+        ),
+    )
+
+    builder.add_node(
+        "approval",
+        _instrument_node(
+            "approval",
+            approval_node,
+            resolved_events_db_path,
+        ),
+    )
+
+    builder.add_node(
+        "delivery",
+        _instrument_node(
+            "delivery",
+            delivery_node,
+            resolved_events_db_path,
+        ),
+    )
+
+    # Flujo principal.
     builder.add_edge(START, "research")
     builder.add_edge("research", "analysis")
     builder.add_edge("analysis", "writing")
     builder.add_edge("writing", "review")
 
-    # --------------------------------------------------------
-    # REVIEW ROUTING
-    # --------------------------------------------------------
+    # RevisiÃ³n y correcciones.
     builder.add_conditional_edges(
         "review",
-        lambda state: (
-            "approval"
-            if state.get("status") == "awaiting_approval"
-            else "end"
-        ),
+        _route_after_review,
         {
-            "approval": "approval",
-            "end": END,
+            "revise_research": "research",
+            "revise_analysis": "analysis",
+            "revise_writing": "writing",
+            "pending_review": "approval",
+            "blocked": END,
         },
     )
 
-    # --------------------------------------------------------
-    # APPROVAL ROUTING
-    # --------------------------------------------------------
+    # AprobaciÃ³n humana.
     builder.add_conditional_edges(
         "approval",
         _route_after_approval,
@@ -680,9 +373,7 @@ def build_workflow(
         },
     )
 
-    # --------------------------------------------------------
-    # DELIVERY ROUTING
-    # --------------------------------------------------------
+    # Entrega.
     builder.add_conditional_edges(
         "delivery",
         _route_after_delivery,
@@ -696,21 +387,3 @@ def build_workflow(
     return builder.compile(
         checkpointer=checkpointer,
     )
-
-
-# ============================================================
-# UTILITIES
-# ============================================================
-def _utc_now() -> str:
-    """Devuelve la hora actual en UTC."""
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _draft_to_dict(draft: ReportDraft) -> dict[str, Any]:
-    """Convierte el borrador en un diccionario serializable."""
-    return asdict(draft)
-
-
-def _review_to_dict(review: Any) -> dict[str, Any]:
-    """Convierte el resultado de revisión en un diccionario serializable."""
-    return asdict(review)

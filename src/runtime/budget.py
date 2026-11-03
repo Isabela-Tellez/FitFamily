@@ -3,9 +3,10 @@
 import sqlite3
 import uuid
 
-from dataclasses import dataclass
 from contextlib import closing
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from math import isfinite
 from pathlib import Path
 from typing import Any
 
@@ -61,9 +62,18 @@ def _get_limits(
         or type(limits.max_tokens) is not int
         or limits.max_calls < 1
         or limits.max_tokens < 1
-        or limits.max_cost < 0
     ):
         raise ValueError("Los límites de presupuesto no son válidos.")
+
+    if (
+        isinstance(limits.max_cost, bool)
+        or not isinstance(limits.max_cost, (int, float))
+        or not isfinite(limits.max_cost)
+        or limits.max_cost < 0
+    ):
+        raise ValueError(
+            "max_cost debe ser un número finito y no negativo."
+        )
 
     return limits
 
@@ -275,6 +285,17 @@ def reserve_call_budget(
                 raise ValueError(
                     "La reserva pertenece a otra ejecución."
                 )
+
+            if (
+                existing["call_type"] != call_type
+                or existing["reserved_tokens"] != estimated_tokens
+                or existing["reserved_cost"] != estimated_cost
+            ):
+                raise ValueError(
+                    "El identificador de reserva ya existe "
+                    "con parámetros diferentes."
+                )
+
 
             return {
                 "reservation_id": reservation_id,

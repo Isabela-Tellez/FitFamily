@@ -13,8 +13,15 @@ DEFAULT_DB_PATH = Path("data") / "fitfamily_checkpoints.sqlite"
 
 def build_thread_config(thread_id: str) -> dict[str, Any]:
     """Construye la configuración de LangGraph para un hilo."""
-    if not isinstance(thread_id, str) or not thread_id.strip():
-        raise ValueError("thread_id debe ser una cadena no vacía.")
+
+    if (
+        not isinstance(thread_id, str)
+        or not thread_id.strip()
+        or any(ord(char) < 32 or ord(char) == 127 for char in thread_id)
+    ):
+        raise ValueError(
+            "thread_id debe ser una cadena no vacía y válida."
+        )
 
     return {
         "configurable": {
@@ -32,6 +39,7 @@ def open_checkpointer(
 
     La conexión debe permanecer abierta mientras se utiliza el grafo.
     """
+
     path = Path(db_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -44,10 +52,9 @@ def create_checkpointer(
     db_path: str | Path = DEFAULT_DB_PATH,
 ) -> Iterator[SqliteSaver]:
     """Proporciona un contexto de persistencia para el workflow."""
+
     with open_checkpointer(db_path) as checkpointer:
         yield checkpointer
-
-
 
 
 def load_run(
@@ -59,27 +66,39 @@ def load_run(
     Recupera el último checkpoint de un hilo existente.
 
     Devuelve None si no hay estado guardado.
+
     Si se proporciona expected_run_id, verifica la identidad
     de negocio antes de devolver el checkpoint.
     """
-    # Validamos los argumentos antes de consultar el grafo.
+
+    # Validamos todos los argumentos antes de consultar el grafo.
+    config = build_thread_config(thread_id)
+
     if expected_run_id is not None:
         if (
             not isinstance(expected_run_id, str)
             or not expected_run_id.strip()
+            or any(
+                ord(char) < 32 or ord(char) == 127
+                for char in expected_run_id
+            )
         ):
             raise ValueError(
-                "expected_run_id debe ser una cadena no vacía."
+                "expected_run_id debe ser una cadena no vacía y válida."
             )
 
-    config = build_thread_config(thread_id)
     snapshot = graph.get_state(config)
 
-    if not snapshot.values:
+    if snapshot is None:
+        return None
+
+    values = snapshot.values
+
+    if not isinstance(values, dict) or not values:
         return None
 
     if expected_run_id is not None:
-        actual_run_id = snapshot.values.get("run_id")
+        actual_run_id = values.get("run_id")
 
         if actual_run_id != expected_run_id:
             raise ValueError(

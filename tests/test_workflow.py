@@ -1,4 +1,3 @@
-
 """Pruebas del workflow de FitFamily sin llamadas externas."""
 
 from unittest.mock import patch
@@ -8,6 +7,12 @@ import pytest
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 
+from src.automation.delivery import ACTION_ORDER
+from src.automation.models import DeliveryResult
+from src.graph.nodes import (
+    analysis_node,
+    approval_node,
+)
 from src.graph.persistence import (
     build_thread_config,
     open_checkpointer,
@@ -16,12 +21,7 @@ from src.graph.state import (
     ResearchState,
     create_initial_state,
 )
-from src.graph.workflow import (
-    analysis_node,
-    approval_node,
-    build_workflow,
-)
-
+from src.graph.workflow import build_workflow
 
 # ============================================================
 # FIXTURES
@@ -65,9 +65,9 @@ def analysis_state():
 def simulated_pipeline():
     """Simula investigación, redacción y revisión."""
     with (
-        patch("src.graph.workflow.run_research") as research,
-        patch("src.graph.workflow.build_report") as writing,
-        patch("src.graph.workflow.run_basic_review") as review,
+        patch("src.graph.nodes.run_research") as research,
+        patch("src.graph.nodes.build_report") as writing,
+        patch("src.graph.nodes.run_basic_review") as review,
     ):
         yield research, writing, review
 
