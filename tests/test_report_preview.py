@@ -68,7 +68,10 @@ def test_preview_keeps_numeric_traceability_and_creates_no_files(
     assert "**Valor declarado:** 25.0" in preview.markdown
     assert "**Unidad:** clients" in preview.markdown
     assert "pendiente de revisión y aprobación" in preview.markdown
-    assert all(note in preview.markdown for note in metric_context_notes(metrics[0]))
+    for note in metric_context_notes(metrics[0]):
+        assert note in draft.limitations
+        visible_note = note.replace("[scenario_intermediate] ", "Escenario intermedio · ")
+        assert visible_note in preview.markdown
     assert preview.draft_fingerprint == calculate_draft_fingerprint(draft)
     assert preview.delivery_actions == ("export_markdown", "export_pdf", "update_tracking_csv")
     assert draft == before
