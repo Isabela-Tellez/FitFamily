@@ -39,7 +39,7 @@ def card_chart(title, fig):
     return dbc.Card([
         dbc.CardHeader(title, style={"fontWeight": "bold", "color": "#172B2A", "backgroundColor": "#F0F2F5"}),
         dbc.CardBody(dcc.Loading(
-            dcc.Graph(figure=fig, config={"displayModeBar": False}),
+            dcc.Graph(figure=fig),
             type="dot", fullscreen=False,
         )),
     ], className="shadow-sm mb-4")
@@ -167,7 +167,7 @@ def card_chart(title, fig_obj):
     return dbc.Card([
         dbc.CardHeader(title, className="bg-dark text-white fw-bold"),
         dbc.CardBody(dcc.Loading(
-            dcc.Graph(figure=fig_obj, config={"displayModeBar": False}),
+            dcc.Graph(figure=fig_obj),
             type="dot", fullscreen=False,
         )),
     ], className="shadow-sm border-0")
