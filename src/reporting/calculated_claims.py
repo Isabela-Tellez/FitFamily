@@ -3,6 +3,7 @@
 from decimal import Decimal
 from math import isfinite
 
+from src.analysis.calculation_adapter import SCENARIO_METRICS
 from src.analysis.contracts import CalculatedMetric
 from src.reporting.models import ReportClaim
 
@@ -74,6 +75,46 @@ def build_break_even_claim(
     return ReportClaim(
         claim_id=claim_id,
         text=text,
+        kind="inference",
+        evidence_ids=list(metric.evidence_ids),
+        metric_id=metric.metric_id,
+        reported_value=reported_value,
+        reported_unit=metric.unit,
+    )
+
+MONTHLY_LABELS = {
+    "monthly_revenue": "Ingresos mensuales estimados",
+    "monthly_variable_costs": "Costes variables mensuales estimados",
+    "monthly_result": "Resultado mensual estimado",
+}
+
+
+def build_scenario_claim(
+    metric: CalculatedMetric, *, claim_id: str
+) -> ReportClaim | None:
+    """Presenta la cifra del escenario sin volver a calcularla."""
+    if metric.context is None:
+        raise ValueError("La métrica necesita el contexto del cálculo.")
+    scenario_id = metric.context.scenario.scenario_id
+    calculation_type = metric.context.calculation_result.calculation_type
+    if calculation_type == "break_even":
+        return build_break_even_claim(metric, claim_id=claim_id)
+    if calculation_type not in MONTHLY_LABELS:
+        raise ValueError("Tipo de cálculo económico no admitido.")
+    suffix, unit = SCENARIO_METRICS[calculation_type]
+    if metric.metric_id != f"{scenario_id}.{suffix}" or metric.unit != unit:
+        raise ValueError("Identificador o unidad de la métrica incorrectos.")
+    if metric.value is None:
+        return None
+
+    reported_value = float(metric.value)
+    if not isfinite(reported_value) or Decimal(str(reported_value)) != metric.value:
+        raise ValueError("El valor no puede convertirse sin alterarlo.")
+    amount = format(metric.value, "f").replace(".", ",")
+    label = MONTHLY_LABELS[calculation_type]
+    return ReportClaim(
+        claim_id=claim_id,
+        text=f"Escenario {scenario_id} — {label}: {amount} €/mes.",
         kind="inference",
         evidence_ids=list(metric.evidence_ids),
         metric_id=metric.metric_id,

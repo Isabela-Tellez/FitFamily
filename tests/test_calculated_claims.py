@@ -331,3 +331,42 @@ def test_calculations_keep_common_outline_without_duplicate_sections(
     for index, section in enumerate(sections):
         if index != economic_index:
             assert draft.sections[index] == section
+def test_report_preserves_monthly_metrics_by_scenario():
+    from src.analysis.calculation_adapter import metric_from_scenario_calculation
+    from src.analysis.economic_calculations import (
+        calculate_monthly_revenue,
+        calculate_monthly_result,
+        calculate_monthly_variable_costs,
+    )
+    from src.reporting.report_builder import build_report
+    from src.schemas import ResearchBrief
+
+    metrics = []
+    for scenario_type, clients in (("conservative", 10), ("intermediate", 100)):
+        scenario = create_economic_scenario(
+            scenario_type=scenario_type,
+            expected_clients=clients,
+            monthly_fee=50,
+            fixed_costs=1000,
+            variable_cost_per_client=10,
+        )
+        revenue = calculate_monthly_revenue(scenario)
+        costs = calculate_monthly_variable_costs(scenario)
+        result = calculate_monthly_result(revenue.result.value, costs.result.value, 1000)
+        for calculation in (revenue, costs, result):
+            metrics.append(metric_from_scenario_calculation(scenario, calculation))
+
+    draft = build_report(
+        ResearchBrief(business_type="Gimnasio", location="Madrid", study_area="Prueba"),
+        ResearchResult(),
+        calculated_metrics=metrics,
+    )
+
+    assert [claim.reported_value for claim in draft.claims] == [
+        500, 100, -600, 5000, 1000, 3000,
+    ]
+    assert [claim.metric_id for claim in draft.claims] == [
+        metric.metric_id for metric in metrics
+    ]
+    assert all(claim.reported_unit == "EUR/month" for claim in draft.claims)
+    assert any("Resultado mensual estimado: -600" in section for section in draft.sections)

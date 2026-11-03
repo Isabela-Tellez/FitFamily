@@ -6,7 +6,7 @@ from src.reporting.models import ReportDraft
 from src.schemas import ResearchResult, ResearchBrief
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.calculation_adapter import metric_context_notes
-from src.reporting.calculated_claims import build_break_even_claim
+from src.reporting.calculated_claims import build_scenario_claim
 from src.reporting.templates import MISSING_SECTION_TEXT
 
 
@@ -69,7 +69,7 @@ def build_report(
     use_llm: bool = False,
     calculated_metrics: list[CalculatedMetric] | None = None,
 ) -> ReportDraft:
-    """Genera un borrador y añade puntos de equilibrio recibidos.
+    """Genera un borrador y añade resultados económicos recibidos.
 
     Las frases numéricas se construyen desde las métricas,
     sin pedir al LLM que reproduzca o recalcule sus valores.
@@ -94,16 +94,15 @@ def build_report(
     existing_claim_ids = {claim.claim_id for claim in draft.claims}
 
     for index, metric in enumerate(metrics, start=1):
-        claim_id = f"calculated_break_even_{index}"
+        metric_type = metric.context.calculation_result.calculation_type if metric.context else "break_even"
+        claim_id = f"calculated_{metric_type}_{index}"
 
         if claim_id in existing_claim_ids:
             raise ValueError(
                 f"El identificador de afirmación ya existe: {claim_id}"
             )
 
-        # Esta primera integración solo admite puntos de equilibrio.
-        # La función rechaza otros tipos o contextos incompletos.
-        claim = build_break_even_claim(
+        claim = build_scenario_claim(
             metric,
             claim_id=claim_id,
         )
@@ -117,7 +116,7 @@ def build_report(
             # Un resultado ausente se explica, nunca se convierte en cero.
             message = (
                 f"Resultado no disponible para {metric.metric_id}. "
-                "No se presenta una cifra de punto de equilibrio."
+                "El cálculo no proporciona una cifra."
             )
             numeric_texts.append(message)
 
@@ -132,7 +131,9 @@ def build_report(
     if numeric_texts:
         economic_title = "Escenarios económicos"
         calculated_text = (
-            "Punto de equilibrio por escenario\n"
+            ("Resultados económicos por escenario\n" if any(
+                not metric.metric_id.endswith(".break_even_clients") for metric in metrics
+            ) else "Punto de equilibrio por escenario\n")
             + "\n\n".join(numeric_texts)
         )
 
