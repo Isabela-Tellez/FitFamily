@@ -132,7 +132,7 @@ def test_append_observations_to_report_keeps_limitations_and_traceability():
     result = append_image_observations_to_report(draft, [observation])
 
     assert result is draft
-    assert any(section.startswith("Análisis visual de gráficos") for section in draft.sections)
+    assert any(section.startswith("Análisis visual\n") for section in draft.sections)
     assert "price-chart-01" in draft.sections[-1]
     assert any("condiciones de matrícula" in item for item in draft.limitations)
 
