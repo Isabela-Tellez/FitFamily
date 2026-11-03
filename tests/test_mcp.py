@@ -71,7 +71,14 @@ def test_get_area_statistics_empty_indicators_returns_all():
     assert len(stats["results"]) >= 4
 
 
-def test_get_area_statistics_unknown_area_returns_nulls():
+def test_get_area_statistics_has_verified_indicators():
+    """El MCP debe exponer al menos 10 indicadores verificados para El Canaveral."""
+    stats = get_area_statistics("el-canaveral", [])
+    verified = [
+        k for k, v in stats["results"].items()
+        if v.get("verification_status") == "verified" and v.get("value") is not None
+    ]
+    assert len(verified) >= 10, f"Solo {len(verified)} indicadores verificados"
     """An area without local data must return nulls, not El Cañaveral data."""
     stats = get_area_statistics("valdebebas", ["population_total"])
     assert stats["area_id"] == "valdebebas"
