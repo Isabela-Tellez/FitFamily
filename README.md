@@ -55,7 +55,7 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 | ¿Redacta un informe? | Sí, con un redactor determinista o con un LLM opcional (Groq). |
 | ¿Revisa el informe? | Sí, referencias y calidad estructural; no verifica la verdad semántica. |
 | ¿Exporta? | Sí, Markdown y PDF, solo después de un `ApprovalRecord` válido. |
-| ¿Tiene flujo automático? | Sí — `workflows.py` conecta análisis → redacción → revisión; falta UI completa. |
+| ¿Tiene flujo automático? | **No.** Los módulos se llaman por separado; no hay `main.py`, CLI ni grafo ejecutable. |
 | ¿Tiene UI? | **Parcial.** `src/ui/report_preview.py` ofrece vista previa/exportación de informes; no hay Streamlit ni aplicación web completa. El workflow (`workflows.py`) existe pero requiere controlador. |
 
 **Tecnologías / Temas:** Python 3.13 · Pydantic · LangGraph · SQLite (persistencia) · MCP stdio · CrewAI / Groq (opcional) · pytest · Markdown / PDF · cálculo económico estructurado (`calculation-review-contract.md`).
