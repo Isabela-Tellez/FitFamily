@@ -17,6 +17,7 @@ from src.reporting.report_builder import build_report
 from src.review.quality_checks import run_basic_review
 from src.schemas import ResearchBrief, Evidence
 from src.agents.researcher import run_research
+from src.multimodal.image_analyzer import analyze_image, append_image_observations_to_report
 from src.analysis.scenarios import create_economic_scenario, evaluate_economic_scenario
 from src.analysis.calculation_adapter import metric_from_break_even
 
@@ -82,6 +83,24 @@ metric = metric_from_break_even(scenario, break_even_calc, input_evidence_ids={}
 metrics = [metric]
 
 draft = build_report(brief, research, calculated_metrics=metrics)
+# Integración PR #39: observación visual del gráfico de precios
+try:
+    chart_path = ROOT / "artifacts" / "price_comparison.png"
+    if chart_path.exists():
+        observation = analyze_image(
+            str(chart_path),
+            {"title": "Comparación de cuotas", "unit": "EUR/month", "sample_size": 3},
+            image_id="price-chart-01",
+            source_artifact_id="price_comparison",
+            model=os.getenv("VISION_LLM_MODEL", "groq/qwen/qwen3.8-27b"),
+        )
+        draft = append_image_observations_to_report(draft, [observation])
+        print("Observación visual añadida:", observation.observation[:60], "...")
+    else:
+        print("Artefacto de imagen no encontrado; saltando observación visual.")
+except Exception as exc:
+    print("Observación visual fallida (es opcional):", exc)
+
 fingerprint = calculate_draft_fingerprint(draft)
 review = run_basic_review(draft, research, calculated_metrics=metrics)
 route = choose_review_route_for_context(review, draft, research, revision_count=0, calculated_metrics=metrics)

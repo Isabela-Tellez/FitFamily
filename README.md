@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong><br>
-  <sub><strong>Proyecto abierto — actualizado tras fusión de análisis, revisión y workflow (oct 2026)</strong></sub>
+  <sub><strong>Proyecto completado · Oct 2026</strong></sub>
 </p>
 
 <p align="center">
