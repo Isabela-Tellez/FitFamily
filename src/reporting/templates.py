@@ -39,7 +39,9 @@ def validate_report_sections(sections: list[str]) -> None:
     if actual_titles != list(REPORT_SECTION_TITLES):
         raise ValueError(
             "La estructura del informe no coincide con los apartados "
-            "requeridos: deben estar completos, en orden y sin duplicados."
+            "requeridos.\n"
+            f"Titulos recibidos: {actual_titles!r}\n"
+            f"Titulos esperados: {list(REPORT_SECTION_TITLES)!r}"
         )
 
     # Cada apartado debe tener contenido o indicar que está pendiente.
