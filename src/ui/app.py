@@ -94,7 +94,7 @@ with sim:
 with comp:
     st.markdown("### Competidores — Evidencias Tavily (reales, no inventadas)")
     try:
-        with open("data/raw/competitor_registry.json", encoding="utf-8") as f:
+        with open("data/processed/competitor_registry.json", encoding="utf-8") as f:
             comp_data = pd.DataFrame(json.load(f))
         st.dataframe(comp_data, use_container_width=True, hide_index=True)
     except Exception as e:
