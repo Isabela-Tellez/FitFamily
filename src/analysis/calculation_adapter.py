@@ -13,11 +13,34 @@ def metric_from_break_even(scenario: EconomicScenario, calculation: CalculationR
     """
     if calculation.calculation_type != "break_even":
         raise ValueError("Este adaptador admite únicamente el punto de equilibrio.")
+    return metric_from_scenario_calculation(
+        scenario, calculation, input_evidence_ids=input_evidence_ids
+    )
+
+
+SCENARIO_METRICS = {
+    "break_even": ("break_even_clients", "clients"),
+    "monthly_revenue": ("monthly_revenue", "EUR/month"),
+    "monthly_variable_costs": ("monthly_variable_costs", "EUR/month"),
+    "monthly_result": ("monthly_result", "EUR/month"),
+}
+
+
+def metric_from_scenario_calculation(
+    scenario: EconomicScenario,
+    calculation: CalculationResult,
+    *,
+    input_evidence_ids: dict[str, str] | None = None,
+) -> CalculatedMetric:
+    """Adapta un cálculo económico conservando su procedencia."""
+    if calculation.calculation_type not in SCENARIO_METRICS:
+        raise ValueError("Tipo de cálculo económico no admitido.")
+    suffix, unit = SCENARIO_METRICS[calculation.calculation_type]
     result = calculation.result
     return CalculatedMetric(
-        metric_id=f"{scenario.scenario_id}.break_even_clients",
+        metric_id=f"{scenario.scenario_id}.{suffix}",
         value=Decimal(str(result.value)) if result is not None else None,
-        unit=result.unit if result is not None else "clients",
+        unit=result.unit if result is not None else unit,
         calculation=calculation.calculation_id,
         evidence_ids=list(calculation.evidence_ids),
         context=CalculationContext(

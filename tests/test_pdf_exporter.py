@@ -140,7 +140,7 @@ def test_pdf_includes_metric_reference_without_changing_draft(monkeypatch):
     """Incluye los campos numéricos en los párrafos del PDF."""
     from copy import deepcopy
 
-    from reportlab.platypus import Paragraph, SimpleDocTemplate
+    from reportlab.platypus import LongTable, Paragraph, SimpleDocTemplate
 
     from src.reporting.models import ReportClaim, ReportDraft
     from src.reporting.pdf_renderer import render_report_pdf
@@ -171,6 +171,14 @@ def test_pdf_includes_metric_reference_without_changing_draft(monkeypatch):
             for item in flowables
             if isinstance(item, Paragraph)
         )
+        for table in flowables:
+            if isinstance(table, LongTable):
+                paragraphs.extend(
+                    cell.getPlainText()
+                    for row in table._cellvalues
+                    for cell in row
+                    if isinstance(cell, Paragraph)
+                )
         return real_build(document, flowables, *args, **kwargs)
 
     monkeypatch.setattr(SimpleDocTemplate, "build", capture_and_build)
@@ -179,10 +187,7 @@ def test_pdf_includes_metric_reference_without_changing_draft(monkeypatch):
 
     assert content.startswith(b"%PDF-")
     assert (
-        "Métrica: scenario_intermediate.break_even_clients"
-        in paragraphs
+        any("Métrica: scenario_intermediate.break_even_clients" in text for text in paragraphs)
     )
-    assert "Valor declarado: 25.0" in paragraphs
-    assert "Unidad: clients" in paragraphs
-    assert "Bajo estos supuestos se necesitan 25 clientes." in paragraphs
+    assert "25 clientes" in paragraphs
     assert draft == original

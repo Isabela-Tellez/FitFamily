@@ -261,11 +261,13 @@ def build_scenario_chart(
     bars = ax.bar(
         data["scenario"],
         data["value"],
+        color=["#A12626" if value < 0 else "C0" for value in data["value"]],
     )
 
     ax.set_title(
         f"Comparación de escenarios económicos: {metric}"
     )
+    ax.margins(y=0.12)
     ax.set_xlabel("Escenario")
     ax.set_ylabel(f"Resultado ({next(iter(units))})")
     ax.grid(axis="y", linestyle="--", alpha=0.35)

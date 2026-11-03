@@ -40,6 +40,7 @@ class ReportClaim:
     # El revisor los comparará con el resultado del analista.
     reported_value: float | None = None
     reported_unit: str | None = None
+    calculation_id: str | None = None
 
     def __post_init__(self) -> None:
         """Comprueba que la referencia numérica esté completa."""
@@ -110,4 +111,3 @@ class ReportDraft:
     draft_id: str = field(default_factory=lambda: uuid4().hex)
     version: int = 1
     claims: list[ReportClaim] = field(default_factory=list)
-

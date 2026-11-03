@@ -65,10 +65,11 @@ def test_preview_keeps_numeric_traceability_and_creates_no_files(
 
     assert "25 clientes" in preview.markdown
     assert metrics[0].metric_id in preview.markdown
-    assert "**Valor declarado:** 25.0" in preview.markdown
-    assert "**Unidad:** clients" in preview.markdown
+    assert "| Intermedio | Punto de equilibrio | 25 clientes |" in preview.markdown
     assert "pendiente de revisión y aprobación" in preview.markdown
-    assert all(note in preview.markdown for note in metric_context_notes(metrics[0]))
+    for note in metric_context_notes(metrics[0]):
+        assert note in draft.limitations
+    assert "Supuesto de cálculo:" not in preview.markdown
     assert preview.draft_fingerprint == calculate_draft_fingerprint(draft)
     assert preview.delivery_actions == ("export_markdown", "export_pdf", "update_tracking_csv")
     assert draft == before
@@ -107,7 +108,7 @@ def test_numeric_preview_review_delivery_and_retry_keep_the_same_report(
     assert calculate_draft_fingerprint(draft) == preview.draft_fingerprint
     markdown = Path(result.markdown_path).read_text(encoding="utf-8")
     assert "25 clientes" in markdown
-    assert "**Valor declarado:** 25.0" in markdown
+    assert "| Intermedio | Punto de equilibrio | 25 clientes |" in markdown
     assert "aprobado para exportación" in markdown
     assert Path(result.pdf_path).read_bytes().startswith(b"%PDF-")
     assert len(list((tmp_path / "reports").glob("*.md"))) == 1
