@@ -238,6 +238,38 @@ def _draft_from_state(state: ResearchState) -> ReportDraft:
     )
 
 
+def _delivery_result_from_state(
+    data: dict[str, Any] | None,
+) -> DeliveryResult | None:
+    """Reconstruye un resultado de entrega desde el estado persistido."""
+    if data is None:
+        return None
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "El resultado de entrega almacenado no es válido."
+        )
+
+    return DeliveryResult(
+        **{
+            **data,
+            "requested_actions": tuple(
+                data["requested_actions"]
+            ),
+            "completed_actions": tuple(
+                data["completed_actions"]
+            ),
+            "failed_actions": tuple(
+                data["failed_actions"]
+            ),
+            "errors": tuple(
+                tuple(error)
+                for error in data.get("errors", [])
+            ),
+        }
+    )
+
+
 # ============================================================
 # REVIEW NODE
 # ============================================================
@@ -496,28 +528,9 @@ def delivery_node(state: ResearchState) -> dict[str, Any]:
     # --------------------------------------------------------
     # PREVIOUS DELIVERY RESULT
     # --------------------------------------------------------
-    previous_result = None
-    previous_data = state.get("delivery_result")
-
-    if previous_data:
-        previous_result = DeliveryResult(
-            **{
-                **previous_data,
-                "requested_actions": tuple(
-                    previous_data["requested_actions"]
-                ),
-                "completed_actions": tuple(
-                    previous_data["completed_actions"]
-                ),
-                "failed_actions": tuple(
-                    previous_data["failed_actions"]
-                ),
-                "errors": tuple(
-                    tuple(error)
-                    for error in previous_data.get("errors", [])
-                ),
-            }
-        )
+    previous_result = _delivery_result_from_state(
+        state.get("delivery_result")
+    )
 
     # --------------------------------------------------------
     # EXECUTE DELIVERY
