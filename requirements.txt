@@ -30,6 +30,7 @@ tavily-python==0.8.5
 
 # Pruebas (no necesarias en producción)
 pytest==9.0.3
+pytest-cov==7.1.0
 
 # Notas:
 # - El paquete duckduckgo-search NO se incluye porque el código usa from ddgs import DDGS
