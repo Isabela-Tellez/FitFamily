@@ -106,8 +106,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Logo real
-st.image(r"C:\Users\JUAN\Downloads\logo_fitfamily.jpg", width=200)
+# ---------------------------------------------------------------------------
+# Logo real en panel lateral izquierdo
+with st.sidebar:
+    st.image(r"C:\Users\JUAN\Downloads\logo_fitfamily.jpg", width=160)
 
 # ---------------------------------------------------------------------------
 # Estado de sesión y utilidades
