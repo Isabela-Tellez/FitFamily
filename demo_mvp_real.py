@@ -16,7 +16,7 @@ from src.automation.models import ApprovalRecord
 from src.graph.review_routes import choose_review_route_for_context
 from src.reporting.report_builder import build_report
 from src.review.quality_checks import run_basic_review
-from src.schemas import ResearchBrief
+from src.schemas import ResearchBrief, Evidence
 from src.agents.researcher import run_research
 from src.analysis.scenarios import create_economic_scenario, evaluate_economic_scenario
 from src.analysis.calculation_adapter import metric_from_break_even
@@ -38,10 +38,35 @@ brief = ResearchBrief(
     },
 )
 
+import asyncio
+from src.mcp.client import connect_mcp, call_area_statistics
+...
 print("Ejecutando investigacion real (ddgs)...")
 research = run_research(brief)
 print("Evidencias:", len(research.evidences), "Competidores:", len(research.competitors))
 print("Search:", research.search_performed)
+
+# Datos municipales reales via MCP
+print("Consultando MCP (indicadores de El Canaveral)...")
+async def fetch_mcp():
+    async with connect_mcp() as session:
+        return await call_area_statistics(session, "El Canaveral", None)
+
+mcp_result = asyncio.run(fetch_mcp())
+source = mcp_result.get("source", "MCP local")
+for key, info in mcp_result.get("results", {}).items():
+    if info.get("verification_status") == "verified" and info.get("value") is not None:
+        research.evidences.append(
+            Evidence(
+                evidence_id=f"mcp_{key}",
+                claim=f"{key}: {info['value']} {info['unit']} ({info.get('reference_period','')})",
+                value=info["value"],
+                unit=info["unit"],
+                source_url=info.get("source_url"),
+                limitations=info.get("limitations", ""),
+            )
+        )
+print("Evidencias tras MCP:", len(research.evidences))
 
 params = brief.assumed_params
 scenario = create_economic_scenario(
