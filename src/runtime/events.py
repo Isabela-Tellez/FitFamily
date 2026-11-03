@@ -8,12 +8,30 @@ from pathlib import Path
 from typing import Any
 
 
-# Ruta predeterminada de la base de datos de eventos.
 DEFAULT_EVENTS_DB_PATH = Path("data") / "fitfamily_events.sqlite"
 
 
+def _validate_text(value: str, name: str) -> None:
+    """Valida que un campo de texto sea una cadena no vacía."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{name} debe ser una cadena no vacía.")
+
+
+def _validate_details(
+    details: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Valida y normaliza los detalles de un evento."""
+    if details is None:
+        return {}
+
+    if not isinstance(details, dict):
+        raise ValueError("details debe ser un diccionario.")
+
+    return details
+
+
 def _initialize_db(db_path: str | Path) -> None:
-    """Crea la tabla y el índice necesarios para registrar eventos."""
+    """Crea la tabla y los índices necesarios."""
     path = Path(db_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -32,13 +50,65 @@ def _initialize_db(db_path: str | Path) -> None:
             """
         )
 
-        # Acelera las consultas de eventos por investigación.
         connection.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_research_events_run_id_id
             ON research_events (run_id, id)
             """
         )
+
+        # Índice para localizar eventos idempotentes.
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_research_events_idempotency
+            ON research_events (
+                run_id,
+                stage,
+                event_type,
+                details
+            )
+            """
+        )
+
+
+def _serialize_details(
+    details: dict[str, Any],
+    *,
+    sort_keys: bool = False,
+) -> str:
+    """Serializa detalles de forma compatible con SQLite."""
+    try:
+        return json.dumps(
+            details,
+            ensure_ascii=False,
+            sort_keys=sort_keys,
+            default=str,
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "No se pudieron serializar los detalles del evento."
+        ) from exc
+
+
+def _build_event(
+    event_id: int,
+    run_id: str,
+    timestamp: str,
+    stage: str,
+    event_type: str,
+    message: str,
+    details: dict[str, Any],
+) -> dict[str, Any]:
+    """Construye la representación pública de un evento."""
+    return {
+        "id": event_id,
+        "run_id": run_id,
+        "timestamp": timestamp,
+        "stage": stage,
+        "event_type": event_type,
+        "message": message,
+        "details": details,
+    }
 
 
 def emit_event(
@@ -50,37 +120,36 @@ def emit_event(
     db_path: str | Path = DEFAULT_EVENTS_DB_PATH,
 ) -> dict[str, Any]:
     """
-    Registra un evento y devuelve sus datos.
+    Registra un evento de ejecución.
 
-    Los eventos se asocian a un run_id para mantener separadas
-    las investigaciones y permitir consultar su progreso.
+    Cada evento genera un nuevo registro, incluso si existen
+    otros eventos con los mismos datos.
     """
-    if not isinstance(run_id, str) or not run_id.strip():
-        raise ValueError("run_id no puede estar vacío.")
-    if not isinstance(stage, str) or not stage.strip():
-        raise ValueError("stage no puede estar vacío.")
-    if not isinstance(event_type, str) or not event_type.strip():
-        raise ValueError("event_type no puede estar vacío.")
-    if not isinstance(message, str) or not message.strip():
-        raise ValueError("message no puede estar vacío.")
-    if details is not None and not isinstance(details, dict):
-        raise ValueError("details debe ser un diccionario.")
+    _validate_text(run_id, "run_id")
+    _validate_text(stage, "stage")
+    _validate_text(event_type, "event_type")
+    _validate_text(message, "message")
 
-    timestamp = datetime.now(timezone.utc).isoformat()
-    serialized_details = json.dumps(
-        details or {},
-        ensure_ascii=False,
-        default=str,
-    )
+    normalized_details = _validate_details(details)
+
+    serialized_details = _serialize_details(normalized_details)
 
     _initialize_db(db_path)
+
     path = Path(db_path)
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     with sqlite3.connect(path, timeout=10) as connection:
         cursor = connection.execute(
             """
-            INSERT INTO research_events
-                (run_id, timestamp, stage, event_type, message, details)
+            INSERT INTO research_events (
+                run_id,
+                timestamp,
+                stage,
+                event_type,
+                message,
+                details
+            )
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
@@ -92,17 +161,118 @@ def emit_event(
                 serialized_details,
             ),
         )
+
         event_id = cursor.lastrowid
 
-    return {
-        "id": event_id,
-        "run_id": run_id,
-        "timestamp": timestamp,
-        "stage": stage,
-        "event_type": event_type,
-        "message": message,
-        "details": details or {},
-    }
+    return _build_event(
+        event_id=event_id,
+        run_id=run_id,
+        timestamp=timestamp,
+        stage=stage,
+        event_type=event_type,
+        message=message,
+        details=normalized_details,
+    )
+
+
+def emit_event_once(
+    run_id: str,
+    stage: str,
+    event_type: str,
+    message: str,
+    details: dict[str, Any] | None = None,
+    db_path: str | Path = DEFAULT_EVENTS_DB_PATH,
+) -> dict[str, Any]:
+    """
+    Registra un evento evitando duplicados consecutivos equivalentes.
+
+    La comprobación y la inserción se realizan dentro de una
+    transacción BEGIN IMMEDIATE para evitar condiciones de carrera.
+
+    La identidad del evento se determina mediante:
+    run_id, stage, event_type y details.
+    """
+    _validate_text(run_id, "run_id")
+    _validate_text(stage, "stage")
+    _validate_text(event_type, "event_type")
+    _validate_text(message, "message")
+
+    normalized_details = _validate_details(details)
+
+    serialized_details = _serialize_details(
+        normalized_details,
+        sort_keys=True,
+    )
+
+    _initialize_db(db_path)
+
+    path = Path(db_path)
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    with sqlite3.connect(path, timeout=10) as connection:
+        connection.execute("BEGIN IMMEDIATE")
+
+        row = connection.execute(
+            """
+            SELECT id, timestamp
+            FROM research_events
+            WHERE run_id = ?
+              AND stage = ?
+              AND event_type = ?
+              AND details = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (
+                run_id,
+                stage,
+                event_type,
+                serialized_details,
+            ),
+        ).fetchone()
+
+        if row is not None:
+            return _build_event(
+                event_id=row[0],
+                run_id=run_id,
+                timestamp=row[1],
+                stage=stage,
+                event_type=event_type,
+                message=message,
+                details=normalized_details,
+            )
+
+        cursor = connection.execute(
+            """
+            INSERT INTO research_events (
+                run_id,
+                timestamp,
+                stage,
+                event_type,
+                message,
+                details
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_id,
+                timestamp,
+                stage,
+                event_type,
+                message,
+                serialized_details,
+            ),
+        )
+
+        return _build_event(
+            event_id=cursor.lastrowid,
+            run_id=run_id,
+            timestamp=timestamp,
+            stage=stage,
+            event_type=event_type,
+            message=message,
+            details=normalized_details,
+        )
 
 
 def read_events(
@@ -112,43 +282,76 @@ def read_events(
     db_path: str | Path = DEFAULT_EVENTS_DB_PATH,
 ) -> list[dict[str, Any]]:
     """
-    Recupera los eventos de una investigación en orden de registro.
+    Recupera los eventos de una investigación.
 
-    after_id permite consultar solo los eventos nuevos, evitando
-    repetir los que ya se han mostrado en la interfaz.
+    Los eventos se devuelven en orden cronológico de registro.
+
+    after_id permite consultar exclusivamente eventos nuevos,
+    facilitando la actualización incremental de la interfaz.
     """
-    if not isinstance(run_id, str) or not run_id.strip():
-        raise ValueError("run_id no puede estar vacío.")
-    if isinstance(after_id, bool) or not isinstance(after_id, int) or after_id < 0:
-        raise ValueError("after_id debe ser un entero no negativo.")
-    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
-        raise ValueError("limit debe ser un entero positivo.")
+    _validate_text(run_id, "run_id")
+
+    if (
+        isinstance(after_id, bool)
+        or not isinstance(after_id, int)
+        or after_id < 0
+    ):
+        raise ValueError(
+            "after_id debe ser un entero no negativo."
+        )
+
+    if (
+        isinstance(limit, bool)
+        or not isinstance(limit, int)
+        or limit < 1
+    ):
+        raise ValueError(
+            "limit debe ser un entero positivo."
+        )
 
     _initialize_db(db_path)
+
     path = Path(db_path)
 
     with sqlite3.connect(path, timeout=10) as connection:
         connection.row_factory = sqlite3.Row
+
         rows = connection.execute(
             """
-            SELECT id, run_id, timestamp, stage, event_type, message, details
+            SELECT
+                id,
+                run_id,
+                timestamp,
+                stage,
+                event_type,
+                message,
+                details
             FROM research_events
-            WHERE run_id = ? AND id > ?
+            WHERE run_id = ?
+              AND id > ?
             ORDER BY id ASC
             LIMIT ?
             """,
-            (run_id, after_id, limit),
+            (
+                run_id,
+                after_id,
+                limit,
+            ),
         ).fetchall()
 
-    return [
-        {
-            "id": row["id"],
-            "run_id": row["run_id"],
-            "timestamp": row["timestamp"],
-            "stage": row["stage"],
-            "event_type": row["event_type"],
-            "message": row["message"],
-            "details": json.loads(row["details"]),
-        }
-        for row in rows
-    ]
+    events = []
+
+    for row in rows:
+        events.append(
+            {
+                "id": row["id"],
+                "run_id": row["run_id"],
+                "timestamp": row["timestamp"],
+                "stage": row["stage"],
+                "event_type": row["event_type"],
+                "message": row["message"],
+                "details": json.loads(row["details"]),
+            }
+        )
+
+    return events
