@@ -136,7 +136,7 @@ def test_text_uses_the_result_of_another_scenario():
     assert claim.reported_value == 50.0
     assert "50 clientes" in claim.text
     assert "25 clientes" not in claim.text
-    assert scenario.scenario_id in claim.text
+    assert "escenario conservador" in claim.text
 
 def test_report_builder_includes_calculated_claim_and_context_notes():
     """El constructor incorpora cifra, texto y contexto del cálculo."""
@@ -368,5 +368,7 @@ def test_report_preserves_monthly_metrics_by_scenario():
     assert [claim.metric_id for claim in draft.claims] == [
         metric.metric_id for metric in metrics
     ]
+    assert draft.claims[0].text.startswith("Escenario conservador")
+    assert draft.claims[3].text.startswith("Escenario intermedio")
     assert all(claim.reported_unit == "EUR/month" for claim in draft.claims)
     assert any("Resultado mensual estimado: -600" in section for section in draft.sections)

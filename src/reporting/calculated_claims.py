@@ -8,6 +8,13 @@ from src.analysis.contracts import CalculatedMetric
 from src.reporting.models import ReportClaim
 
 
+SCENARIO_NAMES = {
+    "conservative": "conservador",
+    "intermediate": "intermedio",
+    "optimistic": "optimista",
+}
+
+
 def build_break_even_claim(
     metric: CalculatedMetric,
     *,
@@ -65,7 +72,7 @@ def build_break_even_claim(
     clients = int(value)
     client_label = "cliente" if clients == 1 else "clientes"
     text = (
-        f"En el escenario {scenario_id}, con las entradas y supuestos "
+        f"En el escenario {SCENARIO_NAMES[context.scenario.scenario_type]}, con las entradas y supuestos "
         f"indicados, se necesitan al menos {clients} {client_label} "
         "para cubrir los costes incluidos en el cálculo mensual. "
         "Esto no garantiza conseguir esa clientela ni la viabilidad "
@@ -112,9 +119,10 @@ def build_scenario_claim(
         raise ValueError("El valor no puede convertirse sin alterarlo.")
     amount = format(metric.value, "f").replace(".", ",")
     label = MONTHLY_LABELS[calculation_type]
+    scenario_name = SCENARIO_NAMES[metric.context.scenario.scenario_type]
     return ReportClaim(
         claim_id=claim_id,
-        text=f"Escenario {scenario_id} — {label}: {amount} €/mes.",
+        text=f"Escenario {scenario_name} — {label}: {amount} €/mes.",
         kind="inference",
         evidence_ids=list(metric.evidence_ids),
         metric_id=metric.metric_id,
