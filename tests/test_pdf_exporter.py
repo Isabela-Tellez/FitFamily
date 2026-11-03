@@ -177,6 +177,7 @@ def test_pdf_includes_metric_reference_without_changing_draft(monkeypatch):
                     cell.getPlainText()
                     for row in table._cellvalues
                     for cell in row
+                    if isinstance(cell, Paragraph)
                 )
         return real_build(document, flowables, *args, **kwargs)
 

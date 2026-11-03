@@ -13,7 +13,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import LongTable, Paragraph, SimpleDocTemplate, Spacer, TableStyle
+from reportlab.platypus import LongTable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, TableStyle
 
 from src.reporting.calculated_claims import ECONOMIC_TRACE_HEADERS, economic_trace_row, format_scenario_note
 from src.reporting.models import ReportDraft
@@ -88,14 +88,16 @@ def render_report_pdf(
     styles.add(ParagraphStyle(
         name="ReportTitle",
         fontName="FitFamily-Bold",
-        fontSize=18,
-        leading=23,
+        fontSize=36,
+        leading=43,
+        textColor=colors.white,
         alignment=TA_CENTER,
         spaceAfter=18,
     ))
     styles.add(ParagraphStyle(
         name="ReportHeading",
         fontName="FitFamily-Bold",
+        textColor=colors.HexColor("#102C3A"),
         fontSize=12,
         leading=16,
         spaceBefore=14,
@@ -115,12 +117,22 @@ def render_report_pdf(
 
     styles.add(ParagraphStyle(
         name="ScenarioHeading", parent=styles["ReportHeading"],
-        fontSize=14, leading=18,
+        fontSize=16, leading=21, textColor=colors.HexColor("#006D66"),
     ))
     styles.add(ParagraphStyle(
         name="MetricHeading", parent=styles["ReportHeading"],
         fontSize=11, leading=14, spaceBefore=6, spaceAfter=3,
     ))
+
+    styles.add(ParagraphStyle(
+        name="CoverLabel", parent=styles["ReportHeading"],
+        fontSize=10, leading=14, textColor=colors.HexColor("#85DAC7"),
+    ))
+
+    for name, parent in (("LossLabel", "ReportBody"), ("LossAmount", "ScenarioHeading")):
+        styles.add(ParagraphStyle(
+            name=name, parent=styles[parent], textColor=colors.HexColor("#A12626"),
+        ))
 
     # ReportLab coloca estos elementos en orden y distribuye
     # el contenido entre las páginas disponibles.
@@ -134,8 +146,27 @@ def render_report_pdf(
 
     # Conservamos los datos del borrador para identificar exactamente
     # qué informe y qué versión se están mostrando.
-    add_text(draft.title, "ReportTitle")
-    add_text(f"Zona de estudio: {draft.study_area}")
+    cover_rows = [
+        [Paragraph("FITFAMILY · ESTUDIO DE MERCADO", styles["CoverLabel"])],
+        [Spacer(1, 28)],
+        [Paragraph(_paragraph_text(draft.title), styles["ReportTitle"])],
+
+    ]
+    if draft.study_area and draft.study_area.casefold() not in draft.title.casefold():
+        cover_rows.append([
+            Paragraph(_paragraph_text(draft.study_area), styles["CoverLabel"])
+        ])
+    cover_rows.append([Spacer(1, 28)])
+    cover = LongTable(cover_rows, colWidths=[465])
+    cover.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#102C3A")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 12),
+        ("LEFTPADDING", (0, 0), (-1, -1), 22),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+    ]))
+    story.extend([cover, Spacer(1, 18)])
+
     add_text(f"Identificador del borrador: {draft.draft_id}")
     add_text(f"Versión: {draft.version}")
 
@@ -147,6 +178,18 @@ def render_report_pdf(
     add_text(f"Estado: {status}")
     story.append(Spacer(1, 0.3 * cm))
 
+    executive_summary = next(
+        (section for section in draft.sections
+         if section.strip().partition("\n")[0] == "Resumen ejecutivo"),
+        None,
+    )
+    if executive_summary:
+        _, _, summary_body = executive_summary.strip().partition("\n")
+        add_text("Resumen ejecutivo", "ScenarioHeading")
+        for paragraph in summary_body.split("\n\n"):
+            if paragraph.strip():
+                add_text(paragraph.strip())
+
     # Seguimos el formato actual de ReportDraft:
     # la primera línea de cada sección contiene su título.
     for section in draft.sections:
@@ -155,7 +198,97 @@ def render_report_pdf(
             continue
 
         heading, _, body = clean_section.partition("\n")
-        add_text(heading, "ReportHeading")
+        if section == executive_summary:
+            continue
+        if heading == "Escenarios económicos":
+            story.append(PageBreak())
+            add_text(heading, "ScenarioHeading")
+        else:
+            add_text(heading, "ReportHeading")
+
+        if heading == "Escenarios económicos":
+            result_rows = []
+            for claim in draft.claims:
+                if not (claim.metric_id or "").endswith(".monthly_result"):
+                    continue
+                row = economic_trace_row(claim)
+                if row is None:
+                    continue
+                scenario, _, value, _ = row
+                result = claim.reported_value
+                label = "Resultado estimado"
+                if result < 0:
+                    label = "Pérdida estimada"
+                elif result > 0:
+                    label = "Beneficio estimado"
+                result_rows.append([
+                    Paragraph(_paragraph_text(f"Escenario {scenario.lower()}"), styles["ScenarioHeading"]),
+                    Paragraph(_paragraph_text(label), styles["LossLabel" if result < 0 else "ReportBody"]),
+                    Paragraph(_paragraph_text(value.lstrip("-")), styles["LossAmount" if result < 0 else "ScenarioHeading"]),
+                ])
+            if result_rows:
+                assumption_rows = []
+                for block in body.split("\n\n### "):
+                    if not block.startswith("Escenario "):
+                        continue
+                    title, _, assumptions = block.split("\n\n#### ", 1)[0].strip().partition("\n")
+                    assumption_rows.append([
+                        [
+                            Paragraph(_paragraph_text(title), styles["ScenarioHeading"]),
+                            Paragraph(_paragraph_text(assumptions.strip()), styles["ReportBody"]),
+                        ]
+                    ])
+                if assumption_rows:
+                    add_text("Supuestos de los escenarios", "ReportHeading")
+                    assumptions_table = LongTable(assumption_rows, colWidths=[465])
+                    assumptions_table.setStyle(TableStyle([
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EAF5F2")),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                    ]))
+                    story.extend([assumptions_table, Spacer(1, 12)])
+                for start in range(0, len(result_rows), 2):
+                    cards = result_rows[start:start + 2]
+                    summary = LongTable([cards], colWidths=[465 / len(cards)] * len(cards))
+                    summary.setStyle(TableStyle([
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EAF5F2")),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                        ("LINEAFTER", (0, 0), (0, 0), 6, colors.white),
+                    ]))
+                    story.extend([summary, Spacer(1, 10)])
+
+                comparison = {}
+                for claim in draft.claims:
+                    row = economic_trace_row(claim)
+                    if row is not None:
+                        scenario, metric, value, _ = row
+                        comparison.setdefault(scenario, {})[metric] = value
+                metrics = dict.fromkeys(
+                    metric for values in comparison.values() for metric in values
+                )
+                cells = [["Indicador", *comparison]]
+                cells.extend(
+                    [metric, *(values.get(metric, "No disponible") for values in comparison.values())]
+                    for metric in metrics
+                )
+                table = LongTable(
+                    [[Paragraph(_paragraph_text(value), styles["ReportBody"]) for value in row]
+                     for row in cells],
+                    colWidths=[165, *([300 / len(comparison)] * len(comparison))],
+                    repeatRows=1,
+                )
+                table.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D4E7EA")),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F1F5F7")]),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]))
+                story.extend([table, Spacer(1, 10)])
+                add_text("Cómo leer la comparación", "ReportHeading")
+                add_text(
+                    "Los resultados estimados dependen de la clientela, la cuota "
+                    "y los costes de cada escenario. El punto de equilibrio indica "
+                    "cuántos clientes hacen falta para cubrir los costes incluidos."
+                )
 
         # Los párrafos separados permiten repartir el contenido
         # entre páginas sin tratar toda la sección como un bloque.
