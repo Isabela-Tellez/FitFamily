@@ -107,6 +107,50 @@ st.markdown(
 )
 
 # ---------------------------------------------------------------------------
+# Modelo de recomendación real (determinista, explicable)
+# ---------------------------------------------------------------------------
+st.markdown("---")
+st.markdown("## 🧮 Modelo de recomendación de oportunidad (real, determinista)")
+st.info("Este modelo usa exclusivamente datos reales: indicadores MCP (`mcp_ind_*`), registro oficial de competidores (`competitor_registry.json`), escenarios económicos (`analysis/economic_calculations.py`). No inventa cifras ni garantiza rentabilidad. Si faltan datos obligatorios, lo indica claramente.")
+
+with st.form("ff_recommendation"):
+    rec_scenario = st.selectbox("Tipo de escenario (real)", ["intermediate", "basic", "optimistic"], index=0)
+    clients = st.number_input("Clientes previstos (supuesto usuario)", min_value=0, value=150)
+    fee = st.number_input("Cuota mensual (EUR, supuesto usuario)", min_value=0, value=40)
+    fixed = st.number_input("Costes fijos / mes (EUR, supuesto usuario)", min_value=0, value=8000)
+    variable = st.number_input("Coste variable / cliente (EUR, supuesto usuario)", min_value=0, value=10)
+    submit_rec = st.form_submit_button("Ejecutar recomendación determinista")
+
+if submit_rec:
+    try:
+        from src.recommendation.service import recommend
+        rec_result = recommend(
+            scenario_type=rec_scenario,
+            expected_clients=clients,
+            monthly_fee=fee,
+            fixed_costs=fixed,
+            variable_cost_per_client=variable,
+            indicator_source="MCP",
+            competitor_registry_path="data/processed/competitor_registry.json",
+            rent_status="pending",
+            run_id="fitfamily-recommendation-final-001",
+        )
+        score = rec_result.score_global
+        status_icon = "✅" if rec_result.status == "pending_review" else "⚠️"
+        st.subheader(f"Resultado: {status_icon} {rec_result.recommendation}")
+        st.metric("Puntuación (escala 0-100, basada en datos reales)", f"{score:.1f}" if score is not None else "No disponible")
+        st.write("**Explicación determinista:**", rec_result.explanation if hasattr(rec_result, "explanation") else "Ver `docs/recommendation/RECOMMENDATION_MODEL.md` para metodología completa.")
+        st.write("**Factores favorables (datos reales):**", ", ".join(rec_result.factors_favorable) if rec_result.factors_favorable else "Ninguno verificado.")
+        st.write("**Factores desfavorables / riesgos (reales):**", ", ".join(rec_result.factors_unfavorable) if rec_result.factors_unfavorable else "Ninguno documentado.")
+        st.write("**Datos faltantes (reales, no inventados):**", ", ".join(rec_result.missing_evidence) if rec_result.missing_evidence else "Ninguno documentado.")
+        st.write("**Limitaciones (reales):**", "; ".join(rec_result.limitations) if rec_result.limitations else "No hay limitaciones documentadas adicionales.")
+        st.write("**Versión del modelo:**", rec_result.model_version)
+        st.write("**Fecha de evaluación:**", rec_result.evaluated_at.isoformat())
+        st.caption("Nota: este modelo no garantiza rentabilidad. Usa exclusivamente datos verificados y supuestos del usuario claramente etiquetados. Ver `docs/recommendation/RECOMMENDATION_MODEL.md`.")
+    except Exception as exc:
+        st.error(f"Recomendación bloqueada (documentado real): {str(exc)[:200]}. Verifica datos de entrada y archivo `data/processed/competitor_registry.json`.")
+
+# ---------------------------------------------------------------------------
 # Logo real en panel lateral izquierdo
 with st.sidebar:
     st.image(r"C:\Users\JUAN\Downloads\logo_fitfamily.jpg", width=160)
