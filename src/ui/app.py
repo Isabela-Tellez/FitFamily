@@ -106,6 +106,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Logo real
+st.image("assets/logo-fitfamily.png", width=200)
 
 # ---------------------------------------------------------------------------
 # Estado de sesión y utilidades
