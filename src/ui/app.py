@@ -1,0 +1,95 @@
+"""FitFamily Studio — punto de entrada único de la interfaz Streamlit.
+
+Arranque:  python -m streamlit run src/ui/app.py
+
+Arquitectura de presentación separada de la lógica de negocio:
+
+  app.py             → este punto de entrada (bootstrap + router)
+  studio/design.py   → sistema de diseño centralizado (tokens + CSS)
+  studio/state.py    → estado de sesión y utilidades compartidas
+  studio/components.py → componentes visuales reutilizables
+  studio/navigation.py → router y barra lateral
+  studio/services.py → envoltorios del backend real (controlador, MCP)
+  studio/screens/    → una pantalla por área de experiencia
+  controller.py      → adaptador de presentación sobre el backend
+  report_preview.py  → previsualización trazable del informe
+
+Conexión con el backend: la interfaz NO ejecuta nodos del grafo por su
+cuenta. Toda ejecución, recuperación, aprobación y entrega pasa por la
+API pública `src.runtime.controller` (start_run, load_run, resume_run,
+retry_delivery) y por el registro de eventos `src.runtime.events`.
+
+Compatibilidad Streamlit: la ilustración se embebe con `st.iframe`.
+Streamlit 1.56 depreca `st.components.v1.html` (retirada tras
+2026-06-01); no se importa `streamlit.components.v1` en ninguna parte
+de esta interfaz.
+
+La app no lanza búsquedas, consultas MCP ni exportaciones al cargarse:
+cada operación externa requiere una acción explícita del usuario.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import streamlit as st
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from dotenv import load_dotenv
+
+load_dotenv(ROOT / ".env", override=False)
+
+from src.ui.studio import design, navigation
+from src.ui.studio.screens import (
+    approval,
+    indicators,
+    new_study,
+    recommendation,
+    results,
+    workspace,
+)
+from src.ui.studio.state import init
+
+# ---------------------------------------------------------------------------
+# Configuración e identidad (una sola vez por sesión)
+# ---------------------------------------------------------------------------
+st.set_page_config(
+    page_title="FitFamily Studio · Inteligencia de mercado",
+    page_icon="🏡",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+design.inject()
+init()
+
+# ---------------------------------------------------------------------------
+# Router: una sola pantalla activa por vez (sin bloques duplicados)
+# ---------------------------------------------------------------------------
+# Aplica una navegación solicitada en el run anterior antes de instanciar
+# el radio de la barra lateral (evita modificar su clave después).
+pending_page = st.session_state.pop("ff_pending_page", None)
+if pending_page:
+    st.session_state["ff_page"] = pending_page
+
+page = navigation.render_sidebar()
+
+if page == "Inicio":
+    workspace.render()
+elif page == "Nuevo estudio":
+    new_study.render()
+elif page == "Resultados":
+    results.render()
+elif page == "Indicadores oficiales":
+    indicators.render()
+elif page == "Recomendación":
+    recommendation.render()
+elif page == "Aprobación y entrega":
+    approval.render()
+
+from src.ui.studio.components import footer
+
+footer()
