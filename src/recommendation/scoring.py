@@ -118,5 +118,6 @@ def score_opportunity(inp: RecommendationInput) -> RecommendationResult:
         limitations=limitations,
         sources_used=sources,
         assumptions_used=assumptions,
+        explanation=explanation,
         status="pending_review" if recommendation == "promising_conditional" else "pending_review",
     )

@@ -347,6 +347,8 @@ def test_duplicate_submission_is_blocked(app):
 
 
 def test_missing_groq_blocks_run_with_clear_message(app, monkeypatch):
+    # Simula ausencia de .env (load_dotenv no reinyecta la clave) y de GROQ.
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: None)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     app.radio(key="ff_page").set_value("Nuevo estudio")
     app.run()
@@ -407,8 +409,71 @@ def test_recommendation_screen_runs_deterministic_model(app, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# I. Health check HTTP
+# J. Recomendación: traducción de estados y explicación de la puntuación
 # ---------------------------------------------------------------------------
+def test_recommendation_translates_insufficient_evidence(app):
+    app.radio(key="ff_page").set_value("Recomendación")
+    app.run()
+    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    btn.click()
+    app.run()
+    assert not app.exception
+    md = " ".join(m.value for m in app.markdown)
+    captions = " ".join(c.value for c in app.caption)
+    assert "### Evidencia insuficiente para emitir una recomendación concluyente" in md
+    assert "Código interno del modelo (trazabilidad): `insufficient_evidence`" in captions
+
+
+def test_recommendation_preserves_internal_code_for_diagnostics(app):
+    from src.ui.studio.screens import recommendation as rec_screen
+
+    assert rec_screen._recommendation_label("insufficient_evidence") == \
+        "Evidencia insuficiente para emitir una recomendación concluyente"
+    assert rec_screen._recommendation_label("promising_conditional") == \
+        "Oportunidad prometedora (condicionada)"
+    assert rec_screen._recommendation_label("review_needed") == \
+        "Requiere revisión adicional"
+    unknown = rec_screen._recommendation_label("codigo_inventado_xyz")
+    assert "no reconocido" in unknown.lower() or "no disponible" in unknown.lower()
+    # El código interno se conserva en el texto de diagnóstico
+    diag = rec_screen._recommendation_explanation(
+        _make_result_stub("codigo_inventado_xyz")
+    )
+    assert isinstance(diag, str) and diag.strip()
+
+
+def _make_result_stub(code: str):
+    from types import SimpleNamespace
+    return SimpleNamespace(
+        recommendation=code, explanation=None, score_global=1.0,
+        missing_evidence=[], limitations=[], factors_favorable=[],
+        factors_unfavorable=[], model_version="v1", evaluated_at=None,
+    )
+
+
+def test_recommendation_explains_score(app):
+    app.radio(key="ff_page").set_value("Recomendación")
+    app.run()
+    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    btn.click()
+    app.run()
+    captions = " ".join(c.value for c in app.caption)
+    assert "promedio ponderado" in captions
+    assert "0-10" in captions or "0-10)" in captions
+    assert "No es probabilidad de éxito" in captions or "no es probabilidad" in captions.lower()
+
+
+def test_recommendation_shows_missing_evidence_and_factors(app):
+    app.radio(key="ff_page").set_value("Recomendación")
+    app.run()
+    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    btn.click()
+    app.run()
+    md = " ".join(m.value for m in app.markdown)
+    assert "Datos pendientes" in md
+    assert "Factores favorables" in md
+    assert "Factores desfavorables" in md
+    assert "Limitaciones" in md
 def _free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))

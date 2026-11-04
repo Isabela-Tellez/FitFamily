@@ -35,5 +35,6 @@ class RecommendationResult:
     limitations: list[str]
     sources_used: list[str]
     assumptions_used: list[str]
+    explanation: str = ""
     model_version: str = "v1.2026-11-03"
     status: str = "pending_review"

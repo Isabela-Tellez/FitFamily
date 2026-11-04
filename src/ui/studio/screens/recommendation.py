@@ -17,7 +17,53 @@ from src.ui.studio.components import (
     render_metrics,
     section_header,
 )
-from src.ui.studio.state import redact_secrets
+# Traducción de estados internos del modelo a etiquetas comprensibles.
+# El código interno se conserva para trazabilidad/diagnóstico.
+_RECOMMENDATION_LABELS = {
+    "promising_conditional": "Oportunidad prometedora (condicionada)",
+    "insufficient_evidence": "Evidencia insuficiente para emitir una recomendación concluyente",
+    "review_needed": "Requiere revisión adicional",
+}
+
+_RECOMMENDATION_EXPLANATIONS = {
+    "promising_conditional": (
+        "Los indicadores verificados, el registro de competidores y el escenario "
+        "económico son suficientes para plantear una oportunidad. Aun así, "
+        "conviene confirmar la disposición a pagar y los servicios de los competidores."
+    ),
+    "insufficient_evidence": (
+        "La información disponible todavía no permite formular una recomendación "
+        "firme. Es necesario completar o contrastar los datos pendientes antes de "
+        "tomar una decisión."
+    ),
+    "review_needed": (
+        "Los datos son parciales: faltan supuestos o evidencia completa de "
+        "competencia. No se debe declarar rentabilidad; conviene completar la "
+        "validación antes de decidir."
+    ),
+}
+
+def _recommendation_label(code: object) -> str:
+    """Traduce un código interno a una etiqueta legible (fallback genérico)."""
+    text = str(code or "").strip()
+    if text in _RECOMMENDATION_LABELS:
+        return _RECOMMENDATION_LABELS[text]
+    if not text:
+        return "Estado no disponible"
+    return "Estado no reconocido"
+
+
+def _recommendation_explanation(result) -> str:
+    """Explicación legible: primero la del modelo, luego la traducción."""
+    model_explanation = getattr(result, "explanation", None)
+    if isinstance(model_explanation, str) and model_explanation.strip():
+        return model_explanation.strip()
+    code = getattr(result, "recommendation", "")
+    return _RECOMMENDATION_EXPLANATIONS.get(
+        str(code or "").strip(),
+        "No hay explicación disponible para este estado. Conserva el código "
+        "técnico para diagnóstico.",
+    )
 
 
 def render() -> None:
@@ -94,32 +140,51 @@ def render() -> None:
         return
 
     st.write("")
+    code = getattr(result, "recommendation", "")
+    label = _recommendation_label(code)
+    st.markdown(f"### {label}")
+    st.caption(f"Código interno del modelo (trazabilidad): `{code or '—'}`")
+
+    explanation = _recommendation_explanation(result)
+    st.write(explanation)
+
     score = getattr(result, "score_global", None)
     render_metrics(
         [
             (
                 "Puntuación global",
                 f"{score:.1f}" if score is not None else "No disponible",
-                "Escala 0-100 basada en datos reales",
+                "Puntuación compuesta (0-10), no probabilidad de éxito",
             ),
             ("Estado", str(result_status(result)), "Estado del modelo"),
             ("Versión del modelo", str(getattr(result, "model_version", "—")), "Trazabilidad"),
         ],
         columns=3,
     )
+    st.caption(
+        "La puntuación (0-10) es un promedio ponderado de 4 dimensiones: "
+        "demanda (25%), registro de competidores (15%), escenario económico "
+        "(35%) y diferenciación (25%). No es probabilidad de éxito, ni de "
+        "rentabilidad, ni garantía de viabilidad."
+    )
     st.write("")
 
-    st.markdown(f"### {getattr(result, 'recommendation', 'Resultado')}")
-    explanation = getattr(result, "explanation", None)
-    if explanation:
-        st.write(explanation)
-    else:
-        st.caption(
-            "Ver `docs/recommendation/RECOMMENDATION_MODEL.md` para la "
-            "metodología completa."
-        )
+    # Datos pendientes primero (lo más importante para actuar)
+    missing = list(getattr(result, "missing_evidence", []) or [])
+    if missing:
+        section_header("Datos pendientes (no inventados)")
+        for item in missing:
+            st.markdown(f"- {item}")
 
-    section_header("Factores y limitaciones")
+    limitations = list(getattr(result, "limitations", []) or [])
+    section_header("Limitaciones")
+    if limitations:
+        for item in limitations:
+            st.markdown(f"- {item}")
+    else:
+        st.markdown("- Sin limitaciones adicionales documentadas.")
+
+    section_header("Factores y riesgos")
     st.markdown(
         "- **Factores favorables (datos reales):** "
         + (", ".join(result.factors_favorable) or "Ninguno verificado.")
@@ -128,14 +193,7 @@ def render() -> None:
         "- **Factores desfavorables / riesgos:** "
         + (", ".join(result.factors_unfavorable) or "Ninguno documentado.")
     )
-    st.markdown(
-        "- **Datos faltantes (no inventados):** "
-        + (", ".join(result.missing_evidence) or "Ninguno documentado.")
-    )
-    st.markdown(
-        "- **Limitaciones:** "
-        + ("; ".join(result.limitations) or "Sin limitaciones adicionales.")
-    )
+
     evaluated = getattr(result, "evaluated_at", None)
     st.caption(
         f"Evaluado: {evaluated.isoformat() if evaluated else '—'} · "
