@@ -193,12 +193,40 @@ def render_report_pdf(
 
     # Seguimos el formato actual de ReportDraft:
     # la primera línea de cada sección contiene su título.
+    visual_observations = []
+    visual_references = []
+    for section in draft.sections:
+        heading, _, body = section.strip().partition("\n")
+        if heading != "Análisis visual":
+            continue
+        for block in body.split("\n\n"):
+            title, _, details = block.strip().partition("\n")
+            prefix = "Observación asistida por IA: "
+            if title != "### Imagen: resultado-mensual" or not details.startswith(prefix):
+                continue
+            observation, _, references = details[len(prefix):].partition("\nArtefacto de origen: ")
+            visual_observations.append(observation)
+            visual_references.append((block, references))
+
+    has_economic_chart = any(
+        section.strip().partition("\n")[0] == "Escenarios económicos"
+        for section in draft.sections
+    ) and any(
+        (claim.metric_id or "").endswith(".monthly_result")
+        and economic_trace_row(claim) is not None
+        for claim in draft.claims
+    )
     for section in draft.sections:
         clean_section = section.strip()
         if not clean_section:
             continue
 
         heading, _, body = clean_section.partition("\n")
+        if heading == "Análisis visual" and has_economic_chart:
+            for block, _ in visual_references:
+                body = body.replace(block, "")
+            if not body.strip():
+                continue
         if section == executive_summary:
             continue
         if heading == "Escenarios económicos":
@@ -300,6 +328,8 @@ def render_report_pdf(
                     chart.drawWidth = 435
                 add_text("Resultado mensual por escenario", "ReportHeading")
                 story.append(chart)
+                for observation in visual_observations:
+                    add_text(observation)
                 add_text(
                     "Cada barra muestra el resultado mensual estimado de un escenario. "
                     "Por debajo de cero hay pérdida y por encima hay beneficio."
@@ -352,6 +382,12 @@ def render_report_pdf(
 
     # Mostramos las afirmaciones y sus referencias para mantener
     # la trazabilidad disponible en el borrador.
+    if has_economic_chart and visual_references:
+        add_text("Referencia del gráfico de resultado mensual", "ReportHeading")
+        for _, references in visual_references:
+            if references:
+                add_text("Artefacto de origen: " + references)
+
     add_text("Registro de afirmaciones", "ReportHeading")
     kind_labels = {
         "fact": "Afirmación factual",
