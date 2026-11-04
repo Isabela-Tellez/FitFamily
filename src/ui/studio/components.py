@@ -163,7 +163,7 @@ def footer() -> None:
 # ---------------------------------------------------------------------------
 # Ilustración de marca — compatibilidad con Streamlit 1.56+
 # ---------------------------------------------------------------------------
-def render_mascot(height: int = 300) -> None:
+def render_mascot(height: int = 260) -> None:
     """Ilustración original en SVG/CSS embebida con ``st.iframe``.
 
     Streamlit 1.56 depreca ``st.components.v1.html`` (retirada tras
@@ -173,12 +173,12 @@ def render_mascot(height: int = 300) -> None:
     """
     html = r"""<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
     *{box-sizing:border-box}body{margin:0;background:transparent;font-family:Arial,sans-serif}
-    .scene{width:100%;height:285px;position:relative;overflow:hidden;background:linear-gradient(135deg,#e8f5ed,#d8efe2 60%,#f4f7df);border-radius:24px}
+    .scene{width:100%;height:260px;position:relative;overflow:hidden;background:linear-gradient(135deg,#e8f5ed,#d8efe2 60%,#f4f7df);border-radius:24px}
     .sun{position:absolute;width:72px;height:72px;right:9%;top:23px;border-radius:50%;background:#f6d66e;box-shadow:0 0 0 14px #f6d66e33}
     .cloud{position:absolute;width:95px;height:26px;left:9%;top:35px;border-radius:30px;background:#fff;opacity:.8}.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%}.cloud:before{width:34px;height:34px;left:14px;top:-17px}.cloud:after{width:43px;height:43px;left:40px;top:-22px}
-    .floor{position:absolute;left:0;right:0;bottom:0;height:65px;background:#bddfc8;border-top:3px solid #9fceb0}
+    .floor{position:absolute;left:0;right:0;bottom:0;height:50px;background:#bddfc8;border-top:3px solid #9fceb0}
     .sign{position:absolute;left:6%;top:15px;color:#176b55;font-size:11px;font-weight:800;letter-spacing:2px}
-    svg{position:absolute;inset:0;width:100%;height:100%}.float{animation:float 3.4s ease-in-out infinite}.bob{transform-box:fill-box;transform-origin:center bottom;animation:bob 1.9s ease-in-out infinite}.ball{animation:roll 3s ease-in-out infinite}.spark{animation:twinkle 1.7s ease-in-out infinite alternate}
+    svg{position:absolute;inset:0;width:100%;height:100%;transform:scale(0.88);transform-origin:top center}.float{animation:float 3.4s ease-in-out infinite}.bob{transform-box:fill-box;transform-origin:center bottom;animation:bob 1.9s ease-in-out infinite}.ball{animation:roll 3s ease-in-out infinite}.spark{animation:twinkle 1.7s ease-in-out infinite alternate}
     @keyframes float{50%{transform:translateY(-7px)}}@keyframes bob{50%{transform:rotate(3deg) translateY(-2px)}}@keyframes roll{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(20px) rotate(180deg)}}@keyframes twinkle{to{opacity:.25;transform:scale(.7)}}
     @media(prefers-reduced-motion:reduce){.float,.bob,.ball,.spark{animation:none!important}}
     </style></head><body><div class="scene" role="img" aria-label="Ilustración animada de una familia: una persona entrena mientras una niña juega en una zona infantil segura.">

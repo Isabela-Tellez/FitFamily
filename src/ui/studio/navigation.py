@@ -6,6 +6,8 @@ del estudio en sesión (sin datos inventados).
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 
 from src.ui.studio import design
@@ -35,6 +37,10 @@ def go(page: str) -> None:
 def render_sidebar() -> str:
     """Dibuja la sidebar y devuelve la página activa."""
     with st.sidebar:
+        # Logotipo de FitFamily
+        logo_path = Path(__file__).resolve().parents[3] / "assets" / "logo-fitfamily.png"
+        if logo_path.is_file():
+            st.image(str(logo_path), width=150)
         # Identidad del producto
         st.markdown(
             """

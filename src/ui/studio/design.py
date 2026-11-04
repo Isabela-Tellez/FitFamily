@@ -17,7 +17,7 @@ COLORS = {
     "bg": "#F5F7F6",             # papel
     "surface": "#FFFFFF",
     "text": "#182624",
-    "muted": "#667570",
+    "muted": "#52615D",
     "border": "#E1E8E4",
     "success": "#23845D",
     "success_bg": "#E6F2ED",
@@ -94,18 +94,18 @@ h3 {{ font-weight: 650 !important; color: var(--ff-text); }}
   height: 100%;
 }}
 .ff-card-label {{
-  font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.08em; color: var(--ff-muted);
 }}
 .ff-card-value {{
   font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em;
   color: var(--ff-primary); margin: 6px 0 4px;
 }}
-.ff-card-foot {{ font-size: 0.78rem; color: var(--ff-muted); line-height: 1.45; }}
+.ff-card-foot {{ font-size: 0.8rem; color: var(--ff-muted); line-height: 1.45; }}
 
 /* ---- Secciones ---- */
 .ff-eyebrow {{
-  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em;
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ff-accent);
 }}
 .ff-panel-title {{ font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; color: var(--ff-primary); margin: 2px 0 4px; }}
@@ -114,7 +114,7 @@ h3 {{ font-weight: 650 !important; color: var(--ff-text); }}
 /* ---- Estados (etiquetas con texto, no solo color) ---- */
 .ff-badge {{
   display: inline-block; padding: 5px 11px; border-radius: 999px;
-  font-size: 0.71rem; font-weight: 800; letter-spacing: 0.04em;
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 0.04em;
   text-transform: uppercase;
 }}
 .ff-badge-ok {{ background: var(--ff-success-bg, #E6F2ED); color: var(--ff-success); }}
@@ -143,7 +143,7 @@ h3 {{ font-weight: 650 !important; color: var(--ff-text); }}
   justify-content: center; font-size: 1rem; flex-shrink: 0;
 }}
 .ff-step strong {{ display: block; font-size: 0.83rem; color: var(--ff-text); }}
-.ff-step span {{ display: block; font-size: 0.71rem; color: var(--ff-muted); margin-top: 2px; }}
+.ff-step span {{ display: block; font-size: 0.75rem; color: var(--ff-muted); margin-top: 2px; }}
 
 /* ---- Botones ---- */
 .stButton > button, .stDownloadButton > button, .stFormSubmitButton > button {{
@@ -181,7 +181,7 @@ div[data-testid="stMetricValue"] {{ color: var(--ff-primary); font-weight: 800; 
 
 /* ---- Pie ---- */
 .ff-footer {{
-  font-size: 0.74rem; color: var(--ff-muted); padding: 16px 0 4px;
+  font-size: 0.75rem; color: var(--ff-muted); padding: 16px 0 4px;
   border-top: 1px solid var(--ff-border); margin-top: 28px;
 }}
 
