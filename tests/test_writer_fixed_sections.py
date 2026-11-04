@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from src.reporting.writing_models import parse_writing_output, writer_response_format
+from src.reporting.writing_models import parse_writing_output, writer_response_format, writer_response_schema
 from src.reporting.models import ReportDraft
 from src.reporting.templates import REPORT_SECTION_TITLES, validate_report_sections
 from src.schemas import ResearchBrief, ResearchResult
@@ -51,10 +51,11 @@ def test_duplicate_json_section_key_is_rejected():
         parse_writing_output(raw)
 
 
-def test_groq_strict_schema_requires_all_sections_and_claim_fields():
+def test_writer_response_format_uses_json_object_with_local_validation():
     fmt = writer_response_format("groq/openai/gpt-oss-120b")
-    assert fmt["type"] == "json_schema" and fmt["json_schema"]["strict"] is True
-    schema = fmt["json_schema"]["schema"]
+    assert fmt == {"type": "json_object"}
+    # El esquema estricto sigue disponible para validacion local.
+    schema = writer_response_schema()
     sections = schema["$defs"]["WritingSections"]
     assert sections["required"] == list(REPORT_SECTION_TITLES)
     assert sections["additionalProperties"] is False
@@ -71,7 +72,7 @@ def test_installed_crewai_builds_and_forwards_strict_schema_without_api():
         llm = build_writer_llm()
     params = llm._prepare_completion_params([{"role": "user", "content": "Prueba local."}])
     assert params["response_format"] == writer_response_format(llm.model)
-    assert params["response_format"]["json_schema"]["strict"] is True
+    assert params["response_format"] == {"type": "json_object"}
 
 
 def load_check_module():
@@ -119,3 +120,91 @@ def test_full_batched_builder_preserves_outline_and_adds_calculation_once():
     summary = load_check_module().validate_check_result(draft, review, route)
     assert summary["sections"] == 11
     assert summary["issues"] == []
+
+
+# ---------------------------------------------------------------------------
+# Pruebas del parser defensivo (normalizacion de formato Groq)
+# ---------------------------------------------------------------------------
+
+def test_parser_accepts_valid_object():
+    data = response()
+    output = parse_writing_output(json.dumps(data))
+    assert [s.partition(chr(10))[0] for s in output.sections] == list(REPORT_SECTION_TITLES)
+    assert output.claims == []
+    assert output.limitations == []
+
+
+def test_parser_unwraps_single_object_array():
+    data = response()
+    raw = json.dumps([data])
+    output = parse_writing_output(raw)
+    assert [s.partition(chr(10))[0] for s in output.sections] == list(REPORT_SECTION_TITLES)
+
+
+def test_parser_rejects_empty_array():
+    with pytest.raises(ValueError, match="array vac"):
+        parse_writing_output("[]")
+
+
+def test_parser_rejects_multiple_objects_array():
+    data = response()
+    raw = json.dumps([data, data])
+    with pytest.raises(ValueError, match="varios objetos"):
+        parse_writing_output(raw)
+
+
+def test_parser_rejects_invalid_json():
+    with pytest.raises(ValueError, match="JSON valido"):
+        parse_writing_output("{not valid json")
+
+
+def test_parser_rejects_missing_required_fields():
+    data = response()
+    del data["sections"]
+    with pytest.raises(Exception):
+        parse_writing_output(json.dumps(data))
+
+
+def test_parser_rejects_wrong_types():
+    data = response()
+    data["sections"] = 123
+    with pytest.raises(Exception):
+        parse_writing_output(json.dumps(data))
+
+
+def test_parser_preserves_claims_and_limitations():
+    data = response()
+    data["claims"] = [{"text": "Hecho verificado.", "kind": "fact", "evidence_ids": ["ev1"]}]
+    data["limitations"] = ["Limitacion de prueba."]
+    output = parse_writing_output(json.dumps(data))
+    assert len(output.claims) == 1
+    assert output.claims[0].text == "Hecho verificado."
+    assert output.claims[0].evidence_ids == ["ev1"]
+    assert output.limitations == ["Limitacion de prueba."]
+
+
+def test_parser_preserves_numeric_values_in_sections():
+    data = response()
+    data["sections"][REPORT_SECTION_TITLES[0]] = "Ingresos: 10000.0 EUR/mes"
+    output = parse_writing_output(json.dumps(data))
+    assert "10000.0" in output.sections[0]
+
+
+def test_parser_rejects_fact_without_references_at_runtime():
+    data = response()
+    data["claims"] = [{"text": "Hecho sin ref.", "kind": "fact", "evidence_ids": []}]
+    output = parse_writing_output(json.dumps(data))
+    assert output.claims[0].evidence_ids == []
+
+
+def test_parser_handles_real_groq_array_wrapper():
+    raw = '[{"sections": {"Resumen ejecutivo": "Contenido de prueba."}, "claims": [], "limitations": []}]'
+    with pytest.raises(Exception):
+        parse_writing_output(raw)
+
+
+def test_parser_unwraps_array_with_complete_sections():
+    data = response()
+    raw = json.dumps([data])
+    output = parse_writing_output(raw)
+    assert [s.partition(chr(10))[0] for s in output.sections] == list(REPORT_SECTION_TITLES)

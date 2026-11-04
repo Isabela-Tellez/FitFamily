@@ -2,7 +2,7 @@
 
 Responsable: **Isabella (Persona 5)**.
 
-> **Estado: aplicación pendiente.** No existe todavía una aplicación Streamlit en `dev`. `src/ui/report_preview.py` aporta un adaptador reutilizable con Markdown, identidad, huella y opciones de entrega; no implementa la aplicación ni una segunda aprobación. Este documento fija el contrato que debe respetar la interfaz al integrarse.
+> **Estado: aplicacion implementada.** Existe una aplicacion Streamlit completa en src/ui/app.py (rama integration/pr40-pr41-local) que respeta este contrato: toda aprobacion y entrega pasa por src.runtime.controller (resume_run, retry_delivery). src/ui/report_preview.py sigue aportando el adaptador reutilizable.
 
 ## Objetivo
 

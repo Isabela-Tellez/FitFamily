@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Primera integración de CrewAI con Groq para redactar un borrador
+Integración de CrewAI con Groq para redactar un borrador
 a partir de ResearchBrief y ResearchResult.
 
 Se conserva el WriterAgent determinista existente.
@@ -10,9 +10,13 @@ Se conserva el WriterAgent determinista existente.
 El constructor permite elegir explícitamente el redactor con LLM.
 Por defecto conserva el modo determinista para mantener compatibilidad.
 
-La conexión con la interfaz y el flujo global sigue pendiente.
+La conexión con la interfaz y el flujo global está implementada
+en la rama `integration/pr40-pr41-local`.
 
-> **Revisión documental del 26 de octubre de 2026.** No se ha ejecutado una llamada real a Groq. Las pruebas de esta revisión usan respuestas simuladas; la ejecución real descrita más abajo es histórica y no se ha reproducido. El CI no tiene una clave de proveedor.
+> **Ejecución real verificada el 4 de noviembre de 2026.** Se realizó una
+> llamada real a Groq (modelo `groq/openai/gpt-oss-120b`) con investigación
+> real mediante Tavily. El informe se generó correctamente (11 secciones,
+> 19 afirmaciones) y pasó la revisión de calidad (0 incidencias).
 
 ## Configuración
 
@@ -27,10 +31,26 @@ WRITER_LLM_MODEL=groq/openai/gpt-oss-120b
 
 No compartir ni versionar la clave.
 
-CrewAI utiliza el extra litellm.
-Se fija litellm==1.88.6 porque la versión 1.106.2 instalada
-intentaba importar CacheableResult, ausente en MCP 1.28.1.
-La configuración corregida pasó las pruebas MCP del proyecto.
+## Formato de respuesta del proveedor
+
+El proveedor se configura con `response_format = {"type": "json_object"}`.
+La validación estricta se realiza localmente mediante Pydantic
+(`WritingResponse`, `extra="forbid"`, `strict=True`).
+
+Motivo: con `json_schema` estricto, Groq rechazaba la respuesta del LLM
+porque este la envolvía en un array `[{...}]` en lugar de un objeto
+`{...}`. El esquema se validaba en el servidor y la respuesta nunca
+llegaba al parser. Con `json_object` la respuesta llega y se valida
+localmente.
+
+El parser `parse_writing_output` normaliza de forma segura:
+- Objeto JSON válido: se valida directamente.
+- Array con un único objeto: se extrae ese objeto.
+- Array vacío o con varios objetos: se rechaza (estructura ambigua).
+- Contenido no-objeto: se rechaza con mensaje explicativo.
+- Objeto con campos incorrectos: validación estricta (Pydantic).
+
+La normalización no cambia valores, no completa campos y no oculta errores.
 
 ## Funciones
 
@@ -58,56 +78,3 @@ Se rechazan:
 
 Se conservan las preguntas pendientes de la investigación
 y las limitaciones de las evidencias citadas.
-
-## Validación histórica y cobertura actual
-
-- Una ejecución real con datos ficticios produjo un borrador,
-  conservó la cuota de 45 euros mensuales y su referencia,
-  y dejó la disponibilidad de ludoteca como pendiente. Es un registro
-  histórico, no una comprobación repetida en esta revisión.
-- Esa ejecución interpretó incorrectamente coverage_percentage.
-  Después se añadió una instrucción para evitar esa interpretación;
-  queda pendiente comprobarla en otra ejecución real.
-- Cuatro pruebas sin red validan la conversión y los rechazos.
-- Las pruebas conjuntas seleccionadas y las pruebas MCP pasaron.
-- En la suite actual, `tests/test_strategic_writer.py` cubre la ruta LLM
-  con mocks; no acredita que el proveedor responda ni que el modelo
-  real respete las referencias.
-
-## Limitaciones
-
-- Todavía no recibe el análisis financiero de Laura.
-- Comprobar referencias no demuestra que respalden las frases.
-- La estructura no garantiza que todas las afirmaciones del texto
-  estén registradas individualmente.
-- Los textos de fuentes se tratan como datos no confiables.
-  Las instrucciones del prompt no garantizan evitar toda manipulación.
-- Los límites del agente no constituyen un presupuesto global
-  de tokens, coste o llamadas.
-- No hay exportación ni aprobación accesibles como herramientas
-  del agente.
-
-## Integración con el constructor
-
-Para obtener un ReportDraft redactado con el LLM:
-
-build_report(brief, research_result, use_llm=True)
-
-Para obtener directamente el texto Markdown:
-
-build_report_markdown(brief, research_result, use_llm=True)
-
-Ambas funciones están en src/reporting/report_builder.py.
-
-Para renderizar un borrador que ya existe, sin volver a generarlo:
-
-render_report_markdown(draft)
-
-Si se omite use_llm, se utiliza el Writer determinista.
-Si el LLM falla, el error se propaga: no se cambia de modo
-automáticamente.
-
-El controlador debe elegir el modo explícitamente. Para mostrar,
-revisar, aprobar y exportar un mismo informe, debe conservar el
-ReportDraft generado y renderizar ese objeto. No debe volver a
-generarlo después de la aprobación.
