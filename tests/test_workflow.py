@@ -188,15 +188,15 @@ def test_analysis_node_calculates_economic_metrics(
     }
 
     assert float(
-        metrics["monthly_revenue"]["value"]
+        metrics["scenario_intermediate.monthly_revenue"]["value"]
     ) == 8000.0
 
     assert float(
-        metrics["monthly_variable_costs"]["value"]
+        metrics["scenario_intermediate.monthly_variable_costs"]["value"]
     ) == 2000.0
 
     assert float(
-        metrics["monthly_result"]["value"]
+        metrics["scenario_intermediate.monthly_result"]["value"]
     ) == 0.0
 
     break_even = metrics[
@@ -261,9 +261,9 @@ def test_analysis_node_accepts_zero_clients(analysis_state):
         for metric in result["analysis_result"]["calculated_metrics"]
     }
 
-    assert float(metrics["monthly_revenue"]["value"]) == 0.0
-    assert float(metrics["monthly_variable_costs"]["value"]) == 0.0
-    assert float(metrics["monthly_result"]["value"]) == -6000.0
+    assert float(metrics["scenario_intermediate.monthly_revenue"]["value"]) == 0.0
+    assert float(metrics["scenario_intermediate.monthly_variable_costs"]["value"]) == 0.0
+    assert float(metrics["scenario_intermediate.monthly_result"]["value"]) == -6000.0
 
 
 # ============================================================

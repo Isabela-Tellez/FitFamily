@@ -2,7 +2,6 @@
 
 from dataclasses import asdict
 from datetime import datetime, timezone
-from decimal import Decimal
 from src.config import settings
 from math import isfinite
 from typing import Any
@@ -10,7 +9,9 @@ from typing import Any
 from langgraph.types import interrupt
 
 from src.agents.researcher import run_research
-from src.analysis.calculation_adapter import metric_from_break_even
+from src.analysis.calculation_adapter import (
+    metric_from_scenario_calculation,
+)
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.scenarios import (
     create_economic_scenario,
@@ -128,30 +129,13 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
         ],
     )
 
-    metrics = []
-
-    for calculation in calculations:
-        if calculation.calculation_type == "break_even":
-            metric = metric_from_break_even(
-                scenario,
-                calculation,
-            )
-        else:
-            result = calculation.result
-
-            metric = CalculatedMetric(
-                metric_id=calculation.calculation_type,
-                value=(
-                    Decimal(str(result.value))
-                    if result is not None
-                    else None
-                ),
-                unit=result.unit if result is not None else "unknown",
-                calculation=calculation.operation,
-                evidence_ids=calculation.evidence_ids,
-            )
-
-        metrics.append(metric)
+    # Un único adaptador para los cuatro cálculos: conserva escenario,
+    # cálculo, evidencias e identificador con el contrato de
+    # src/reporting/calculated_claims.py (scenario_<tipo>.<metric>).
+    metrics = [
+        metric_from_scenario_calculation(scenario, calculation)
+        for calculation in calculations
+    ]
 
     return {
         "analysis_result": {
