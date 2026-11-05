@@ -2,6 +2,7 @@
 Puntuación determinista basada en datos reales existentes.
 No inventa datos; usa indicadores verificados, registro de competidores y escenarios.
 """
+from datetime import datetime, timezone
 from src.recommendation.models import RecommendationInput, RecommendationResult
 from src.analysis.scenarios import create_economic_scenario, evaluate_economic_scenario
 from pathlib import Path

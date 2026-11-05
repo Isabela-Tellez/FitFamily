@@ -270,7 +270,12 @@ def recommend(
     fixed_costs: float,
     variable_cost_per_client: float,
 ):
-    """Ejecuta el modelo de recomendación real. Devuelve (resultado, error)."""
+    """Ejecuta el modelo de recomendación real. Devuelve (resultado, error).
+
+    Si el servidor MCP o el registro de competidores no están disponibles,
+    el modelo se ejecuta con indicator_source="none" y reporta qué falta,
+    en lugar de lanzar una excepción.
+    """
     try:
         from src.recommendation.service import recommend as _recommend
 
@@ -280,7 +285,7 @@ def recommend(
             monthly_fee=monthly_fee,
             fixed_costs=fixed_costs,
             variable_cost_per_client=variable_cost_per_client,
-            indicator_source="MCP",
+            indicator_source="none",
             competitor_registry_path="data/processed/competitor_registry.json",
             rent_status="pending",
             run_id="fitfamily-recommendation-studio-001",

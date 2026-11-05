@@ -26,7 +26,6 @@ class RecommendationResult:
     """Resultado auditable."""
     run_id: str
     evaluated_at: datetime
-    model_version: str = "v1.2026-11-03"
     score_global: float | None  # 0-100, solo si cobertura suficiente
     score_breakdown: dict[str, float]  # dimensiones
     recommendation: str  # "promising_conditional" / "insufficient_evidence" / "review_needed"
@@ -36,4 +35,5 @@ class RecommendationResult:
     limitations: list[str]
     sources_used: list[str]
     assumptions_used: list[str]
+    model_version: str = "v1.2026-11-03-deterministic"
     status: str = "pending_review"
