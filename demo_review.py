@@ -55,8 +55,12 @@ def main():
     )
     require(checked.issues == () and route == "pending_review", "caso correcto.")
     preview = render_report_markdown(draft)
-    require(metric.metric_id in preview and "**Valor declarado:** 25.0" in preview
-            and "**Unidad:** clients" in preview, "presentación numérica de Gema.")
+    require("| Escenario | Métrica | Valor | Referencias |" in preview
+            and "| Intermedio | Punto de equilibrio | 25 clientes |" in preview
+            and metric.metric_id in preview,
+            "presentación numérica de Gema.")
+    require(f"Cálculo: {calculation.calculation_id}" in preview,
+            "referencia al cálculo original.")
     print("CASO 1 — Cifra correcta: pending_review.")
     print("Sin incidencias; sigue pendiente de revisión humana.\n")
 
