@@ -33,14 +33,14 @@ pages = {
             icon="🔎",
         ),
         st.Page(
-            "src/ui/pages/researches.py",
+            "src/ui/pages/research.py",
             title="Investigaciones",
             icon="📚",
         ),
     ],
     "Análisis": [
         st.Page(
-            "src/ui/pages/economic_analysis.py",
+            "src/ui/pages/analysis.py",
             title="Análisis económico",
             icon="📈",
         ),
@@ -57,7 +57,7 @@ pages = {
             icon="✅",
         ),
         st.Page(
-            "src/ui/pages/settings.py",
+            "src/ui/pages/exports.py",
             title="Configuración",
             icon="⚙️",
         ),
