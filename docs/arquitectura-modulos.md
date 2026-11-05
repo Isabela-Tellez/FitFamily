@@ -72,7 +72,9 @@ La interfaz Streamlit y el grafo LangGraph de Isabella están **diseñados en do
 | Renderizadores | `src/reporting/markdown_renderer.py`, `pdf_renderer.py` | `render_report_markdown(draft)`, `render_report_pdf(draft)` | Texto/bytes en memoria | Implementado; no validan aprobación |
 | Revisión | `src/review/` | `run_basic_review(draft, result)` | `ReviewResult` | Implementado; solo comprobaciones estructurales |
 | Rutas de revisión | `src/graph/review_routes.py` | `choose_review_route(review, count, max_revisions=2)` | Ruta de corrección | Implementado; no ejecuta agentes |
-| Aprobación y exportación | `src/automation/` | `ApprovalRecord`, `export_markdown`, `export_pdf` | Archivos publicados | Implementado a nivel de API; el controlador humano no existe |
+| Aprobación y exportación | `src/automation/` | `ApprovalRecord`, `export_markdown`, `export_pdf` | Archivos publicados | Implementado a nivel de API; el controlador humano existe en `workflows.py` (PR #30) |
+| Workflow / persistencia | `src/graph/workflow.py`, `src/graph/persistence.py`, `src/graph/state.py`, `src/runtime/events.py` | `build_workflow()`, `open_checkpointer()` | Estado persistente, eventos, aprobación | Implementado (`LangGraph` + SQLite) |
+| Adaptador cálculo-revisión | `src/analysis/calculation_adapter.py` | `metric_from_break_even()`, `metric_context_notes()` | `CalculatedMetric` integrado | Implementado (PR #29) |
 
 ## 3. Flujo real, paso a paso
 
@@ -136,16 +138,16 @@ El componente `src/agents/researcher.py` es código, no la persona Juan. Del mis
 
 ### Implementado, pero sin integración automática
 
-- `ResearchResult` → análisis: falta un adaptador explícito a `DataFrame`.
-- MCP → investigación: la consulta de indicadores es una herramienta local separada; no alimenta `run_research`.
-- Análisis → redactor: el análisis no forma parte del `ReportDraft` actual.
-- Revisión → corrección: `choose_review_route` devuelve una ruta, pero no ejecuta la corrección.
+- `ResearchResult` → análisis: adaptador explícito (`calculation_adapter.py`) y métricas estructuradas (`CalculatedMetric`).
+- MCP → investigación: indicadores locales disponibles; integración con análisis en progreso.
+- Análisis → redactor: conectado (`build_report()` con `calculated_metrics` y `metric_context_notes`).
+- Revisión → corrección: flujo definido (`run_basic_review()` con `calculated_metrics`; `choose_review_route_for_context()`).
 - `coverage_percentage`: campo reservado, siempre `0.0`.
 
 ### Diseñado, no implementado
 
-- `src/ui/`: solo `.gitkeep`; no hay Streamlit.
-- `src/runtime/`: solo `.gitkeep`; no hay grafo ni controlador.
+- `src/ui/`: solo `streamlit-approval.md`; no hay aplicación web ejecutable.
+- `src/runtime/`: `events.py`; workflow (`workflows.py`) implementado; falta controlador global y UI completa.
 - `src/security/`, `src/multimodal/`: carpetas reservadas, sin módulos.
 - No hay `main.py`, CLI ni servidor de aplicación.
 - `update_tracking_csv()` está implementada en

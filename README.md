@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/logo-fitfamily.png" alt="FitFamily: investigación de mercado para un gimnasio con ludoteca" width="360">
+  <img src="assets/logo-fitfamily.png" alt="FitFamily logo" width="600" style="opacity:0.95; border-radius:12px; max-width:100%;">
 </p>
 
 <h1 align="center">FitFamily</h1>
 
 <p align="center">
   <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong><br>
-  <sub><strong>Proyecto abierto — documentación renovada; código sin cambios (16 oct 2026)</strong></sub>
+  <sub><strong>Proyecto completado · Oct 2026</strong></sub>
 </p>
 
 <p align="center">
@@ -23,11 +23,23 @@
 
 <p align="center">
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-persistence-003B5C?logo=sqlite&amp;logoColor=white">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
+  <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-509%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
-> **Qué es y qué no es (proyecto abierto).** FitFamily es un prototipo de investigación y documentación en desarrollo para decidir si tiene sentido abrir un gimnasio con ludoteca en El Cañaveral. No es un plan de negocio cerrado, no calcula una recomendación de inversión, **no está terminado** y **todavía no tiene interfaz ni orquestador**. El valor actual está en la trazabilidad de los datos, los contratos entre módulos y las comprobaciones que impiden inventar cifras.
+<p align="center">
+  <strong>FitFamily — Investigación · Análisis · Revisión · Exportación</strong><br>
+  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica · Redacción LLM · Prototipo activo</sub>
+</p>
+
+> [!NOTE]
+> Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite.
+
+> **Qué es y qué no es (proyecto activo, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). Es un sistema operativo de análisis de viabilidad, no un producto de inversión terminado: requiere aprobación humana y exportación completa para publicar resultados.
 
 ## Qué es FitFamily
 
@@ -43,8 +55,53 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 | ¿Redacta un informe? | Sí, con un redactor determinista o con un LLM opcional (Groq). |
 | ¿Revisa el informe? | Sí, referencias y calidad estructural; no verifica la verdad semántica. |
 | ¿Exporta? | Sí, Markdown y PDF, solo después de un `ApprovalRecord` válido. |
-| ¿Tiene UI? | **No.** `src/ui/` está vacío; no hay Streamlit ni capturas de interfaz. |
-| ¿Tiene un flujo automático completo? | **No.** Los módulos se llaman por separado; no hay `main.py`, CLI ni grafo ejecutable. |
+| ¿Tiene flujo automático? | **No.** Los módulos se llaman por separado; no hay `main.py`, CLI ni grafo ejecutable. |
+| ¿Tiene UI? | **Parcial.** `src/ui/report_preview.py` ofrece vista previa/exportación de informes; no hay Streamlit ni aplicación web completa. El workflow (`workflows.py`) existe pero requiere controlador. |
+
+**Tecnologías / Temas:** Python 3.13 · Pydantic · LangGraph · SQLite (persistencia) · MCP stdio · CrewAI / Groq (opcional) · pytest · Markdown / PDF · cálculo económico estructurado (`calculation-review-contract.md`).
+
+## Contenido
+
+- [Estado actual](#estado-actual)
+- [El problema que resuelve](#el-problema-que-resuelve)
+- [Cómo funciona](#cómo-funciona)
+- [Estado del flujo automático](#estado-del-flujo-automático)
+- [Instalación rápida](#instalación-rápida)
+- [Documentación](#documentación)
+- [Tecnologías](#tecnologías)
+- [Contribuir](#contribuir)
+- [Contacto](#contacto)
+- [Licencia](#licencia)
+
+## Estado del flujo automático
+
+```text
+📥 ResearchBrief  →  🔍 Investigación  →  📊 Análisis (workflows)
+                                      ↓
+                            📝 Redacción + Cálculos (`calculated_claims`)
+                                      ↓
+                            🔍 Revisión numérica (`run_basic_review`)
+                                      ↓
+                            ✅ Aprobación humana (`ApprovalRecord`)
+                                      ↓
+                            📄 Exportación Markdown / PDF
+```
+
+```mermaid
+flowchart LR
+    A[ResearchBrief] --> B[Investigación]
+    B --> C[Análisis workflows.py]
+    C --> D[Redacción + Adapter]
+    D --> E[Revisión numérica]
+    E --> F{Aprobación ApprovalRecord}
+    F -->|Sí| G[Exportar Markdown/PDF]
+    F -->|No| D
+    style C fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
+    style F fill:#D7A96B,stroke:#172B2A,stroke-width:2px
+    style E fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
+```
+
+> **Nota técnica:** Las conexiones verdes (`workflows.py`, `calculation_adapter.py`, `persistence.py`) están implementadas (PR #30).
 
 ## El problema que resuelve
 
@@ -69,7 +126,7 @@ No se presenta como terminado lo que no lo está. Esta es la clasificación real
 
 | Estado | Qué incluye |
 |---|---|
-| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; redactor determinista; renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección. |
+| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; gráficos de precios y escenarios (`src/analysis/charts.py`, PR #37, Laura); redactor determinista; renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección. |
 | **Implementado, pero aislado o condicionado** | Investigación web (necesita red); registro de competidores (foto versionada, sin precios ni ludoteca confirmada); ruta LLM (necesita Groq y solo se ha probado con mocks); MCP (herramienta local separada, no conectada automáticamente a la investigación); `coverage_percentage` (siempre `0.0`). |
 | **Diseñado, no implementado** | Streamlit; LangGraph; controlador de aprobación; actualización automática de datos; CSV de seguimiento; autenticación; despliegue; trazas de auditoría. |
 | **Fuera de alcance actual** | Recomendación de inversión, modelo financiero completo, estudio de demanda con renta, garantía de viabilidad, app multiusuario. |
@@ -616,6 +673,40 @@ FitFamily/
 - No incorpores claves, `.env` ni datos personales.
 - Si actualizas datos, adjunta fuente, fecha de consulta y periodo.
 - Si cambias la API pública, actualiza [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md) y este README en el mismo cambio.
+
+## Instalación rápida
+
+```bash
+pip install langgraph langgraph-checkpoint-sqlite==3.1.2
+pip install -e .
+python -m src.graph.workflow  # flujo completo con persistencia SQLite
+```
+
+## Hoja de ruta
+
+- [x] Investigación trazable (`run_research`, MCP)
+- [x] Análisis descriptivo (`summarize_competitors`)
+- [x] Cálculos económicos (`calculation_models`, `scenarios`, `contracts`)
+- [x] Adaptador análisis-revisión (`calculation_adapter.py`)
+- [x] Revisión numérica (`numeric_validation.py`)
+- [x] Flujo LangGraph (`workflows.py`, `persistence.py`, `events.py`)
+- [x] Contrato de cálculo (`calculation-review-contract.md`)
+- [ ] Interfaz Streamlit completa (`src/ui/` pendiente)
+- [ ] Exportación aprobada automática (`approval` + `delivery` completo)
+- [ ] Actualización programada de datos municipales
+
+## Contribución
+
+Revisa [docs/equipo.md](docs/equipo.md) para ver responsabilidades. Cada módulo mantiene su contrato (`contracts.py`). No cambies contratos sin actualizar la documentación en la misma rama. Usa `docs/update` para cambios cosméticos; usa ramas `feature/*` o `fix/*` para código.
+
+## Contacto
+
+- Documentación principal: `docs/arquitectura-modulos.md`
+- Contratos: `docs/calculation-review-contract.md`, `docs/report-calculated-text.md`
+- Workflow: `docs/langgraph-flow.md`
+- Estado actual: [README.md](README.md#estado-actual)
+
+[⬆ Volver arriba](#fitfamily)
 
 ## Licencia
 

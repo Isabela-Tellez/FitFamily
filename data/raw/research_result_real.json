@@ -1,0 +1,254 @@
+{
+  "evidences": [
+    {
+      "evidence_id": "search_5db2e91bcb93bdf8",
+      "claim": "Search result: énergie Fitness el Cañaveral - Gimnasios y Centros... | Firmania",
+      "value": null,
+      "unit": null,
+      "frequency": null,
+      "source_url": "https://firmania.es/madrid/énergie-fitness-el-cañaveral-2150881",
+      "snippet": "Además, busque Gimnasios y Centros Deportivos cercano en Madrid.énergie Fitness el Cañaveral se encuentra en Madrid, en la dirección: C. Cerro del Campo 42-46, 28052, Madrid, Madrid.",
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Datos de búsqueda; verifique la fuente original."
+    },
+    {
+      "evidence_id": "search_24b3ecfd69656905",
+      "claim": "Search result: énergie Fitness el Cañaveral, Madrid",
+      "value": null,
+      "unit": null,
+      "frequency": null,
+      "source_url": "https://www.cylex.es/madrid/énergie-fitness-el-cañaveral-14286560.html",
+      "snippet": "énergie Fitness el Cañaveral. Dirección: C. Cerro del Campo 42-46, 28052 Madrid. Móvil. 638 84 61 24 Teléfono. sitio web. energiefitness.es/gym/el-canaveral-madrid. Correo electrónico. [email protected].",
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Datos de búsqueda; verifique la fuente original."
+    },
+    {
+      "evidence_id": "search_88f4a0b078da82a0",
+      "claim": "Search result: Gimnasios y precios en El Cañaveral Madrid | ONE MORE",
+      "value": null,
+      "unit": null,
+      "frequency": null,
+      "source_url": "https://www.onemore.es/es/gimnasios-precios-el-canaveral-madrid",
+      "snippet": "Gimnasios en El Cañaveral, Madrid, con instalaciones premium a precios competitivos. Únete hoy y transforma tu vida.",
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Datos de búsqueda; verifique la fuente original."
+    },
+    {
+      "evidence_id": "search_bdeccfcc97d5bbef",
+      "claim": "Search result: Energie Fitness El Cañaveral — El Cañaveral | elcanaveral.info",
+      "value": null,
+      "unit": null,
+      "frequency": null,
+      "source_url": "https://www.elcanaveral.info/deporte/energie-fitness-canaveral/",
+      "snippet": "Energie Fitness El Cañaveral es un gimnasio moderno y completo, ideal para quienes buscan mejorar su forma física en el barrio. Dispone de amplias.",
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Datos de búsqueda; verifique la fuente original."
+    },
+    {
+      "evidence_id": "search_8bb35bae8b730fa3",
+      "claim": "Search result: énergie Fitness el Cañaveral - Madrid - Montajes",
+      "value": null,
+      "unit": null,
+      "frequency": null,
+      "source_url": "https://aresdg.es/energie-fitness-el-canaveral/",
+      "snippet": "Énergie Fitness el Cañaveral se enorgullece de ofrecer una amplia variedad de especialidades y servicios, incluyendo: Gimnasio con modernas instalaciones y equipo de última generación.",
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Datos de búsqueda; verifique la fuente original."
+    },
+    {
+      "evidence_id": "ev_bdeccfcc97d5bbef",
+      "claim": "Precio publicado por gimnasio con ludoteca en www.elcanaveral.info: 99 euros",
+      "value": 99.0,
+      "unit": "euros",
+      "frequency": null,
+      "source_url": "https://www.elcanaveral.info/deporte/energie-fitness-canaveral/",
+      "snippet": "★ ¿Quieres más clientes para tu negocio? Aparece primero en Google Más clientes para tu negocio LocalSEOAds.com → EC elcanaveral .info Directorio Guías del barrio Vivir en El Cañaveral Guías «mejores X» Cómo llegar y transporte Parques y espacios públicos Servicios públicos Planes y escapadas El Cañaveral con perro El Cañaveral con niños Comida a domicilio Outlets y centros comerciales Mercados y mercadillos Nuevas aperturas Agenda del barrio Fiestas y días especiales Por zonas Actualidad Comuni",
+      "date_observed": null,
+      "geo_scope": "www.elcanaveral.info",
+      "limitations": "Extracción automática; verifique la fuente original para datos completos."
+    },
+    {
+      "evidence_id": "mcp_population_total",
+      "claim": "population_total: 27480 habitantes",
+      "value": 27480,
+      "unit": "habitantes",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200076-0-padron",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Población empadronada a 1 de octubre de 2026, calculada sumando todas las edades del barrio 'EL CAÑAVERAL' en el Padrón Municipal (datos.madrid.es, archivo CSV). Cifra en crecimiento: 24.963 hab. en enero de 2026 (Nuevosureste) y 17.193 hab. en 2024 (INE)."
+    },
+    {
+      "evidence_id": "mcp_population_total_2025",
+      "claim": "population_total_2025: 21492 habitantes",
+      "value": 21492,
+      "unit": "habitantes",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Población a 1 de enero de 2025 incluida en el fichero oficial de hogares (datos.madrid.es/300438-0-hogares-tamano). Coincide exactamente con la población oficial de El Cañaveral a esa fecha del dataset 'Población por distrito y barrio a 1 de enero' (21.492). Se publica para que los indicadores de hogares (referencia 1 ene 2025) y de población actual (referencia oct 2026) no se combinen entre sí."
+    },
+    {
+      "evidence_id": "mcp_households_total",
+      "claim": "households_total: 8140 hogares",
+      "value": 8140,
+      "unit": "hogares",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Suma exacta de los hogares de las 9 secciones censales que la cartografía oficial del Ayuntamiento asigna a El Cañaveral (COD_BAR 194: 19052, 19053, 19054, 19055, 19056, 19058, 19059, 19060, 19061), según el Padrón Municipal revisado a 1 de enero de 2025. La agregación es exacta, no estimada: esas 9 secciones teselan el polígono del barrio al 100% (0 m2 fuera del límite, 0 m2 sin cubrir), por lo que ninguna sección cruza el borde del barrio. 'Hogares' es el concepto del Padrón (personas que comparten vivienda), no 'familias' ni 'viviendas'. Referencia temporal: 1 ene 2025, NO la de population_total (oct 2026); para ratios coherentes usar population_total_2025."
+    },
+    {
+      "evidence_id": "mcp_average_household_size",
+      "claim": "average_household_size: 2.64 personas por hogar",
+      "value": 2.64,
+      "unit": "personas por hogar",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Derivado de los mismos datos que households_total: 21.492 habitantes / 8.140 hogares = 2,64 personas por hogar a 1 de enero de 2025. Coherente con el 'tamaño medio del hogar' publicado por sección en el fichero oficial. No debe combinarse con population_total (oct 2026): use population_total_2025."
+    },
+    {
+      "evidence_id": "mcp_population_under_20_share",
+      "claim": "population_under_20_share: 28.29 porcentaje",
+      "value": 28.29,
+      "unit": "porcentaje",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200076-0-padron",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Porcentaje de población menor de 20 años calculado a partir del Padrón Municipal (octubre 2026): 7.774 de 27.480 habitantes. Indicador de potencial de familias con hijos; no es un conteo de familias."
+    },
+    {
+      "evidence_id": "mcp_businesses_open",
+      "claim": "businesses_open: 234 locales abiertos",
+      "value": 234,
+      "unit": "locales abiertos",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Locales con situación 'Abierto' en El Cañaveral según el Censo de Locales del Ayuntamiento de Madrid (datos.madrid.es/200085-0-censo-locales, CSV, actualizado diariamente). 'Locales' (premises) no equivale a 'negocios' (establecimientos): un local puede albergar varias actividades. Cifra secundaria previa no verificada: 126 'negocios' (Wikipedia, junio 2025)."
+    },
+    {
+      "evidence_id": "mcp_households_with_minors",
+      "claim": "households_with_minors: 3071 hogares",
+      "value": 3071,
+      "unit": "hogares",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/300438-0-hogares-tamano",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Hogares con al menos un menor según la composición del hogar oficial (Padrón a 1 de enero de 2025), agregada sobre las 9 secciones censales del barrio. Es un MÍNIMO: se excluyen las categorías 'con o sin menores' (662 hogares), que no permiten atribuir la presencia de menores. 'Hogares con menores' no es sinónimo de 'familias con hijos'."
+    },
+    {
+      "evidence_id": "mcp_gyms_registered",
+      "claim": "gyms_registered: 9 locales abiertos",
+      "value": 9,
+      "unit": "locales abiertos",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Locales ABIERTOS en El Cañaveral con epígrafe de actividad económica declarado '931008 - ACTIVIDADES DE LOS GIMNASIOS', según el fichero de Actividades del Censo de Locales. Registro administrativo: puede contener inconsistencias. No es un censo de gimnasios privados, sino de locales con esa actividad declarada. El fichero de Actividades recoge 229 de los 234 locales abiertos del fichero de Locales: 5 locales no tienen actividad económica declarada."
+    },
+    {
+      "evidence_id": "mcp_sports_recreation_venues",
+      "claim": "sports_recreation_venues: 4 locales abiertos",
+      "value": 4,
+      "unit": "locales abiertos",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Locales ABIERTOS con epígrafe '855002 - ENSEÑANZA NO REGLADA (DEPORTIVA Y RECREATIVA, CULTURAL, CLASES DE REGIMEN NO REGULADO)' en El Cañaveral. Actividad deportiva o recreativa declarada, no necesariamente un gimnasio. El fichero de Actividades recoge 229 de los 234 locales abiertos del fichero de Locales: 5 locales no tienen actividad económica declarada."
+    },
+    {
+      "evidence_id": "mcp_childrens_play_venues",
+      "claim": "childrens_play_venues: 3 locales abiertos",
+      "value": 3,
+      "unit": "locales abiertos",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Locales ABIERTOS con epígrafe '932001/932002 - CENTROS DE JUEGOS O CELEBRACIONES INFANTILES (CON O SIN COCINA)' en El Cañaveral. Es la oferta de ocio infantil más próxima a una ludoteca, pero el epígrafe no garantiza que el local ofrezca ludoteca. El fichero de Actividades recoge 229 de los 234 locales abiertos del fichero de Locales: 5 locales no tienen actividad económica declarada."
+    },
+    {
+      "evidence_id": "mcp_community_pools",
+      "claim": "community_pools: 3 locales abiertos",
+      "value": 3,
+      "unit": "locales abiertos",
+      "frequency": null,
+      "source_url": "https://datos.madrid.es/dataset/200085-0-censo-locales",
+      "snippet": null,
+      "date_observed": null,
+      "geo_scope": null,
+      "limitations": "Locales ABIERTOS con epígrafe '931010 - PISCINAS DE COMUNIDADES DE VECINOS DE TEMPORADA' en El Cañaveral. El fichero de Actividades recoge 229 de los 234 locales abiertos del fichero de Locales: 5 locales no tienen actividad económica declarada."
+    }
+  ],
+  "competitors": [
+    {
+      "identifier": "www.elcanaveral.info|precio|gimnasio con ludoteca",
+      "name": null,
+      "location": null,
+      "services": [],
+      "tariffs": [
+        {
+          "value": 99.0,
+          "unit": "euros",
+          "condition": "Precio publicado por gimnasio con ludoteca en www.elcanaveral.info: 99 euros",
+          "frequency": ""
+        }
+      ],
+      "evidences": [
+        {
+          "evidence_id": "ev_bdeccfcc97d5bbef",
+          "claim": "Precio publicado por gimnasio con ludoteca en www.elcanaveral.info: 99 euros",
+          "value": 99.0,
+          "unit": "euros",
+          "frequency": null,
+          "source_url": "https://www.elcanaveral.info/deporte/energie-fitness-canaveral/",
+          "snippet": "★ ¿Quieres más clientes para tu negocio? Aparece primero en Google Más clientes para tu negocio LocalSEOAds.com → EC elcanaveral .info Directorio Guías del barrio Vivir en El Cañaveral Guías «mejores X» Cómo llegar y transporte Parques y espacios públicos Servicios públicos Planes y escapadas El Cañaveral con perro El Cañaveral con niños Comida a domicilio Outlets y centros comerciales Mercados y mercadillos Nuevas aperturas Agenda del barrio Fiestas y días especiales Por zonas Actualidad Comuni",
+          "date_observed": null,
+          "geo_scope": "www.elcanaveral.info",
+          "limitations": "Extracción automática; verifique la fuente original para datos completos."
+        }
+      ],
+      "postal_code": null,
+      "latitude": null,
+      "longitude": null,
+      "census_section": null,
+      "license_status": null,
+      "license_type": null,
+      "license_date": null,
+      "has_playroom": null,
+      "verification_status": null,
+      "consulted_at": null
+    }
+  ],
+  "coverage_percentage": 0.0,
+  "unresolved_questions": [
+    "Que competidores existen y que tarifas documentadas hay?"
+  ],
+  "search_performed": "Web search performed: 5 results found; competitor search found 1 competitors",
+  "notes": "Research executed via direct tool usage. Brief: gimnasio con ludoteca in Madrid. Questions: 1. Tool-based execution without requiring LLM API keys for basic operations."
+}
