@@ -16,6 +16,21 @@
   <a href="README.en.md">English version</a>
 </p>
 
+<p align="center">
+  <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
+  <img alt="LangGraph orquestación" src="https://img.shields.io/badge/LangGraph-orquestación-1C3C3C?logo=langchain&amp;logoColor=white">
+  <img alt="CrewAI agentes" src="https://img.shields.io/badge/CrewAI-agentes-FF5A50">
+  <img alt="Groq LLM_y_visión" src="https://img.shields.io/badge/Groq-LLM_y_visión-F55036">
+  <img alt="Pydantic contratos" src="https://img.shields.io/badge/Pydantic-contratos-E92063?logo=pydantic&amp;logoColor=white">
+  <img alt="pandas análisis" src="https://img.shields.io/badge/pandas-análisis-150458?logo=pandas&amp;logoColor=white">
+  <img alt="Matplotlib gráficos" src="https://img.shields.io/badge/Matplotlib-gráficos-11557C">
+  <img alt="SQLite persistencia" src="https://img.shields.io/badge/SQLite-persistencia-003B57?logo=sqlite&amp;logoColor=white">
+  <img alt="MCP datos_locales" src="https://img.shields.io/badge/MCP-datos_locales-6F42C1">
+  <img alt="ReportLab PDF" src="https://img.shields.io/badge/ReportLab-PDF-006D66">
+  <img alt="pytest pruebas" src="https://img.shields.io/badge/pytest-pruebas-0A9EDC?logo=pytest&amp;logoColor=white">
+  <img alt="Licencia MIT" src="https://img.shields.io/badge/Licencia-MIT-2EA44F">
+</p>
+
 FitFamily reúne investigación web, datos municipales, análisis económico, redacción asistida y revisión en un flujo de LangGraph. El resultado es un borrador con fuentes, supuestos y referencias a los cálculos. Una persona revisa el documento y autoriza su entrega en Markdown, PDF y CSV.
 
 El caso de estudio es la apertura de un gimnasio con ludoteca en El Cañaveral. El informe ayuda a comparar la oferta existente y explorar escenarios de clientela, cuota y costes. Las conclusiones distinguen datos observados, cálculos, hipótesis y preguntas abiertas.
@@ -123,6 +138,21 @@ Para consultar los indicadores municipales del MCP local:
 python -m src.mcp.client
 ```
 
+### Interfaz Streamlit
+
+La rama [feat/streamlit-ui-integration](https://github.com/Isabela-Tellez/FitFamily/tree/feat/streamlit-ui-integration) contiene la aplicación app.py y las pantallas de investigación, análisis, aprobación y exportaciones.
+
+Para probar esa versión, utiliza un checkout de esa rama con sus propias dependencias:
+
+```bash
+git fetch origin
+git switch feat/streamlit-ui-integration
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+Guarda tus cambios antes de cambiar de rama. La aplicación se abre en la dirección local que muestra Streamlit en la terminal.
+
 ### Ejecutar el workflow
 
 Este ejemplo utiliza búsqueda web y redacción con Groq. Los parámetros económicos son hipótesis ilustrativas.
@@ -175,6 +205,36 @@ La redacción recibe cifras calculadas por Python. Cada métrica conserva el esc
 
 Los nombres conservador, intermedio y optimista identifican hipótesis de escenario. El número de clientes, la cuota y los costes deben explicarse en el informe. Los valores ausentes se mantienen como desconocidos.
 
+## Demostración y resultados
+
+El 5 de noviembre de 2026 se ejecutó la redacción real con Groq sobre la versión a3d56bb, basada en dev c57f8f3. La entrada combinó tres fichas guardadas del Censo de Locales con tres escenarios económicos ficticios. Las hipótesis fueron 10, 100 y 150 clientes, cuota mensual de 50 €, costes fijos de 1.000 € y coste variable mensual de 10 € por cliente.
+
+| Comprobación | Resultado observado |
+|---|---|
+| Registros municipales de la muestra | 3 |
+| Escenarios y métricas calculadas | 3 escenarios y 12 métricas |
+| Secciones del borrador | 11 |
+| Afirmaciones registradas | 26 |
+| Incidencias del revisor | 0 |
+| Ruta tras revisar | pending_review |
+| Archivos de vista previa | Markdown y PDF |
+| Consulta web nueva | Se utilizó el registro municipal guardado. |
+| Aprobación de entrega | El borrador quedó pendiente de decisión humana. |
+
+La redacción recibió los registros municipales y las referencias. Los importes proceden de las funciones económicas de Python y se incorporan al informe conservando el cálculo original. El PDF de esta ejecución tiene 12 páginas. El resumen ejecutivo presenta fragmentos por lote de redacción; la revisión editorial de esa composición forma parte de la lectura humana.
+
+![Primera página del borrador redactado con Groq](assets/report-groq-preview.png)
+
+La captura corresponde al borrador real de esta prueba. Los supuestos económicos son ilustrativos y la muestra administrativa se limita a tres registros. El resultado acredita la integración de redacción, métricas, revisión y renderizado para esas entradas. La búsqueda web, la interfaz y la entrega tras aprobación se validan mediante sus propios recorridos.
+
+Puedes repetir la prueba con:
+
+```bash
+python scripts/demo_groq_report.py
+```
+
+Requiere configuración de Groq, conexión y cuota. Los archivos se guardan en outputs/demo_groq. La redacción y los identificadores pueden variar entre ejecuciones. Consulta el [registro de resultados](docs/demo-groq-result.json).
+
 ## Datos municipales y método
 
 Los artefactos versionados tienen su propia fecha. Cada nueva investigación debe conservar la fuente, el ámbito, la fecha de observación y sus limitaciones.
@@ -197,7 +257,7 @@ Los artefactos versionados tienen su propia fecha. Cada nueva investigación deb
 | Familias con hijos | `null` | — | No disponible: no es una categoría oficial de barrio |
 | Gimnasios con ludoteca | `null` | — | No disponible: ningún epígrafe combina ambas actividades |
 
-**No mezcles estos periodos.** La población de octubre de 2026 y los hogares de enero de 2025 son referencias distintas. Para ratios de hogares usa `population_total_2025` o el tamaño medio ya calculado; no dividas la población de 2026 entre los hogares de 2025.
+**Fechas de los datos.** La población corresponde a octubre de 2026 y los hogares a enero de 2025. El número medio de personas por hogar utiliza la población y los hogares de enero de 2025 para comparar datos del mismo periodo.
 
 ### Lo que el registro de competidores añade
 

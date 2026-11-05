@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-11-05T12:51:19.805510+00:00",
+  "sections": 11,
+  "claims": 26,
+  "competitors": 3,
+  "metrics": 12,
+  "route": "pending_review",
+  "issues": [],
+  "web_search": false,
+  "approved": false,
+  "model": "groq/openai/gpt-oss-120b",
+  "code_commit": "a3d56bb",
+  "base_dev": "c57f8f3"
+}
