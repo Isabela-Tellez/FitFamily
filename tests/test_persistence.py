@@ -1,5 +1,9 @@
 """Pruebas de persistencia SQLite para las ejecuciones de FitFamily."""
 
+import os
+import subprocess
+import sys
+
 from typing import TypedDict
 
 import pytest
@@ -291,3 +295,197 @@ def test_open_checkpointer_closes_context_after_exception(tmp_path):
     # Comprobamos que la base puede volver a abrirse tras la excepción.
     with open_checkpointer(db_path) as checkpointer:
         assert checkpointer is not None
+
+
+
+def test_research_state_survives_process_restart(tmp_path):
+    """
+    Comprueba que SQLite conserva una investigación entre
+    dos procesos Python completamente independientes.
+    """
+    db_path = tmp_path / "process-restart.sqlite"
+    thread_id = "thread-process-001"
+    run_id = "research-process-001"
+
+    # --------------------------------------------------
+    # PROCESO A: crear y persistir la investigación
+    # --------------------------------------------------
+
+    writer_script = """
+import sys
+
+from langgraph.graph import END, START, StateGraph
+from src.graph.persistence import open_checkpointer, build_thread_config
+from src.graph.state import create_initial_state
+
+db_path = sys.argv[1]
+thread_id = sys.argv[2]
+run_id = sys.argv[3]
+
+state = create_initial_state(
+    run_id=run_id,
+    brief={"topic": "FitFamily"},
+)
+
+state["research_result"] = {
+    "summary": "Resultado persistido entre procesos"
+}
+state["current_stage"] = "analysis"
+
+builder = StateGraph(dict)
+builder.add_node("save", lambda state: state)
+builder.add_edge(START, "save")
+builder.add_edge("save", END)
+
+with open_checkpointer(db_path) as checkpointer:
+    graph = builder.compile(checkpointer=checkpointer)
+    graph.invoke(
+        state,
+        build_thread_config(thread_id),
+    )
+
+print("PERSISTED")
+"""
+
+    writer = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            writer_script,
+            str(db_path),
+            thread_id,
+            run_id,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={
+            **os.environ,
+            "LANGCHAIN_TRACING_V2": "false",
+        },
+    )
+
+    assert writer.returncode == 0, writer.stderr
+    assert "PERSISTED" in writer.stdout
+
+    # --------------------------------------------------
+    # PROCESO B: recuperar desde SQLite
+    # --------------------------------------------------
+
+    reader_script = """
+import sys
+
+from langgraph.graph import END, START, StateGraph
+from src.graph.persistence import open_checkpointer, load_run
+
+db_path = sys.argv[1]
+thread_id = sys.argv[2]
+expected_run_id = sys.argv[3]
+
+builder = StateGraph(dict)
+builder.add_node("save", lambda state: state)
+builder.add_edge(START, "save")
+builder.add_edge("save", END)
+
+with open_checkpointer(db_path) as checkpointer:
+    graph = builder.compile(checkpointer=checkpointer)
+
+    snapshot = load_run(
+        graph,
+        thread_id,
+        expected_run_id=expected_run_id,
+    )
+
+    assert snapshot is not None
+    assert snapshot.values["run_id"] == expected_run_id
+    assert snapshot.values["brief"] == {
+        "topic": "FitFamily"
+    }
+    assert snapshot.values["research_result"] == {
+        "summary": "Resultado persistido entre procesos"
+    }
+    assert snapshot.values["current_stage"] == "analysis"
+
+print("RECOVERED")
+"""
+
+    reader = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            reader_script,
+            str(db_path),
+            thread_id,
+            run_id,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={
+            **os.environ,
+            "LANGCHAIN_TRACING_V2": "false",
+        },
+    )
+
+    assert reader.returncode == 0, reader.stderr
+    assert "RECOVERED" in reader.stdout
+
+
+@pytest.mark.parametrize(
+    "thread_id",
+    [
+        "",
+        " ",
+        "\n",
+        "\t",
+        "thread\x00invalid",
+        "thread\x7finvalid",
+    ],
+)
+def test_build_thread_config_rejects_invalid_ids(thread_id):
+    """Rechaza identificadores vacíos o con caracteres de control."""
+
+    with pytest.raises(ValueError):
+        build_thread_config(thread_id)
+
+
+def test_load_run_rejects_invalid_thread_before_graph_access():
+    """Valida el hilo antes de consultar el grafo."""
+
+    class GraphThatMustNotBeCalled:
+        def get_state(self, config):
+            pytest.fail("No debería consultar el grafo.")
+
+    with pytest.raises(ValueError):
+        load_run(
+            GraphThatMustNotBeCalled(),
+            "\n",
+        )
+
+
+def test_load_run_returns_none_for_empty_snapshot():
+    """Devuelve None cuando el snapshot no contiene estado."""
+
+    class EmptySnapshot:
+        values = {}
+
+    class FakeGraph:
+        def get_state(self, config):
+            return EmptySnapshot()
+
+    assert load_run(FakeGraph(), "thread-empty") is None
+
+
+def test_load_run_rejects_control_characters_in_expected_run_id():
+    """Rechaza identificadores esperados con caracteres de control."""
+
+    class GraphThatMustNotBeCalled:
+        def get_state(self, config):
+            pytest.fail("No debería consultar el grafo.")
+
+    with pytest.raises(ValueError):
+        load_run(
+            GraphThatMustNotBeCalled(),
+            "thread-valid",
+            expected_run_id="run\ninvalid",
+        )

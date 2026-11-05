@@ -1,4 +1,10 @@
-"""Prueba compartida con datos ficticios, sin LLM ni Internet."""
+"""Pruebas con datos ficticios y cálculos reales.
+
+El redactor LLM se simula cuando corresponde.
+No se realizan llamadas externas.
+"""
+
+import pytest
 
 from src.analysis.calculation_adapter import (
     metric_context_notes,
@@ -130,7 +136,7 @@ def test_text_uses_the_result_of_another_scenario():
     assert claim.reported_value == 50.0
     assert "50 clientes" in claim.text
     assert "25 clientes" not in claim.text
-    assert scenario.scenario_id in claim.text
+    assert "escenario conservador" in claim.text
 
 def test_report_builder_includes_calculated_claim_and_context_notes():
     """El constructor incorpora cifra, texto y contexto del cálculo."""
@@ -238,5 +244,131 @@ def test_markdown_builder_includes_calculated_text_and_notes():
     assert "Punto de equilibrio por escenario" in markdown
     assert "50 clientes" in markdown
 
-    for note in metric_context_notes(metric):
-        assert note in markdown
+    assert "Escenario conservador · Limitación del cálculo: Costes pendientes de contrastar." in markdown
+    assert "Supuesto de cálculo:" not in markdown
+
+@pytest.mark.parametrize(
+    "existing_body",
+    [
+        "Información cualitativa del escenario.",
+        None,
+    ],
+)
+def test_calculations_keep_common_outline_without_duplicate_sections(
+    existing_body,
+):
+    """Inserta el cálculo en su apartado y conserva el resto del informe."""
+    from unittest.mock import patch
+
+    from src.reporting.report_builder import build_report
+    from src.reporting.templates import (
+        MISSING_SECTION_TEXT,
+        REPORT_SECTION_TITLES,
+    )
+    from src.schemas import ResearchBrief
+
+    scenario = create_economic_scenario(
+        scenario_type="intermediate",
+        expected_clients=100,
+        monthly_fee=50,
+        fixed_costs=1000,
+        variable_cost_per_client=10,
+    )
+    calculation = create_break_even_calculation(
+        fixed_costs=1000,
+        monthly_fee=50,
+        variable_cost_per_client=10,
+    )
+    metric = metric_from_break_even(scenario, calculation)
+
+    sections = [
+        f"{title}\n{MISSING_SECTION_TEXT}"
+        for title in REPORT_SECTION_TITLES
+    ]
+    economic_index = REPORT_SECTION_TITLES.index("Escenarios económicos")
+
+    if existing_body is not None:
+        sections[economic_index] = (
+            f"Escenarios económicos\n{existing_body}"
+        )
+
+    simulated_draft = ReportDraft(
+        title="Informe ficticio",
+        study_area="Zona de prueba",
+        sections=list(sections),
+    )
+
+    # Simulamos el redactor; el constructor y el cálculo son reales.
+    with patch(
+        "src.agents.strategic_writer.run_writing",
+        return_value=simulated_draft,
+    ):
+        draft = build_report(
+            ResearchBrief(
+                business_type="gimnasio",
+                location="Madrid",
+                study_area="Zona de prueba",
+            ),
+            ResearchResult(),
+            use_llm=True,
+            calculated_metrics=[metric],
+        )
+
+    titles = [
+        section.partition("\n")[0]
+        for section in draft.sections
+    ]
+    assert titles == list(REPORT_SECTION_TITLES)
+
+    economic_section = draft.sections[economic_index]
+    assert economic_section.count("25 clientes") == 1
+    assert MISSING_SECTION_TEXT not in economic_section
+
+    if existing_body is not None:
+        assert existing_body in economic_section
+
+    # Los demás apartados conservan exactamente su contenido.
+    for index, section in enumerate(sections):
+        if index != economic_index:
+            assert draft.sections[index] == section
+def test_report_preserves_monthly_metrics_by_scenario():
+    from src.analysis.calculation_adapter import metric_from_scenario_calculation
+    from src.analysis.economic_calculations import (
+        calculate_monthly_revenue,
+        calculate_monthly_result,
+        calculate_monthly_variable_costs,
+    )
+    from src.reporting.report_builder import build_report
+    from src.schemas import ResearchBrief
+
+    metrics = []
+    for scenario_type, clients in (("conservative", 10), ("intermediate", 100)):
+        scenario = create_economic_scenario(
+            scenario_type=scenario_type,
+            expected_clients=clients,
+            monthly_fee=50,
+            fixed_costs=1000,
+            variable_cost_per_client=10,
+        )
+        revenue = calculate_monthly_revenue(scenario)
+        costs = calculate_monthly_variable_costs(scenario)
+        result = calculate_monthly_result(revenue.result.value, costs.result.value, 1000)
+        for calculation in (revenue, costs, result):
+            metrics.append(metric_from_scenario_calculation(scenario, calculation))
+
+    draft = build_report(
+        ResearchBrief(business_type="Gimnasio", location="Madrid", study_area="Prueba"),
+        ResearchResult(),
+        calculated_metrics=metrics,
+    )
+
+    assert [claim.reported_value for claim in draft.claims] == [
+        500, 100, -600, 5000, 1000, 3000,
+    ]
+    assert [claim.metric_id for claim in draft.claims] == [
+        metric.metric_id for metric in metrics
+    ]
+    assert draft.claims[0].text.startswith("Escenario conservador")
+    assert draft.claims[3].text.startswith("Escenario intermedio")
+    assert all(claim.reported_unit == "EUR/month" for claim in draft.claims)
+    assert any("Resultado mensual estimado: -600" in section for section in draft.sections)

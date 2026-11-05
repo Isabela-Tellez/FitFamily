@@ -5,6 +5,7 @@ Este módulo genera texto en memoria.
 No escribe archivos ni ejecuta acciones de exportación.
 """
 
+from src.reporting.calculated_claims import ECONOMIC_TRACE_HEADERS, economic_trace_row, format_scenario_note
 from src.reporting.models import ReportDraft
 
 
@@ -62,8 +63,13 @@ def render_report_markdown(
 
     lines.extend(["", "## Limitaciones", ""])
 
-    if draft.limitations:
-        for limitation in dict.fromkeys(draft.limitations):
+    limitations = [
+        visible
+        for note in dict.fromkeys(draft.limitations)
+        if (visible := format_scenario_note(note)) is not None
+    ]
+    if limitations:
+        for limitation in limitations:
             lines.append(f"- {limitation}")
     else:
         lines.append(
@@ -80,7 +86,12 @@ def render_report_markdown(
             "inference": "Inferencia",
         }
 
+        economic_rows = []
         for claim in draft.claims:
+            row = economic_trace_row(claim)
+            if row is not None:
+                economic_rows.append(row)
+                continue
             label = kind_labels.get(claim.kind, claim.kind)
             lines.extend([
                 f"### {claim.claim_id}",
@@ -101,7 +112,26 @@ def render_report_markdown(
                     "**Evidencias:** sin referencias registradas."
                 )
 
+            # Mostramos los campos numéricos sin recalcularlos.
+            if claim.metric_id is not None:
+                lines.extend([
+                    "",
+                    f"**Métrica:** {claim.metric_id}",
+                    "",
+                    f"**Valor declarado:** {claim.reported_value}",
+                    "",
+                    f"**Unidad:** {claim.reported_unit}",
+                ])
+
             lines.append("")
+
+            lines.append("")
+        if economic_rows:
+            lines.append("| " + " | ".join(ECONOMIC_TRACE_HEADERS) + " |")
+            lines.append("| --- | --- | --- | --- |")
+            for row in economic_rows:
+                cells = [cell.replace("|", r"\|").replace("\n", "<br>") for cell in row]
+                lines.append("| " + " | ".join(cells) + " |")
     else:
         lines.append(
             "No se han registrado afirmaciones con referencias individuales."
