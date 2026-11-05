@@ -16,6 +16,23 @@ from src.automation.models import ApprovalRecord
 from src.reporting.markdown_renderer import render_report_markdown
 
 
+def _safe_filename(draft: ReportDraft, extension: str) -> str:
+    """
+    Construye un nombre de archivo legible a partir del área de estudio
+    y un fragmento corto del identificador del borrador.
+
+    Mantiene suficiente entropía para evitar colisiones, pero es legible
+    para la persona usuaria.
+    """
+    area = (draft.study_area or "informe").strip().lower()
+    area_safe = "".join(
+        c if c.isalnum() or c in ("-", "_") else "_"
+        for c in area
+    )[:40]
+    short_hash = draft.draft_id[:8]
+    return f"estudio_{area_safe}_{short_hash}{extension}"
+
+
 def calculate_draft_fingerprint(draft: ReportDraft) -> str:
     """
     Calcula la huella del borrador, incluidas sus cifras estructuradas.
@@ -115,21 +132,8 @@ def export_markdown(
     directory = Path(output_dir).resolve()
     directory.mkdir(parents=True, exist_ok=True)
 
-    # Convertimos los identificadores en un nombre seguro.
-    operation = json.dumps(
-        {
-            "run_id": run_id,
-            "draft_id": draft.draft_id,
-            "version": draft.version,
-            "action": "export_markdown",
-        },
-        sort_keys=True,
-    )
-    operation_key = hashlib.sha256(
-        operation.encode("utf-8")
-    ).hexdigest()
-
-    target = directory / f"report_{operation_key}.md"
+    # Nombre legible basado en el área de estudio y el borrador.
+    target = directory / _safe_filename(draft, ".md")
 
     _write_markdown_atomically(target, markdown)
 
@@ -206,22 +210,8 @@ def export_pdf(
     directory = Path(output_dir).resolve()
     directory.mkdir(parents=True, exist_ok=True)
 
-    # Incluimos la acción para distinguir esta operación
-    # de la exportación Markdown del mismo borrador.
-    operation = json.dumps(
-        {
-            "run_id": run_id,
-            "draft_id": draft.draft_id,
-            "version": draft.version,
-            "action": "export_pdf",
-        },
-        sort_keys=True,
-    )
-    operation_key = hashlib.sha256(
-        operation.encode("utf-8")
-    ).hexdigest()
-
-    target = directory / f"report_{operation_key}.pdf"
+    # Nombre legible basado en el área de estudio y el borrador.
+    target = directory / _safe_filename(draft, ".pdf")
     _write_pdf_atomically(target, pdf_content)
 
     return target

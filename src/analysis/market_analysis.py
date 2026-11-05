@@ -114,6 +114,70 @@ def compare_competitors(data: pd.DataFrame) -> pd.DataFrame:
     ).reset_index(drop=True)
 
 
+def classify_competitors(data: pd.DataFrame) -> dict:
+    """
+    Clasifica competidores en directa, indirecta y pendiente de verificación
+    usando solo evidencias disponibles, sin inventar servicios ni estados.
+
+    - Directa: establecimientos con ludoteca confirmada (has_playroom == True).
+      Es candidato a competencia directa porque ofrece un servicio equivalente
+      al que el proyecto explora (gimnasio con ludoteca).
+    - Indirecta: establecimientos sin ludoteca confirmada
+      (has_playroom == False). Ofrecen actividad deportiva pero no la misma
+      propuesta de valor completa; la ausencia de ludoteca no demuestra por sí
+      sola que sean indirectos, solo que no cuentan con ese servicio.
+    - Pendiente de verificación: establecimientos con datos insuficientes
+      (has_playroom == None). La ausencia de información no se interpreta como
+      competencia potencial, ni como directa, ni como indirecta.
+    - Potencial: solo se llena si existe evidencia explícita de una futura
+      apertura o entrada en el mercado. Con los datos disponibles actualmente
+      no existe tal evidencia, por lo que queda vacío.
+    """
+    normalized_data = normalize_prices(data)
+
+    directa = normalized_data[normalized_data["has_playroom"] == True]
+    indirecta = normalized_data[normalized_data["has_playroom"] == False]
+    pendiente_verificacion = normalized_data[normalized_data["has_playroom"].isna()]
+
+    def _entries(df: pd.DataFrame) -> list[dict]:
+        return [
+            {
+                "gym_name": row["gym_name"],
+                "monthly_price_eur": (
+                    float(row["monthly_price_eur"])
+                    if pd.notna(row["monthly_price_eur"])
+                    else None
+                ),
+                "has_playroom": (
+                    bool(row["has_playroom"])
+                    if pd.notna(row["has_playroom"])
+                    else None
+                ),
+            }
+            for _, row in df.iterrows()
+        ]
+
+    return {
+        "directa": {
+            "count": len(directa),
+            "competidores": _entries(directa),
+        },
+        "indirecta": {
+            "count": len(indirecta),
+            "competidores": _entries(indirecta),
+        },
+        "pendiente_verificacion": {
+            "count": len(pendiente_verificacion),
+            "competidores": _entries(pendiente_verificacion),
+        },
+        "potencial": {
+            "count": 0,
+            "competidores": [],
+        },
+        "total": len(normalized_data),
+    }
+
+
 def calculate_indicators(data: pd.DataFrame) -> dict:
     """
     Calcula los indicadores descriptivos básicos del mercado.
@@ -211,3 +275,79 @@ def summarize_research_result(research_result: object) -> dict | None:
     competitors_data = pd.DataFrame(rows)
 
     return calculate_indicators(competitors_data)
+
+
+def classify_research_result(research_result: object) -> dict | None:
+    """
+    Adapta el resultado de investigación a la clasificación competitiva.
+
+    Usa solo evidencias disponibles: clasifica por ludoteca confirmada,
+    sin ludoteca, o actividad no confirmada. No infiere servicios.
+    """
+    if research_result is None:
+        return None
+
+    if isinstance(research_result, dict):
+        competitors = research_result.get("competitors", [])
+    else:
+        competitors = getattr(research_result, "competitors", [])
+
+    rows = []
+
+    for competitor in competitors or []:
+        if isinstance(competitor, dict):
+            name = competitor.get("name")
+            tariffs = competitor.get("tariffs", [])
+            has_playroom = competitor.get("has_playroom")
+        else:
+            name = getattr(competitor, "name", None)
+            tariffs = getattr(competitor, "tariffs", [])
+            has_playroom = getattr(competitor, "has_playroom", None)
+
+        monthly_prices = []
+
+        for tariff in tariffs or []:
+            if not isinstance(tariff, dict):
+                continue
+
+            frequency = str(
+                tariff.get("frequency") or ""
+            ).strip().casefold()
+
+            value = tariff.get("value")
+
+            if frequency in {"monthly", "mensual", "month"} and value is not None:
+                try:
+                    price = float(value)
+                except (TypeError, ValueError):
+                    continue
+
+                if math.isfinite(price) and price >= 0:
+                    monthly_prices.append(price)
+
+        monthly_price = (
+            monthly_prices[0]
+            if len(monthly_prices) == 1
+            else None
+        )
+
+        rows.append(
+            {
+                "gym_name": name or "Competidor sin nombre",
+                "monthly_price_eur": monthly_price,
+                "has_playroom": has_playroom,
+            }
+        )
+
+    if not rows:
+        return {
+            "directa": {"count": 0, "competidores": []},
+            "indirecta": {"count": 0, "competidores": []},
+            "pendiente_verificacion": {"count": 0, "competidores": []},
+            "potencial": {"count": 0, "competidores": []},
+            "total": 0,
+        }
+
+    competitors_data = pd.DataFrame(rows)
+
+    return classify_competitors(competitors_data)

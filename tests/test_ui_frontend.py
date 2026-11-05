@@ -280,8 +280,8 @@ def test_approval_registers_record_and_delivers_files(app):
     assert set(dr.completed_actions) >= {"export_markdown", "export_pdf", "update_tracking_csv"}
 
     out_dir = app.session_state and Path("outputs/reports")
-    md_files = list(out_dir.glob("report_*.md"))
-    pdf_files = list(out_dir.glob("report_*.pdf"))
+    md_files = list(out_dir.glob("estudio_*.md"))
+    pdf_files = list(out_dir.glob("estudio_*.pdf"))
     csv_files = list(Path("outputs").glob("tracking.csv"))
     assert md_files and pdf_files and csv_files
     md_text = md_files[0].read_text(encoding="utf-8")

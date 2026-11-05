@@ -279,6 +279,11 @@ def render() -> None:
                 f"Decidida: {approval.get('decided_at')} · "
                 f"Versión: {state.get('approved_version_id') or '—'}"
             )
+            # Si el estado ya es completed, la entrega finalizó.
+            if state.get("status") == "completed":
+                st.success(
+                    "El informe ha sido aprobado y entregado completamente."
+                )
         else:
             st.markdown(
                 '<span class="ff-badge ff-badge-warn">Informe rechazado</span>',
