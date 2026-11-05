@@ -104,3 +104,47 @@ def test_markdown_shows_metric_reference_without_changing_draft():
     assert "Métrica: scenario_intermediate.break_even_clients" in markdown
     assert "| Intermedio | Punto de equilibrio | 25 clientes |" in markdown
     assert draft == original
+
+
+def test_economic_table_preserves_original_calculation_and_evidence():
+    """El cálculo real conserva sus referencias hasta la tabla final."""
+    from src.analysis.calculation_adapter import metric_from_break_even
+    from src.analysis.economic_calculations import create_break_even_calculation
+    from src.analysis.scenarios import create_economic_scenario
+    from src.reporting.report_builder import build_report
+    from src.schemas import Evidence, ResearchBrief, ResearchResult
+
+    evidence = Evidence(
+        evidence_id="economic_source_test",
+        claim="Entradas ficticias documentadas para esta prueba.",
+        source_url="https://example.com/escenario",
+    )
+    scenario = create_economic_scenario(
+        "intermediate", 100, 50, 1000, 10,
+        assumptions=["Escenario ficticio de prueba."],
+    )
+    calculation = create_break_even_calculation(
+        fixed_costs=1000, monthly_fee=50, variable_cost_per_client=10,
+        evidence_ids=[evidence.evidence_id],
+    )
+    metric = metric_from_break_even(scenario, calculation)
+    draft = build_report(
+        ResearchBrief(business_type="Gimnasio", location="Madrid", study_area="Prueba"),
+        ResearchResult(evidences=[evidence]),
+        calculated_metrics=[metric],
+    )
+    original = deepcopy(draft)
+
+    markdown = render_report_markdown(draft)
+
+    table_row = next(
+        line for line in markdown.splitlines()
+        if line.startswith("| Intermedio | Punto de equilibrio |")
+    )
+    assert "25 clientes" in table_row
+    assert f"Métrica: {metric.metric_id}" in table_row
+    assert f"Cálculo: {calculation.calculation_id}" in table_row
+    assert f"Evidencias: {evidence.evidence_id}" in table_row
+    assert draft.claims[0].calculation_id == calculation.calculation_id
+    assert draft.claims[0].evidence_ids == [evidence.evidence_id]
+    assert draft == original
