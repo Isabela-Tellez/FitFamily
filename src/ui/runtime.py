@@ -4,7 +4,10 @@ from contextlib import ExitStack
 import streamlit as st
 
 from src.config import settings
-from src.graph.persistence import open_checkpointer
+from src.graph.persistence import (
+    open_checkpointer,
+    load_run as load_persisted_run,
+)
 from src.graph.workflow import build_workflow
 from src.runtime.events import read_recent_events
 
@@ -104,3 +107,27 @@ def get_recent_events(limit=10):
         limit=limit,
         db_path=settings.events_db_path,
     )
+
+
+def get_research_by_id(run_id: str):
+    """
+    Recupera una investigación concreta y verifica su identidad.
+    """
+
+    if not isinstance(run_id, str) or not run_id.strip():
+        raise ValueError(
+            "Identificador de investigación inválido."
+        )
+
+    graph, _ = get_graph()
+
+    snapshot = load_persisted_run(
+        graph=graph,
+        thread_id=run_id,
+        expected_run_id=run_id,
+    )
+
+    if snapshot is None:
+        return None
+
+    return snapshot.values

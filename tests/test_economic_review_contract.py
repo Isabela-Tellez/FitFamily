@@ -69,10 +69,21 @@ class EconomicReviewTests(unittest.TestCase):
 
     def test_intermediate_revenue_cannot_be_changed_with_total(self):
         m = metrics()[2]
+
         m.context.calculation_result.inputs[0].value += 100
         m.context.calculation_result.result.value += 100
-        m.value += Decimal('100')
-        self.assertTrue(validate_calculation_contexts([m], ResearchResult()))
+        m.value += Decimal("100")
+
+        issues = validate_calculation_contexts(
+            [m],
+            ResearchResult(),
+        )
+
+        self.assertTrue(issues)
+        self.assertEqual(
+            issues[0].code,
+            "invalid_calculation_context",
+        )
 
     def test_observed_inputs_need_evidence(self):
         for m in metrics():

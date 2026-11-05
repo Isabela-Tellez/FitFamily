@@ -16,6 +16,7 @@ from src.analysis.contracts import CalculatedMetric
 from src.analysis.scenarios import (
     create_economic_scenario,
     evaluate_economic_scenario,
+    compare_economic_scenarios,
 )
 from src.automation.delivery import (
     ACTION_ORDER,
@@ -51,8 +52,14 @@ def research_node(state: ResearchState) -> dict[str, Any]:
 # ============================================================
 # ANALYSIS NODE
 # ============================================================
+
+# ============================================================
+# ANALYSIS NODE
+# ============================================================
+
 def analysis_node(state: ResearchState) -> dict[str, Any]:
-    """Calcula indicadores económicos a partir de parámetros validados."""
+    """Calcula y compara los tres escenarios económicos."""
+
     brief = ResearchBrief.model_validate(state["brief"])
     params = brief.assumed_params or {}
 
@@ -75,7 +82,7 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
                 "scenarios": [],
                 "calculated_metrics": [],
                 "limitations": [
-                    "No se pudieron calcular los indicadores económicos. "
+                    "No se pudieron calcular los escenarios económicos. "
                     f"Faltan parámetros: {', '.join(missing)}."
                 ],
             },
@@ -107,60 +114,114 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
             "expected_clients debe ser un número entero."
         )
 
-    scenario = create_economic_scenario(
-        scenario_type="intermediate",
-        expected_clients=expected_clients,
-        monthly_fee=numeric_params["monthly_fee"],
-        fixed_costs=numeric_params["fixed_costs"],
-        variable_cost_per_client=numeric_params[
-            "variable_cost_per_client"
-        ],
-        assumptions=[
-            f"{name} procede de assumed_params del encargo."
-            for name in required
-        ],
+    monthly_fee = float(numeric_params["monthly_fee"])
+    fixed_costs = float(numeric_params["fixed_costs"])
+    variable_cost = float(
+        numeric_params["variable_cost_per_client"]
     )
 
-    calculations = evaluate_economic_scenario(
-        scenario,
-        limitations=[
-            "Los resultados son proyecciones basadas en los parámetros "
-            "proporcionados; no garantizan la rentabilidad del negocio."
-        ],
-    )
+    if expected_clients < 0:
+        raise ValueError("expected_clients no puede ser negativo.")
 
-    metrics = [
-        metric_from_scenario_calculation(
-            scenario,
-            calculation,
+    if monthly_fee <= 0:
+        raise ValueError("monthly_fee debe ser mayor que cero.")
+
+    if fixed_costs < 0 or variable_cost < 0:
+        raise ValueError("Los costes no pueden ser negativos.")
+
+    if monthly_fee <= variable_cost:
+        raise ValueError(
+            "monthly_fee debe superar variable_cost_per_client."
         )
-        for calculation in calculations
+
+    # Los porcentajes son hipótesis de sensibilidad.
+    scenario_definitions = [
+        (
+            "conservative",
+            int(expected_clients * 0.8),
+            "Se supone un 20 % menos de clientes.",
+        ),
+        (
+            "intermediate",
+            expected_clients,
+            "Se utiliza el número de clientes de referencia.",
+        ),
+        (
+            "optimistic",
+            int(expected_clients * 1.2),
+            "Se supone un 20 % más de clientes.",
+        ),
     ]
+
+    scenarios = []
+
+    for scenario_type, clients, description in scenario_definitions:
+        scenarios.append(
+            create_economic_scenario(
+                scenario_type=scenario_type,
+                expected_clients=clients,
+                monthly_fee=monthly_fee,
+                fixed_costs=fixed_costs,
+                variable_cost_per_client=variable_cost,
+                assumptions=[
+                    description,
+                    "Los parámetros proceden de assumed_params "
+                    "del encargo.",
+                ],
+            )
+        )
+
+    # Evaluamos los tres escenarios utilizando los cálculos existentes.
+    comparison = compare_economic_scenarios(
+        scenarios=scenarios,
+        limitations=[
+            "Los resultados son proyecciones basadas en supuestos "
+            "y no garantizan la rentabilidad del negocio."
+        ],
+    )
+
+    serialized_scenarios = []
+    metrics = []
+
+    for scenario in scenarios:
+        calculations = comparison[scenario.scenario_id]
+
+        serialized_scenarios.append(
+            {
+                "scenario": scenario.model_dump(mode="json"),
+                "calculations": [
+                    calculation.model_dump(mode="json")
+                    for calculation in calculations
+                ],
+            }
+        )
+
+        for calculation in calculations:
+            metrics.append(
+                metric_from_scenario_calculation(
+                    scenario,
+                    calculation,
+                )
+            )
 
     return {
         "analysis_result": {
-            "scenarios": [
-                {
-                    "scenario": scenario.model_dump(mode="json"),
-                    "calculations": [
-                        calculation.model_dump(mode="json")
-                        for calculation in calculations
-                    ],
-                }
-            ],
+            "scenarios": serialized_scenarios,
             "calculated_metrics": [
                 metric.model_dump(mode="json")
                 for metric in metrics
             ],
-            "limitations": [
+            "limitations": list(dict.fromkeys(
                 limitation
+                for calculations in comparison.values()
                 for calculation in calculations
                 for limitation in calculation.limitations
-            ],
+            )),
         },
         "current_stage": "writing",
         "updated_at": _utc_now(),
     }
+
 
 
 # ============================================================

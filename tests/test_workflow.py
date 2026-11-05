@@ -177,8 +177,22 @@ def test_analysis_node_calculates_economic_metrics(
 
     analysis = result["analysis_result"]
 
-    assert len(analysis["scenarios"]) == 1
-    assert len(analysis["calculated_metrics"]) == 4
+    assert len(analysis["scenarios"]) == 3
+    scenario_types = {
+        item["scenario"]["scenario_type"]
+        for item in analysis["scenarios"]
+    }
+
+    assert scenario_types == {
+        "conservative",
+        "intermediate",
+        "optimistic",
+    }
+
+    for scenario in analysis["scenarios"]:
+        assert len(scenario["calculations"]) == 4
+
+    assert len(analysis["calculated_metrics"]) == 12
 
     # Todas las métricas deben incluir su contexto de cálculo.
     for metric in analysis["calculated_metrics"]:
@@ -189,9 +203,16 @@ def test_analysis_node_calculates_economic_metrics(
 
     assert result["current_stage"] == "writing"
 
+    intermediate_metrics = [
+        metric
+        for metric in analysis["calculated_metrics"]
+        if metric["context"]["scenario"]["scenario_type"]
+        == "intermediate"
+    ]
+
     metrics = {
         metric["context"]["calculation_result"]["calculation_type"]: metric
-        for metric in analysis["calculated_metrics"]
+        for metric in intermediate_metrics
     }
 
     assert float(

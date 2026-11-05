@@ -7,17 +7,12 @@ def apply_styles():
         """
         <style>
         :root {
-            --primary: #527A60;
-            --primary-dark: #365744;
-            --coral: #D98C79;
-            --sage: #DCE9DF;
-            --lavender: #E9E4F2;
-            --peach: #F5E8DA;
-            --background: #F7F6F2;
-            --surface: #FFFFFF;
-            --text: #293B32;
-            --muted: #879189;
-            --border: #EAECE6;
+            --background: #EAEFE9;
+            --primary: #13404B;
+            --primary-dark: #13404B;
+            --coral: #E26D5C;
+            --sage: #819885;
+            --peach: #F4D0A4;
         }
 
         .stApp {
@@ -119,20 +114,27 @@ def apply_styles():
         /* METRICS */
 
         [data-testid="stMetric"] {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(40, 60, 45, 0.025);
+            background: #FFFFFF !important;
+            border: 1px solid #DCE9DF !important;
+            border-radius: 16px !important;
+            padding: 20px !important;
+            min-height: 115px;
+            box-shadow: 0 2px 8px rgba(19, 64, 75, 0.06);
         }
 
         [data-testid="stMetricLabel"] {
-            color: var(--muted) !important;
+            color: #819885 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
         }
 
         [data-testid="stMetricValue"] {
-            color: var(--primary-dark) !important;
-            font-weight: 750;
+            color: #13404B !important;
+            font-size: clamp(17px, 1.5vw, 28px) !important;
+            font-weight: 750 !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            line-height: 1.3 !important;
         }
 
         /* BUTTONS */

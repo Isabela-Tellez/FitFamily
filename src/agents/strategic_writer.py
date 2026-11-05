@@ -29,6 +29,38 @@ from src.reporting.templates import (
 )
 
 
+def _filter_failed_access_evidence(
+    research_result: ResearchResult,
+) -> ResearchResult:
+    """Excluye intentos fallidos del catálogo de evidencias citables."""
+
+    filtered = research_result.model_copy(deep=True)
+
+    failed_ids = {
+        evidence.evidence_id
+        for evidence in [
+            *filtered.evidences,
+            *(e for c in filtered.competitors for e in c.evidences),
+        ]
+        if evidence.evidence_id.startswith("access_attempt_")
+    }
+
+    filtered.evidences = [
+        evidence
+        for evidence in filtered.evidences
+        if evidence.evidence_id not in failed_ids
+    ]
+
+    for competitor in filtered.competitors:
+        competitor.evidences = [
+            evidence
+            for evidence in competitor.evidences
+            if evidence.evidence_id not in failed_ids
+        ]
+
+    return filtered
+
+
 def build_writer() -> Agent:
     """Construye el agente sin ejecutar una tarea de redacción."""
     return Agent(
@@ -169,7 +201,15 @@ def run_writing(brief: ResearchBrief, research_result: ResearchResult) -> Report
         content = _writing_task_content(brief, research, agent)
         return count_writing_task_tokens(content, model) <= WRITER_TASK_TOKEN_LIMIT
 
-    batches = partition_writer_research(research_result, fits)
+    # El redactor solo recibe evidencias utilizables.
+    filtered_research = _filter_failed_access_evidence(
+        research_result
+    )
+
+    batches = partition_writer_research(
+        filtered_research,
+        fits,
+    )
     drafts = [_run_writing_single(brief, batch, agent) for batch in batches]
     if len(drafts) == 1:
         return drafts[0]

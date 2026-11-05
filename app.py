@@ -2,7 +2,7 @@ import streamlit as st
 
 from src.config import settings
 from src.ui.styles import apply_styles
-from src.ui.components import render_brand
+from src.ui.branding import render_brand
 from src.ui.runtime import get_graph
 
 
