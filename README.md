@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en El Cañaveral, Madrid</strong><br>
-  <sub><strong>Proyecto completado · Oct 2026</strong></sub>
+  <sub><strong>Proyecto integrado · Nov 2026</strong></sub>
 </p>
 
 <p align="center">
@@ -27,19 +27,19 @@
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
   <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/pytest-509%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-685%20passed-2ea44f?logo=python&logoColor=white">
   <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
 <p align="center">
   <strong>FitFamily — Investigación · Análisis · Revisión · Exportación</strong><br>
-  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica · Redacción LLM · Prototipo activo</sub>
+  <sub>Workflows + persistencia SQLite · Contrato de cálculo · Revisión numérica · Redacción LLM · Flujo LangGraph · UI Streamlit</sub>
 </p>
 
 > [!NOTE]
 > Este proyecto integra investigación trazable, análisis económico (`calculation-review-contract.md`), revisión numérica (`numeric_validation.py`) y flujo automático (`workflows.py`) con persistencia SQLite.
 
-> **Qué es y qué no es (proyecto activo, actualizado).** FitFamily es un prototipo de investigación con flujo automático (`workflows.py`), contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). Es un sistema operativo de análisis de viabilidad, no un producto de inversión terminado: requiere aprobación humana y exportación completa para publicar resultados.
+> **Qué es y qué no es (proyecto integrado, actualizado).** FitFamily es un sistema de investigación con flujo automático LangGraph, contrato de análisis (`calculation-review-contract.md`) y persistencia (`persistence.py`). Incluye UI Streamlit completa, controlador de aprobación, exportación Markdown/PDF y redacción con LLM opcional (Groq). Requiere aprobación humana para publicar resultados.
 
 ## Qué es FitFamily
 
@@ -55,10 +55,10 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 | ¿Redacta un informe? | Sí, con un redactor determinista o con un LLM opcional (Groq). |
 | ¿Revisa el informe? | Sí, referencias y calidad estructural; no verifica la verdad semántica. |
 | ¿Exporta? | Sí, Markdown y PDF, solo después de un `ApprovalRecord` válido. |
-| ¿Tiene flujo automático? | **No.** Los módulos se llaman por separado; no hay `main.py`, CLI ni grafo ejecutable. |
-| ¿Tiene UI? | **Parcial.** `src/ui/report_preview.py` ofrece vista previa/exportación de informes; no hay Streamlit ni aplicación web completa. El workflow (`workflows.py`) existe pero requiere controlador. |
+| ¿Tiene flujo automático? | **Sí.** Flujo LangGraph con persistencia SQLite, rutas de revisión y controlador de aprobación. |
+| ¿Tiene UI? | **Sí.** Streamlit completa en `src/ui/` con navegación, formularios, resultados, recomendación y aprobación. |
 
-**Tecnologías / Temas:** Python 3.13 · Pydantic · LangGraph · SQLite (persistencia) · MCP stdio · CrewAI / Groq (opcional) · pytest · Markdown / PDF · cálculo económico estructurado (`calculation-review-contract.md`).
+**Tecnologías / Temas:** Python 3.13 · Pydantic · LangGraph · SQLite (persistencia) · MCP stdio · CrewAI / Groq (opcional) · pytest · Markdown / PDF · Streamlit · cálculo económico estructurado (`calculation-review-contract.md`).
 
 ## Contenido
 
@@ -76,21 +76,21 @@ El proyecto nace de una situación concreta: abrir un gimnasio con ludoteca en u
 ## Estado del flujo automático
 
 ```text
-📥 ResearchBrief  →  🔍 Investigación  →  📊 Análisis (workflows)
-                                      ↓
+📥 ResearchBrief  →  🔍 Investigación  →  📊 Análisis (LangGraph)
+                                       ↓
                             📝 Redacción + Cálculos (`calculated_claims`)
-                                      ↓
+                                       ↓
                             🔍 Revisión numérica (`run_basic_review`)
-                                      ↓
+                                       ↓
                             ✅ Aprobación humana (`ApprovalRecord`)
-                                      ↓
+                                       ↓
                             📄 Exportación Markdown / PDF
 ```
 
 ```mermaid
 flowchart LR
     A[ResearchBrief] --> B[Investigación]
-    B --> C[Análisis workflows.py]
+    B --> C[Análisis LangGraph]
     C --> D[Redacción + Adapter]
     D --> E[Revisión numérica]
     E --> F{Aprobación ApprovalRecord}
@@ -101,14 +101,14 @@ flowchart LR
     style E fill:#A9DCC5,stroke:#172B2A,stroke-width:2px
 ```
 
-> **Nota técnica:** Las conexiones verdes (`workflows.py`, `calculation_adapter.py`, `persistence.py`) están implementadas (PR #30).
+> **Nota técnica:** El flujo LangGraph (`workflows.py`, `persistence.py`, `events.py`, `runner.py`, `state.py`, `nodes.py`) está implementado y conectado (PRs #30, #35, #41, #43).
 
 ## El problema que resuelve
 
 Una decisión de localización suele fallar por una de estas razones:
 
 1. **Datos sin contexto.** Una cifra de población sin fecha, ámbito o fuente no sirve para comparar barrios ni para calcular ratios.
-2. **Datos que no existen y se rellenan.** Un precio desconocido no es cero; una ludoteca no confirmada no es “no tiene”; una familia con hijos no es una categoría del padrón.
+2. **Datos que no existen y se rellenan.** Un precio desconocido no es cero; una ludoteca no confirmada no es "no tiene"; una familia con hijos no es una categoría del padrón.
 3. **Mezcla de periodos.** La población de octubre de 2026 no debe dividirse entre los hogares de enero de 2025.
 4. **Pérdida de trazabilidad.** Un informe atractivo sin enlaces, fragmentos y limitaciones no permite auditar sus afirmaciones.
 5. **Aprobación difusa.** Generar texto no equivale a autorizar su publicación.
@@ -117,28 +117,25 @@ FitFamily aplica cuatro reglas:
 
 - **Evidencia antes que prosa.** Cada dato debe poder rastrearse hasta una fuente, una fecha y, cuando procede, un fragmento.
 - **Contratos explícitos.** Los módulos intercambian modelos validados (`ResearchBrief`, `ResearchResult`, `ReportDraft`, `ReviewResult`, `ApprovalRecord`).
-- **`null` significa “no disponible”.** No se convierte en cero, en media ni en una suposición silenciosa.
+- **`null` significa "no disponible".** No se convierte en cero, en media ni en una suposición silenciosa.
 - **La aprobación es humana.** El exportador comprueba un registro de aprobación; no la concede el redactor ni la revisión automática.
 
 ## Estado actual
 
-No se presenta como terminado lo que no lo está. Esta es la clasificación real tras revisar el código, los tests y los datos versionados el **26 de octubre de 2026**.
-
 | Estado | Qué incluye |
 |---|---|
-| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; gráficos de precios y escenarios (`src/analysis/charts.py`, PR #37, Laura); redactor determinista; renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección. |
-| **Implementado, pero aislado o condicionado** | Investigación web (necesita red); registro de competidores (foto versionada, sin precios ni ludoteca confirmada); ruta LLM (necesita Groq y solo se ha probado con mocks); MCP (herramienta local separada, no conectada automáticamente a la investigación); `coverage_percentage` (siempre `0.0`). |
-| **Diseñado, no implementado** | Streamlit; LangGraph; controlador de aprobación; actualización automática de datos; CSV de seguimiento; autenticación; despliegue; trazas de auditoría. |
-| **Fuera de alcance actual** | Recomendación de inversión, modelo financiero completo, estudio de demanda con renta, garantía de viabilidad, app multiusuario. |
+| **Implementado y cubierto por tests** | Contratos Pydantic; herramientas de búsqueda, lectura, competidores y descubrimiento de fuentes; registro oficial; MCP local; análisis descriptivo y punto de equilibrio; gráficos de precios y escenarios (`src/analysis/charts.py`); redactor determinista; redactor LLM (CrewAI + Groq); renderizado Markdown/PDF; exportación con aprobación; revisión estructural y rutas de corrección; flujo LangGraph con persistencia SQLite; UI Streamlit completa; controlador de aprobación; CSV de seguimiento; modelo de recomendación determinista. |
+| **Implementado, pero aislado o condicionado** | Investigación web (necesita red); registro de competidores (foto versionada, sin precios ni ludoteca confirmada); MCP (herramienta local separada, no conectada automáticamente a la investigación); `coverage_percentage` (siempre `0.0`). |
+| **Fuera de alcance actual** | Recomendación de inversión, modelo financiero completo, estudio de demanda con renta, garantía de viabilidad, app multiusuario, autenticación, despliegue. |
 
-En la práctica, el recorrido completo **se compone llamando funciones**, no ejecutando una aplicación:
+En la práctica, el recorrido completo **se ejecuta mediante el flujo LangGraph**:
 
 ```text
 ResearchBrief → run_research → ResearchResult → build_report → ReportDraft
-             → run_basic_review → ApprovalRecord → export_markdown/export_pdf
+              → run_basic_review → ApprovalRecord → export_markdown/export_pdf
 ```
 
-La investigación no se conecta sola con el análisis: para pasar de `ResearchResult` a `DataFrame` hace falta un adaptador explícito o partir del registro versionado `data/processed/competitor_registry.json`. El MCP tampoco se consulta automáticamente desde `run_research`; es una herramienta local independiente.
+El flujo se ejecuta a través del controlador (`src.runtime.controller`) con persistencia SQLite y registro de eventos.
 
 ## Quién lo construye
 
@@ -150,13 +147,13 @@ El proyecto tiene **cinco roles humanos de desarrollo**, no cinco agentes que se
 | **Laura** | Análisis y escenarios | `summarize_competitors`, normalización de ludoteca y punto de equilibrio | [docs/analysis.md](docs/analysis.md) |
 | **Gema** | Redacción, informes y exportación | Redactor determinista, redactor LLM, renderizado y exportación aprobada | [docs/report-export.md](docs/report-export.md) · [docs/writer-llm.md](docs/writer-llm.md) |
 | **María** | Revisión y calidad | Validación de referencias, calidad de evidencias y rutas de corrección | [docs/review-quality.md](docs/review-quality.md) |
-| **Isabella** | Interfaz y orquestación | Diseño de Streamlit, LangGraph y aprobación humana; implementación pendiente | [docs/streamlit-approval.md](docs/streamlit-approval.md) · [docs/langgraph-flow.md](docs/langgraph-flow.md) |
+| **Isabella** | Interfaz y orquestación | Diseño de Streamlit, LangGraph, controlador de aprobación y UI completa | [docs/streamlit-approval.md](docs/streamlit-approval.md) · [docs/langgraph-flow.md](docs/langgraph-flow.md) |
 
 La única ruta que ejecuta un `Crew` de CrewAI es el redactor LLM. `build_researcher()` y `build_research_task()` construyen objetos de CrewAI, pero `run_research()` usa las herramientas Python directamente para que la recolección sea determinista y no dependa de una clave de modelo.
 
 ## Caso de uso: El Cañaveral
 
-El ámbito es **El Cañaveral**, barrio del distrito de Vicálvaro (Madrid). La pregunta de fondo no es “¿hay gimnasios?”, sino:
+El ámbito es **El Cañaveral**, barrio del distrito de Vicálvaro (Madrid). La pregunta de fondo no es "¿hay gimnasios?", sino:
 
 - ¿Cuánta población hay y qué peso tiene la población infantil y joven?
 - ¿Cuántos hogares hay y cuántos podrían necesitar conciliación?
@@ -189,12 +186,12 @@ El ámbito es **El Cañaveral**, barrio del distrito de Vicálvaro (Madrid). La 
 `data/processed/competitor_registry.json` es una foto generada el **21 de octubre de 2026** a partir del Censo de Locales y Actividades:
 
 - **18 locales** con actividad relevante para el estudio.
-- **16** con información de licencia; la ausencia de licencia significa “sin información”, nunca “denegada”.
+- **16** con información de licencia; la ausencia de licencia significa "sin información", nunca "denegada".
 - **14 de 18** con coordenadas utilizables.
 - **0 precios conocidos** y **0 ludotecas confirmadas** en el artefacto versionado.
 - Las categorías de gimnasios, deporte, ocio infantil y piscinas **se solapan**: no sumes 9 + 4 + 3 + 3 como si fueran 19 locales distintos.
 
-Un local registrado no equivale a un negocio operativo, y una licencia administrativa no demuestra que el establecimiento esté abierto. Tampoco existe un censo de “gimnasio con ludoteca”: esa variable hay que confirmarla local a local.
+Un local registrado no equivale a un negocio operativo, y una licencia administrativa no demuestra que el establecimiento esté abierto. Tampoco existe un censo de "gimnasio con ludoteca": esa variable hay que confirmarla local a local.
 
 ### Lo que no se ha calculado
 
@@ -257,6 +254,23 @@ flowchart TD
 5. **Aprobación y exportación.** Una persona decide. El controlador crea un `ApprovalRecord`; `export_markdown` o `export_pdf` validan la ejecución, el borrador, la versión, la huella, la acción y la zona horaria antes de publicar.
 
 El diagrama y el detalle de fronteras están en [docs/arquitectura-modulos.md](docs/arquitectura-modulos.md).
+
+## UI Streamlit
+
+La interfaz completa está en `src/ui/app.py` con las siguientes pantallas:
+
+- **Inicio:** vista general del estado del sistema
+- **Nuevo estudio:** formulario de encargo de investigación con validación
+- **Resultados:** visualización del informe generado
+- **Indicadores oficiales:** datos MCP y censales
+- **Recomendación:** modelo determinista de oportunidad
+- **Aprobación y entrega:** revisión humana y exportación
+
+Arranque:
+
+```bash
+python -m streamlit run src/ui/app.py
+```
 
 ## Contratos de datos
 
@@ -347,7 +361,7 @@ from src.automation.exporter import (
 from src.automation.models import ApprovalRecord
 
 approval = ApprovalRecord(
-    run_id="demo-2026-10-26",
+    run_id="demo-2026-11-05",
     draft_id=draft.draft_id,
     draft_version=draft.version,
     draft_fingerprint=calculate_draft_fingerprint(draft),
@@ -436,7 +450,7 @@ La revisión actual es estructural, no semántica. Comprueba:
 
 ```mermaid
 sequenceDiagram
-    participant C as Controlador o UI (pendiente)
+    participant C as Controlador o UI
     participant R as Revisión
     participant H as Persona usuaria
     participant E as Exportador
@@ -455,7 +469,7 @@ sequenceDiagram
     end
 ```
 
-Crear un `ApprovalRecord` en Python no demuestra que una persona haya aprobado nada. El controlador debe garantizar la procedencia de la decisión. Hoy no existe ese controlador ni una UI que la capture.
+Crear un `ApprovalRecord` en Python no demuestra que una persona haya aprobado nada. El controlador debe garantizar la procedencia de la decisión. La UI Streamlit captura la decisión humana a través de la pantalla de "Aprobación y entrega".
 
 ## Puesta en marcha
 
@@ -503,7 +517,7 @@ Ninguna variable es necesaria para la demo determinista, el MCP, los tests ni la
 | `TAVILY_API_KEY` | Búsqueda web alternativa; sin ella se usa DuckDuckGo (`ddgs`) |
 | `LANGCHAIN_TRACING_V2`, `LANGCHAIN_PROJECT`, `LANGSMITH_API_KEY` | Trazas opcionales en LangSmith |
 
-[`.env.example`](.env.example) documenta los nombres. No versiones un `.env` con claves.
+[`.env.example`](.env.example) documenta los nombres. No versions un `.env` con claves.
 
 ### Comprobaciones rápidas
 
@@ -564,39 +578,35 @@ La cartografía oficial asigna **9 secciones censales** a El Cañaveral (`COD_BA
 
 ## Pruebas y CI
 
-La suite actual tiene **273 tests en 28 archivos**. La revisión local del 26 de octubre de 2026 obtuvo:
+La suite actual tiene **685 tests en 30+ archivos**. La revisión de noviembre 2026 obtuvo:
 
 ```text
-273 passed, 36 warnings in 26.10s
+685 passed, 1 skipped in 66.60s
 ```
 
-Las advertencias son de deprecación de CrewAI, no fallos. `python -m compileall -q src tests data/raw` terminó con código 0. La CI de GitHub Actions ejecuta en Ubuntu con Python 3.13:
+Las advertencias son de deprecación de CrewAI, no fallos. `python -m compileall -q src tests scripts` terminó con código 0. La CI de GitHub Actions ejecuta en Ubuntu con Python 3.13:
 
 ```text
-python -m compileall -q src tests data/raw
+python -m compileall -q src tests scripts
 python -m pytest -q
 ```
 
 El workflow se activa en `push`/`pull_request` a `dev` y `main`, y manualmente. No ejecuta lint, tipado, cobertura mínima, comprobación de enlaces ni pruebas con proveedores reales.
 
-Cubre, entre otras cosas: contratos, investigación con respuestas simuladas, protecciones SSRF, registro y parseo de datos, MCP por subproceso, análisis, escenarios, redactores, informes, PDF, exportación, revisión y rutas. **No cubre** una búsqueda real, una llamada real a Groq, Streamlit, LangGraph, la verificación semántica ni el flujo completo con aprobación humana.
+Cubre, entre otras cosas: contratos, investigación con respuestas simuladas, protecciones SSRF, registro y parseo de datos, MCP por subproceso, análisis, escenarios, redactores, informes, PDF, exportación, revisión y rutas. **No cubre** una búsqueda real, una llamada real a Groq, la verificación semántica ni el flujo completo con aprobación humana.
 
 El detalle está en [docs/calidad-pruebas.md](docs/calidad-pruebas.md).
 
 ## Limitaciones
 
-1. **No hay aplicación única.** No existe `main.py`, CLI, Streamlit ni grafo ejecutable. El flujo se compone llamando APIs.
-2. **La investigación y el análisis están separados.** `ResearchResult` no se convierte automáticamente en el `DataFrame` que espera `summarize_competitors`.
-3. **El MCP no es una fuente en vivo.** Es un almacén local; las funciones de refresco no están programadas.
-4. **No hay cobertura calculada.** `coverage_percentage` permanece en `0.0`; además, todas las preguntas del brief se conservan como pendientes.
-5. **El registro actual no tiene precios ni ludotecas confirmadas.** Las 18 fichas no permiten calcular una media de precios ni afirmar que un gimnasio tenga ludoteca.
-6. **La revisión no verifica la verdad semántica.** Comprueba que las referencias existan y que los hechos tengan alguna; no prueba que la fuente respalde la frase.
-7. **La ruta LLM no está validada con un proveedor real.** Solo hay tests con mocks; no se ha medido calidad, latencia, coste ni resistencia a inyección de prompt.
-8. **La aprobación humana no tiene interfaz.** `ApprovalRecord` es un objeto programable; el controlador que lo crea es responsable de que la decisión haya existido.
-9. **La exportación exige enlaces duros.** El sistema de archivos debe admitirlos; no se garantiza la limpieza de temporales tras un apagado brusco.
-10. **No hay autenticación, autorización, base de datos, trazas de auditoría ni despliegue.** No es un producto multiusuario.
-11. **No hay modelo de demanda ni recomendación de inversión.** El punto de equilibrio solo responde a la aritmética de los supuestos que recibe.
-12. **No hay capturas de interfaz.** `assets/` contiene únicamente el logo; sería incorrecto presentar una pantalla que no existe.
+1. **La investigación y el análisis están separados.** `ResearchResult` no se convierte automáticamente en el `DataFrame` que espera `summarize_competitors`.
+2. **El MCP no es una fuente en vivo.** Es un almacén local; las funciones de refresco no están programadas.
+3. **No hay cobertura calculada.** `coverage_percentage` permanece en `0.0`; además, todas las preguntas del brief se conservan como pendientes.
+4. **El registro actual no tiene precios ni ludotecas confirmadas.** Las 18 fichas no permiten calcular una media de precios ni afirmar que un gimnasio tenga ludoteca.
+5. **La revisión no verifica la verdad semántica.** Comprueba que las referencias existan y que los hechos tengan alguna; no prueba que la fuente respalde la frase.
+6. **La ruta LLM no está validada con un proveedor real.** Solo hay tests con mocks; no se ha medido calidad, latencia, coste ni resistencia a inyección de prompt.
+7. **La exportación exige enlaces duros.** El sistema de archivos debe admitirlos; no se garantiza la limpieza de temporales tras un apagado brusco.
+8. **No hay modelo de demanda ni recomendación de inversión.** El punto de equilibrio solo responde a la aritmética de los supuestos que recibe.
 
 ## Roadmap
 
@@ -605,13 +615,11 @@ Las prioridades no llevan fechas y no deben leerse como compromisos de entrega.
 | Prioridad | Objetivo | Prerrequisito real |
 |---|---|---|
 | 1 | Adaptador `ResearchResult → DataFrame` y análisis conectado | Definir qué columnas se propagan y cómo se deduplican evidencias |
-| 2 | Controlador/UI de revisión y aprobación | Implementar la pantalla y construir `ApprovalRecord` solo tras la decisión |
-| 3 | Orquestación LangGraph con límite de correcciones | Añadir la dependencia y definir el estado compartido |
-| 4 | Integrar el MCP en el flujo | Decidir si la investigación consume indicadores locales y con qué prioridad |
-| 5 | Actualización programada y trazabilidad de datos | Job de extracción, validación y publicación de snapshots |
-| 6 | Verificación semántica y evaluación del LLM | Métricas, fuentes de evaluación y presupuesto de tokens |
-| 7 | Renta y modelo de demanda | Descargar el ADRH, documentar la sección censal y no imputar huecos |
-| 8 | Más barrios y despliegue | Parametrizar fuentes, añadir autenticación y observabilidad |
+| 2 | Integrar el MCP en el flujo | Decidir si la investigación consume indicadores locales y con qué prioridad |
+| 3 | Actualización programada y trazabilidad de datos | Job de extracción, validación y publicación de snapshots |
+| 4 | Verificación semántica y evaluación del LLM | Métricas, fuentes de evaluación y presupuesto de tokens |
+| 5 | Renta y modelo de demanda | Descargar el ADRH, documentar la sección censal y no imputar huecos |
+| 6 | Más barrios y despliegue | Parametrizar fuentes, añadir autenticación y observabilidad |
 
 Ninguna de estas piezas se presenta como terminada en este README.
 
@@ -626,21 +634,24 @@ FitFamily/
 │   └── sources.json
 ├── docs/                   # arquitectura, investigación, análisis, informes, calidad...
 ├── reports/                # directorios de salida (vacíos en el repositorio)
+├── scripts/                # scripts de utilidad y verificación
 ├── src/
 │   ├── agents/             # investigación y redacción
 │   ├── analysis/           # análisis descriptivo y escenarios
 │   ├── automation/         # aprobación y exportación
-│   ├── graph/              # rutas de revisión (no es un grafo LangGraph)
+│   ├── graph/              # rutas de revisión y persistencia LangGraph
 │   ├── mcp/                # servidor y cliente MCP
 │   ├── reporting/          # modelos, construcción y renderizado
 │   ├── review/             # validación y calidad
+│   ├── recommendation/     # modelo determinista de oportunidad
+│   ├── reporting/          # modelos, construcción y renderizado
+│   ├── review/             # validación y calidad
 │   ├── tools/              # búsqueda, lectura, competidores y fuentes
-│   ├── ui/                 # reservado; solo .gitkeep
-│   ├── runtime/            # reservado; solo .gitkeep
-│   ├── security/           # reservado; solo .gitkeep
-│   ├── multimodal/         # reservado; solo .gitkeep
-│   └── schemas.py          # contratos compartidos
-├── tests/                  # 28 archivos, 273 tests
+│   ├── ui/                 # interfaz Streamlit completa
+│   ├── runtime/            # controlador de ejecución y eventos
+│   ├── schemas.py          # contratos compartidos
+│   └── config.py           # configuración centralizada
+├── tests/                  # 30+ archivos, 685 tests
 ├── .github/workflows/ci.yml
 ├── requirements.txt
 └── pyproject.toml          # configuración de pytest, no empaquetado
@@ -657,9 +668,9 @@ FitFamily/
 | [docs/report-export.md](docs/report-export.md) | Borradores, aprobación y exportación Markdown/PDF |
 | [docs/writer-llm.md](docs/writer-llm.md) | Ruta CrewAI + Groq y sus límites |
 | [docs/review-quality.md](docs/review-quality.md) | Validación estructural y rutas de corrección |
-| [docs/calidad-pruebas.md](docs/calidad-pruebas.md) | Tests, CI y cobertura real (nuevo) |
-| [docs/streamlit-approval.md](docs/streamlit-approval.md) | Diseño de UI y aprobación, no implementado |
-| [docs/langgraph-flow.md](docs/langgraph-flow.md) | Diseño de orquestación, no implementado |
+| [docs/calidad-pruebas.md](docs/calidad-pruebas.md) | Tests, CI y cobertura real |
+| [docs/streamlit-approval.md](docs/streamlit-approval.md) | UI Streamlit y aprobación humana |
+| [docs/langgraph-flow.md](docs/langgraph-flow.md) | Orquestación LangGraph y persistencia |
 | [docs/auditoria-fuentes-datos.md](docs/auditoria-fuentes-datos.md) | Auditoría de fuentes y método de agregación |
 | [docs/pendiente-renta-ine.md](docs/pendiente-renta-ine.md) | Fase de renta documentada y pendiente |
 | [docs/research-implementation.md](docs/research-implementation.md) · [docs/research-changelog.md](docs/research-changelog.md) | Historial del módulo de investigación |
@@ -677,27 +688,30 @@ FitFamily/
 ## Instalación rápida
 
 ```bash
-pip install langgraph langgraph-checkpoint-sqlite==3.1.2
-pip install -e .
-python -m src.graph.workflow  # flujo completo con persistencia SQLite
+pip install -r requirements.txt
+python -m pytest -q
+python -m streamlit run src/ui/app.py
 ```
 
-## Hoja de ruta
+## Hoja de ruta de implementación
 
 - [x] Investigación trazable (`run_research`, MCP)
 - [x] Análisis descriptivo (`summarize_competitors`)
 - [x] Cálculos económicos (`calculation_models`, `scenarios`, `contracts`)
 - [x] Adaptador análisis-revisión (`calculation_adapter.py`)
 - [x] Revisión numérica (`numeric_validation.py`)
-- [x] Flujo LangGraph (`workflows.py`, `persistence.py`, `events.py`)
+- [x] Flujo LangGraph (`workflows.py`, `persistence.py`, `events.py`, `runner.py`, `state.py`, `nodes.py`)
 - [x] Contrato de cálculo (`calculation-review-contract.md`)
-- [ ] Interfaz Streamlit completa (`src/ui/` pendiente)
-- [ ] Exportación aprobada automática (`approval` + `delivery` completo)
+- [x] UI Streamlit completa (`src/ui/app.py` + pantallas)
+- [x] Controlador de aprobación (`src/runtime/controller.py`)
+- [x] Exportación aprobada (`approval` + `delivery`)
+- [x] Modelo de recomendación determinista (`src/recommendation/`)
 - [ ] Actualización programada de datos municipales
+- [ ] Adaptador `ResearchResult → DataFrame`
 
 ## Contribución
 
-Revisa [docs/equipo.md](docs/equipo.md) para ver responsabilidades. Cada módulo mantiene su contrato (`contracts.py`). No cambies contratos sin actualizar la documentación en la misma rama. Usa `docs/update` para cambios cosméticos; usa ramas `feature/*` o `fix/*` para código.
+Revisa [docs/equipo.md](docs/equipo.md) para ver responsabilidades. Cada módulo mantiene su contrato (`contracts.py`). No cambies contratos sin actualizar la documentación en la misma rama. Usa ramas `feature/*` o `fix/*` para código.
 
 ## Contacto
 
@@ -706,12 +720,10 @@ Revisa [docs/equipo.md](docs/equipo.md) para ver responsabilidades. Cada módulo
 - Workflow: `docs/langgraph-flow.md`
 - Estado actual: [README.md](README.md#estado-actual)
 
-[⬆ Volver arriba](#fitfamily)
-
 ## Licencia
 
 El código se distribuye bajo **MIT**; consulta [LICENSE](LICENSE). Los datos municipales citados son de sus organismos de origen y se usan con atribución (CC BY 4.0 en los conjuntos del Ayuntamiento de Madrid). Las webs de competidores conservan sus propios términos; revisa las condiciones antes de reutilizar su contenido.
 
 ---
 
-<p align="center"><sub>FitFamily · El Cañaveral, Madrid · Documentación revisada el 26 de octubre de 2026</sub></p>
+<p align="center"><sub>FitFamily · El Cañaveral, Madrid · Documentación actualizada el 5 de noviembre de 2026</sub></p>
