@@ -12,6 +12,7 @@ from src.agents.researcher import run_research
 from src.analysis.calculation_adapter import (
     metric_from_scenario_calculation,
 )
+from src.analysis.contracts import CalculatedMetric
 from src.analysis.scenarios import (
     create_economic_scenario,
     evaluate_economic_scenario,
