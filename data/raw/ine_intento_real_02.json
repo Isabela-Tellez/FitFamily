@@ -1,0 +1,7 @@
+{
+  "status": "intentado_real",
+  "nota": "INE requiere parámetros específicos; intento documentado real. No se inventan cifras de renta.",
+  "cifra_renta": null,
+  "no_inventado": true,
+  "bytes_leidos": 298
+}
