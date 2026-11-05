@@ -355,3 +355,48 @@ def read_events(
         )
 
     return events
+
+
+
+def read_recent_events(
+    limit: int = 20,
+    db_path: str | Path = DEFAULT_EVENTS_DB_PATH,
+) -> list[dict[str, Any]]:
+    """Recupera los últimos eventos de todas las investigaciones."""
+
+    if (
+        isinstance(limit, bool)
+        or not isinstance(limit, int)
+        or limit < 1
+    ):
+        raise ValueError("limit debe ser un entero positivo.")
+
+    _initialize_db(db_path)
+
+    with sqlite3.connect(db_path, timeout=10) as connection:
+        connection.row_factory = sqlite3.Row
+
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                run_id,
+                timestamp,
+                stage,
+                event_type,
+                message,
+                details
+            FROM research_events
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return [
+        {
+            **dict(row),
+            "details": json.loads(row["details"]),
+        }
+        for row in rows
+    ]

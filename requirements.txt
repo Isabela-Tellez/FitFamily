@@ -1,42 +1,27 @@
-# requirements.txt - Dependencias de FitFamily
-# --------------------------------
-# Núcleo del proyecto (obligatorias):
-# - pydantic: modelos y validación de datos
-# - mcp: SDK del Model Context Protocol (servidor y cliente)
-# - httpx: lectura de páginas web
-# - beautifulsoup4: extracción de texto HTML
-# - pandas: análisis descriptivo de competidores
-# - ddgs: búsqueda web (reemplaza a duckduckgo-search)
-# - crewai: marco de agentes AI
-#
-# Opcionales:
-# - tavily-python: búsqueda alternativa (requiere TAVILY_API_KEY)
-
+# Núcleo del proyecto (obligatorias)
 pydantic==2.12.5
 mcp==1.28.1
 httpx==0.28.1
 beautifulsoup4==4.14.3
 pandas==3.0.6
 ddgs==9.14.4
-crewai[litellm]==1.15.28
+crewai[litellm]==1.15.35
 
 # Orquestación y persistencia de agentes
 langgraph==1.2.16
 langgraph-checkpoint-sqlite==3.1.2
 
-# Versión fijada para comprobar compatibilidad con MCP 1.28.1
+# Dependencias adicionales y compatibilidad MCP
 litellm==1.88.6
 tavily-python==0.8.5
 
 # Pruebas (no necesarias en producción)
 pytest==9.0.3
 
-# Notas:
-# - El paquete duckduckgo-search NO se incluye porque el código usa from ddgs import DDGS
-# - tavily-python es opcional: solo necesita TAVILY_API_KEY configurado en el entorno
-#   para usar Tavily como proveedor de búsqueda alternativa
-
 # Exportación de informes a PDF
 reportlab==5.1.0
 pyproj==3.7.2
 matplotlib==3.11.2
+
+# Interfaz web de la aplicación
+streamlit==1.66.1

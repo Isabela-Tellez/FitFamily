@@ -180,10 +180,17 @@ def test_analysis_node_calculates_economic_metrics(
     assert len(analysis["scenarios"]) == 1
     assert len(analysis["calculated_metrics"]) == 4
 
+    # Todas las métricas deben incluir su contexto de cálculo.
+    for metric in analysis["calculated_metrics"]:
+        assert isinstance(metric["context"], dict)
+        assert isinstance(metric["context"]["scenario"], dict)
+        assert isinstance(metric["context"]["calculation_result"], dict)
+        assert metric["context"]["calculation_result"]["calculation_type"]
+
     assert result["current_stage"] == "writing"
 
     metrics = {
-        metric["metric_id"]: metric
+        metric["context"]["calculation_result"]["calculation_type"]: metric
         for metric in analysis["calculated_metrics"]
     }
 
@@ -199,22 +206,19 @@ def test_analysis_node_calculates_economic_metrics(
         metrics["monthly_result"]["value"]
     ) == 0.0
 
-    break_even = metrics[
-        "scenario_intermediate.break_even_clients"
-    ]
+    break_even = metrics["break_even"]
 
     assert float(break_even["value"]) == 200
     assert break_even["unit"] == "clients"
 
-
 @pytest.mark.parametrize(
     ("parameter", "value"),
     [
-        ("expected_clients", 100.5),
+        ("expected_clients", 200.5),
         ("expected_clients", True),
-        ("monthly_fee", float("inf")),
-        ("fixed_costs", float("nan")),
-        ("variable_cost_per_client", "10"),
+        ("monthly_fee", float("nan")),
+        ("fixed_costs", float("inf")),
+        ("variable_cost_per_client", -1.0),
     ],
 )
 def test_analysis_node_rejects_invalid_parameters(
@@ -257,7 +261,7 @@ def test_analysis_node_accepts_zero_clients(analysis_state):
     result = analysis_node(analysis_state)
 
     metrics = {
-        metric["metric_id"]: metric
+        metric["context"]["calculation_result"]["calculation_type"]: metric
         for metric in result["analysis_result"]["calculated_metrics"]
     }
 
