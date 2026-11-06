@@ -189,6 +189,41 @@ def apply_styles():
             visibility: hidden;
         }
 
+        /* RESUMEN INFORMATIVO FITFAMILY */
+
+        .ff-summary {
+            background: #E1EDE2;
+            border: 1px solid #B9D2BE;
+            border-left: 5px solid #819885;
+            border-radius: 15px;
+            padding: 16px 20px;
+            margin: 12px 0 22px;
+            color: #13404B;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .ff-summary p {
+            margin: 0;
+        }
+
+        .ff-summary strong {
+            color: #13404B;
+        }
+
+        /* INDICACIÓN DE ESCENARIO DE REFERENCIA */
+
+        .ff-reference {
+            background: #E1EDE2;
+            border: 1px solid #B9D2BE;
+            border-radius: 12px;
+            padding: 13px 18px;
+            margin: 12px 0 18px;
+            color: #13404B;
+            font-weight: 650;
+            font-size: 15px;
+        }
+
         footer {
             visibility: hidden;
         }

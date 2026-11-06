@@ -1,7 +1,8 @@
-"""Gráficos reutilizables del frontend de FitFamily.
+"""
+Gráficos reutilizables del frontend de FitFamily.
 
 Representan exclusivamente resultados económicos persistidos.
-No ejecutan cálculos ni modifican los datos originales.
+No ejecutan cálculos económicos ni modifican los datos originales.
 """
 
 import pandas as pd
@@ -14,10 +15,14 @@ SCENARIO_LABELS = {
     "optimistic": "Optimista",
 }
 
+COLORS = {
+    "primary": "#13404B",
+    "coral": "#E26D5C",
+    "sage": "#819885",
+}
+
 
 def get_scenario_label(scenario_type):
-    """Devuelve el nombre visual de un escenario."""
-
     return SCENARIO_LABELS.get(
         scenario_type,
         str(scenario_type or "Escenario"),
@@ -37,7 +42,6 @@ def get_calculation_value(calculations, calculation_type):
         and item.get("calculation_type") == calculation_type
     ]
 
-    # Evitamos elegir arbitrariamente entre duplicados.
     if len(matches) != 1:
         return None
 
@@ -57,8 +61,65 @@ def get_calculation_value(calculations, calculation_type):
     return float(value)
 
 
+def format_euros(value):
+    if value is None:
+        return "No disponible"
+
+    return (
+        f"{value:,.2f}"
+        .replace(",", "X")
+        .replace(".", ",")
+        .replace("X", ".")
+        + " €"
+    )
+
+
+def render_scenario_summary(scenarios):
+    """Muestra tres tarjetas con los resultados de cada escenario."""
+
+    st.subheader("Resumen económico")
+
+    columns = st.columns(3)
+
+    for index, item in enumerate(scenarios):
+
+        scenario = item.get("scenario", {})
+        calculations = item.get("calculations", [])
+
+        if not isinstance(scenario, dict):
+            continue
+
+        name = get_scenario_label(
+            scenario.get("scenario_type")
+        )
+
+        revenue = get_calculation_value(
+            calculations,
+            "monthly_revenue",
+        )
+
+        result = get_calculation_value(
+            calculations,
+            "monthly_result",
+        )
+
+        with columns[index]:
+            with st.container(border=True):
+
+                st.markdown(f"**{name}**")
+
+                st.metric(
+                    "Resultado mensual",
+                    format_euros(result),
+                )
+
+                st.caption(
+                    f"Ingresos mensuales: {format_euros(revenue)}"
+                )
+
+
 def render_scenario_comparison(scenarios):
-    """Compara ingresos y resultados mensuales."""
+    """Compara horizontalmente ingresos y resultados."""
 
     st.subheader("Comparación de escenarios")
 
@@ -75,10 +136,10 @@ def render_scenario_comparison(scenarios):
         if not isinstance(scenario, dict):
             continue
 
-        scenario_type = scenario.get("scenario_type")
-
         rows.append({
-            "Escenario": get_scenario_label(scenario_type),
+            "Escenario": get_scenario_label(
+                scenario.get("scenario_type")
+            ),
             "Ingresos mensuales": get_calculation_value(
                 calculations,
                 "monthly_revenue",
@@ -89,88 +150,39 @@ def render_scenario_comparison(scenarios):
             ),
         })
 
-    if not rows:
+    dataframe = pd.DataFrame(rows)
+
+    if dataframe.empty:
         st.info("No existen escenarios disponibles.")
         return
 
-    dataframe = pd.DataFrame(rows).set_index("Escenario")
+    dataframe = dataframe.set_index("Escenario")
 
     st.bar_chart(
         dataframe,
-        use_container_width=True,
-    )
-
-    st.dataframe(
-        dataframe.reset_index(),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
-def render_cost_breakdown(scenario_item):
-    """Representa los costes fijos y variables mensuales."""
-
-    st.subheader("Estructura de costes")
-
-    if not isinstance(scenario_item, dict):
-        st.info("No hay datos del escenario disponibles.")
-        return
-
-    # Aceptamos el objeto completo persistido.
-    scenario = scenario_item.get("scenario", scenario_item)
-    calculations = scenario_item.get(
-        "calculations",
-        scenario.get("calculations", []),
-    )
-
-    if not isinstance(scenario, dict):
-        st.info("No hay datos del escenario disponibles.")
-        return
-
-    fixed_costs = scenario.get("fixed_costs")
-
-    variable_costs = get_calculation_value(
-        calculations,
-        "monthly_variable_costs",
-    )
-
-    values = {
-        "Costes fijos": fixed_costs,
-        "Costes variables": variable_costs,
-    }
-
-    valid_values = {}
-
-    for label, value in values.items():
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-        ):
-            continue
-
-        valid_values[label] = float(value)
-
-    if not valid_values:
-        st.info(
-            "No hay información suficiente para representar los costes."
-        )
-        return
-
-    dataframe = pd.DataFrame({
-        "Tipo de coste": list(valid_values.keys()),
-        "Importe mensual (€)": list(valid_values.values()),
-    })
-
-    st.bar_chart(
-        dataframe.set_index("Tipo de coste"),
-        use_container_width=True,
+        horizontal=True,
+        color=[
+            COLORS["primary"],
+            COLORS["coral"],
+        ],
+        height=260,
+        width="stretch",
     )
 
 
-def render_scenario_revenue(scenarios):
-    """Compara los ingresos mensuales de cada escenario."""
+def render_scenario_composition(scenarios):
+    """
+    Compara la distribución de ingresos entre costes y resultado.
 
-    st.subheader("Previsión de ingresos")
+    Los costes incluyen costes fijos y costes variables persistidos.
+    """
+
+    st.subheader("Distribución de ingresos")
+
+    st.caption(
+        "Comparación de los costes totales y el resultado mensual "
+        "de cada escenario."
+    )
 
     rows = []
 
@@ -180,32 +192,63 @@ def render_scenario_revenue(scenarios):
             continue
 
         scenario = item.get("scenario", {})
+        calculations = item.get("calculations", [])
 
         if not isinstance(scenario, dict):
             continue
 
-        revenue = get_calculation_value(
-            item.get("calculations", []),
-            "monthly_revenue",
+        fixed_costs = scenario.get("fixed_costs")
+
+        variable_costs = get_calculation_value(
+            calculations,
+            "monthly_variable_costs",
         )
 
-        if revenue is None:
+        monthly_result = get_calculation_value(
+            calculations,
+            "monthly_result",
+        )
+
+        if (
+            isinstance(fixed_costs, bool)
+            or not isinstance(fixed_costs, (int, float))
+            or variable_costs is None
+            or monthly_result is None
+        ):
             continue
 
         rows.append({
             "Escenario": get_scenario_label(
                 scenario.get("scenario_type")
             ),
-            "Ingresos mensuales (€)": revenue,
+            "Costes totales": float(fixed_costs) + variable_costs,
+            "Resultado mensual": monthly_result,
         })
 
-    if not rows:
-        st.info("No hay ingresos calculados disponibles.")
+    dataframe = pd.DataFrame(rows)
+
+    if dataframe.empty:
+        st.info(
+            "No hay información suficiente para comparar "
+            "la distribución de ingresos."
+        )
         return
 
-    dataframe = pd.DataFrame(rows).set_index("Escenario")
+    dataframe = dataframe.set_index("Escenario")
 
     st.bar_chart(
         dataframe,
-        use_container_width=True,
+        horizontal=True,
+        stack=True,
+        color=[
+            COLORS["sage"],
+            COLORS["coral"],
+        ],
+        height=300,
+        width="stretch",
+    )
+
+    st.caption(
+        "Verde salvia: costes fijos y variables. "
+        "Coral: resultado mensual."
     )

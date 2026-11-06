@@ -10,9 +10,9 @@ from src.ui.components.status import (
     get_stage_label,
 )
 from src.ui.components.charts import (
+    render_scenario_summary,
     render_scenario_comparison,
-    render_cost_breakdown,
-    render_scenario_revenue,
+    render_scenario_composition,
 )
 
 st.set_page_config(
@@ -247,8 +247,13 @@ evidences = list(unique_evidences.values())
 
 if evidences:
 
-    st.caption(
-        f"Se han recopilado {len(evidences)} evidencias de mercado."
+    st.markdown(
+        f"""
+        <div class="ff-summary">
+            <p>✓ Se han recopilado {len(evidences)} evidencias de mercado.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     # Recuperar precios de todas las evidencias,
@@ -405,11 +410,6 @@ with tab_economic:
     metrics = analysis.get("calculated_metrics", [])
     limitations = analysis.get("limitations", [])
 
-
-    # --------------------------------------------------
-    # ESCENARIOS ECONÓMICOS
-    # --------------------------------------------------
-
     scenario_order = {
         "conservative": 0,
         "intermediate": 1,
@@ -422,11 +422,79 @@ with tab_economic:
         "optimistic": "Optimista",
     }
 
-    # Recuperar exclusivamente los escenarios persistidos.
+    calculation_names = {
+        "monthly_revenue": "Ingresos mensuales",
+        "monthly_variable_costs": "Costes variables mensuales",
+        "monthly_result": "Resultado mensual",
+        "break_even": "Punto de equilibrio",
+    }
+
+    metric_names = {
+        "monthly_revenue": "Ingresos mensuales",
+        "monthly_variable_costs": "Costes variables mensuales",
+        "monthly_result": "Resultado mensual",
+        "break_even_clients": "Punto de equilibrio",
+    }
+
+    def format_number(value, decimals=2):
+        """Formatea valores numéricos sin aceptar booleanos."""
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+        ):
+            return "No disponible"
+
+        return f"{value:,.{decimals}f}"
+
+    def get_persisted_value(calculations, calculation_type):
+        """Recupera un resultado numérico persistido."""
+        matches = [
+            calculation
+            for calculation in calculations
+            if isinstance(calculation, dict)
+            and calculation.get("calculation_type") == calculation_type
+        ]
+
+        if len(matches) != 1:
+            return None
+
+        result = matches[0].get("result")
+
+        if not isinstance(result, dict):
+            return None
+
+        value = result.get("value")
+
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+        ):
+            return None
+
+        return value
+
+    def format_economic_value(value, unit):
+        """Presenta un resultado según su unidad."""
+        if value is None:
+            return "No disponible"
+
+        if unit == "EUR/month":
+            return f"{value:,.2f} €"
+
+        if unit == "clients":
+            return f"{value:,.0f} clientes"
+
+        return f"{value:,.2f} {unit}".strip()
+
+    # --------------------------------------------------
+    # RECUPERACIÓN Y ORDEN DE ESCENARIOS
+    # --------------------------------------------------
+
     valid_scenarios = []
 
     if isinstance(scenarios, list):
         for item in scenarios:
+
             if not isinstance(item, dict):
                 continue
 
@@ -445,356 +513,305 @@ with tab_economic:
         ),
     )
 
-    if ordered_scenarios:
+    if not ordered_scenarios:
 
-        st.success(
-            f"Se han recuperado {len(ordered_scenarios)} "
-            "escenarios económicos persistidos."
-        )
-
-        # Los tres gráficos reciben los mismos resultados persistidos.
-        render_scenario_comparison(ordered_scenarios)
-
-        st.divider()
-
-        render_scenario_revenue(ordered_scenarios)
-
-        st.divider()
-
-        # Los costes se muestran para el escenario intermedio.
-        reference_scenario = next(
-            (
-                item
-                for item in ordered_scenarios
-                if item["scenario"].get("scenario_type")
-                == "intermediate"
-            ),
-            None,
-        )
-
-        if reference_scenario is not None:
-            render_cost_breakdown(reference_scenario)
-        else:
-            st.info(
-                "No existe un escenario intermedio para mostrar "
-                "la estructura de costes de referencia."
-            )
-
-        st.divider()
-
-        # --------------------------------------------------
-        # DETALLE INDIVIDUAL DE LOS ESCENARIOS
-        # --------------------------------------------------
-
-        st.subheader("Detalle de escenarios")
-
-        calculation_names = {
-            "monthly_revenue": "Ingresos mensuales",
-            "monthly_variable_costs": "Costes variables mensuales",
-            "monthly_result": "Resultado mensual",
-            "break_even": "Punto de equilibrio",
-        }
-
-        for item in ordered_scenarios:
-
-            scenario = item["scenario"]
-            calculations = item.get("calculations") or []
-
-            scenario_type = scenario.get("scenario_type")
-            scenario_name = scenario_names.get(
-                scenario_type,
-                "Escenario económico",
-            )
-
-            with st.container(border=True):
-
-                st.markdown(f"### {scenario_name}")
-
-                # Parámetros originales persistidos.
-                col1, col2, col3 = st.columns(3)
-
-                expected_clients = scenario.get("expected_clients")
-                monthly_fee = scenario.get("monthly_fee")
-                fixed_costs = scenario.get("fixed_costs")
-
-                def format_number(value, decimals=2):
-                    if (
-                        isinstance(value, bool)
-                        or not isinstance(value, (int, float))
-                    ):
-                        return "No disponible"
-
-                    return f"{value:,.{decimals}f}"
-
-                col1.metric(
-                    "Clientes previstos",
-                    format_number(expected_clients, 0),
-                )
-
-                col2.metric(
-                    "Cuota mensual",
-                    (
-                        f"{format_number(monthly_fee)} €"
-                        if format_number(monthly_fee) != "No disponible"
-                        else "No disponible"
-                    ),
-                )
-
-                col3.metric(
-                    "Costes fijos mensuales",
-                    (
-                        f"{format_number(fixed_costs)} €"
-                        if format_number(fixed_costs) != "No disponible"
-                        else "No disponible"
-                    ),
-                )
-
-                variable_cost = scenario.get(
-                    "variable_cost_per_client"
-                )
-
-                st.metric(
-                    "Coste variable por cliente",
-                    (
-                        f"{format_number(variable_cost)} €"
-                        if format_number(variable_cost) != "No disponible"
-                        else "No disponible"
-                    ),
-                )
-
-                # Mostrar los cálculos originales, sin recalcular.
-                st.markdown("#### Resultados persistidos")
-
-                valid_calculations = [
-                    calculation
-                    for calculation in calculations
-                    if isinstance(calculation, dict)
-                ]
-
-                displayed_calculations = set()
-
-                if valid_calculations:
-
-                    calculation_columns = st.columns(2)
-                    displayed_count = 0
-
-                    for calculation in valid_calculations:
-
-                        calculation_type = calculation.get(
-                            "calculation_type"
-                        )
-
-                        # Evitar duplicar un mismo indicador.
-                        if (
-                            not calculation_type
-                            or calculation_type in displayed_calculations
-                        ):
-                            continue
-
-                        displayed_calculations.add(calculation_type)
-
-                        result = calculation.get("result")
-
-                        if not isinstance(result, dict):
-                            continue
-
-                        value = result.get("value")
-                        unit = result.get("unit", "")
-
-                        if (
-                            isinstance(value, bool)
-                            or not isinstance(value, (int, float))
-                        ):
-                            continue
-
-                        label = calculation_names.get(
-                            calculation_type,
-                            calculation_type,
-                        )
-
-                        if unit == "EUR/month":
-                            display_value = f"{value:,.2f} €"
-
-                        elif unit == "clients":
-                            display_value = f"{value:,.0f} clientes"
-
-                        else:
-                            display_value = (
-                                f"{value:,.2f} {unit}".strip()
-                            )
-
-                        calculation_columns[
-                            displayed_count % 2
-                        ].metric(
-                            label,
-                            display_value,
-                        )
-
-                        displayed_count += 1
-
-                        for limitation in calculation.get(
-                            "limitations",
-                            [],
-                        ):
-                            st.caption(f"⚠️ {limitation}")
-
-                    if displayed_count == 0:
-                        st.info(
-                            "No hay resultados numéricos disponibles "
-                            "para este escenario."
-                        )
-
-                else:
-                    st.info(
-                        "No hay cálculos disponibles para este escenario."
-                    )
-
-                assumptions = scenario.get("assumptions") or []
-
-                if assumptions:
-                    with st.expander("Hipótesis utilizadas"):
-                        for assumption in assumptions:
-                            st.write(f"- {assumption}")
-
-    else:
         st.warning(
             "Todavía no existen escenarios económicos persistidos "
             "con una estructura válida."
         )
 
+    else:
+
+        st.markdown(
+            f"""
+            <div class="ff-summary">
+                <p>✓ Se han recuperado {len(ordered_scenarios)}
+                escenarios económicos persistidos.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
 
     # --------------------------------------------------
-    # INDICADORES CALCULADOS
+    # 1. RESUMEN ECONÓMICO DE LOS TRES ESCENARIOS
     # --------------------------------------------------
 
-    if metrics:
+    render_scenario_summary(ordered_scenarios)
 
-        st.divider()
-        st.subheader("Indicadores calculados")
+    st.divider()
 
-        metric_names = {
-            "monthly_revenue": "Ingresos mensuales",
-            "monthly_variable_costs": "Costes variables mensuales",
-            "monthly_result": "Resultado mensual",
-            "break_even_clients": "Punto de equilibrio",
-        }
 
-        scenario_names = {
-            "conservative": "Conservador",
-            "intermediate": "Intermedio",
-            "optimistic": "Optimista",
-        }
+    # --------------------------------------------------
+    # 2. COMPARACIÓN HORIZONTAL DE ESCENARIOS
+    # --------------------------------------------------
 
-        grouped_metrics = {}
+    render_scenario_comparison(ordered_scenarios)
 
-        for metric in metrics:
+    st.divider()
 
-            if hasattr(metric, "model_dump"):
-                metric = metric.model_dump(mode="json")
 
-            if not isinstance(metric, dict):
-                continue
+    # --------------------------------------------------
+    # 3. DISTRIBUCIÓN DE INGRESOS
+    # --------------------------------------------------
 
-            metric_id = metric.get("metric_id", "")
+    render_scenario_composition(ordered_scenarios)
 
-            if "." not in metric_id:
-                continue
+    st.divider()
 
-            scenario_id, metric_type = metric_id.split(".", 1)
 
-            scenario_type = scenario_id.removeprefix("scenario_")
+    # --------------------------------------------------
+    # 4. DETALLE DE ESCENARIOS
+    # --------------------------------------------------
 
-            if scenario_type not in scenario_names:
-                continue
+    st.subheader("Detalle de escenarios")
 
-            if metric_type not in metric_names:
-                continue
+    for item in ordered_scenarios:
 
-            # No sobrescribir un indicador ya registrado.
-            grouped_metrics.setdefault(
-                scenario_type,
-                {},
-            ).setdefault(
-                metric_type,
-                metric,
+        scenario = item["scenario"]
+        calculations = item.get("calculations") or []
+
+        scenario_type = scenario.get("scenario_type")
+
+        scenario_name = scenario_names.get(
+            scenario_type,
+            "Escenario económico",
+        )
+
+        with st.expander(
+            f"Escenario {scenario_name}",
+            expanded=False,
+        ):
+
+            st.markdown("#### Parámetros del escenario")
+
+            col1, col2 = st.columns(2)
+
+            col1.metric(
+                "Clientes previstos",
+                format_number(
+                    scenario.get("expected_clients"),
+                    0,
+                ),
             )
 
-        if grouped_metrics:
+            col2.metric(
+                "Cuota mensual",
+                (
+                    f"{format_number(scenario.get('monthly_fee'))} €"
+                    if format_number(
+                        scenario.get("monthly_fee")
+                    ) != "No disponible"
+                    else "No disponible"
+                ),
+            )
 
-            rows = []
+            col3, col4 = st.columns(2)
 
-            for metric_type, label in metric_names.items():
+            col3.metric(
+                "Costes fijos mensuales",
+                (
+                    f"{format_number(scenario.get('fixed_costs'))} €"
+                    if format_number(
+                        scenario.get("fixed_costs")
+                    ) != "No disponible"
+                    else "No disponible"
+                ),
+            )
 
-                row = {"Indicador": label}
+            col4.metric(
+                "Coste variable por cliente",
+                (
+                    f"{format_number(scenario.get('variable_cost_per_client'))} €"
+                    if format_number(
+                        scenario.get("variable_cost_per_client")
+                    ) != "No disponible"
+                    else "No disponible"
+                ),
+            )
 
-                for scenario_type, scenario_name in (
-                    scenario_names.items()
+            st.markdown("#### Resultados económicos")
+
+            valid_calculations = [
+                calculation
+                for calculation in calculations
+                if isinstance(calculation, dict)
+            ]
+
+            displayed_types = set()
+            result_columns = st.columns(2)
+            displayed_count = 0
+
+            for calculation in valid_calculations:
+
+                calculation_type = calculation.get(
+                    "calculation_type"
+                )
+
+                if (
+                    not calculation_type
+                    or calculation_type in displayed_types
                 ):
+                    continue
 
-                    metric = grouped_metrics.get(
-                        scenario_type,
-                        {},
-                    ).get(metric_type)
+                displayed_types.add(calculation_type)
 
-                    if metric is None:
-                        display = "No disponible"
+                result = calculation.get("result")
 
-                    else:
+                if not isinstance(result, dict):
+                    continue
 
-                        value = metric.get("value")
-                        unit = metric.get("unit", "")
+                value = result.get("value")
+                unit = result.get("unit", "")
 
-                        if (
-                            isinstance(value, bool)
-                            or not isinstance(value, (int, float))
-                        ):
-                            display = "No disponible"
+                if (
+                    isinstance(value, bool)
+                    or not isinstance(value, (int, float))
+                ):
+                    continue
 
-                        elif unit == "EUR/month":
-                            display = format_number(
-                                value,
-                                2,
-                                " €",
-                            )
+                label = calculation_names.get(
+                    calculation_type,
+                    calculation_type,
+                )
 
-                        elif unit == "clients":
-                            display = format_number(
-                                value,
-                                0,
-                                " clientes",
-                            )
+                result_columns[
+                    displayed_count % 2
+                ].metric(
+                    label,
+                    format_economic_value(value, unit),
+                )
 
-                        else:
-                            display = f"{value:,.2f} {unit}".strip()
+                displayed_count += 1
 
-                    row[scenario_name] = display
+            if displayed_count == 0:
+                st.info(
+                    "No hay resultados numéricos disponibles "
+                    "para este escenario."
+                )
 
-                rows.append(row)
 
-            st.dataframe(
-                pd.DataFrame(rows),
-                use_container_width=True,
-                hide_index=True,
+            assumptions = scenario.get("assumptions") or []
+
+            if assumptions:
+
+                st.markdown("#### Hipótesis utilizadas")
+
+                for assumption in assumptions:
+
+                    if not isinstance(assumption, str):
+                        continue
+
+                    # Compatibilidad con escenarios antiguos persistidos.
+                    if "assumed_params" in assumption:
+                        assumption = (
+                            "Los parámetros utilizados proceden de los valores "
+                            "asumidos definidos para este encargo."
+                        )
+
+                    st.markdown(f"- {assumption}")
+
+
+            calculation_limitations = list(dict.fromkeys(
+                limitation
+                for calculation in valid_calculations
+                for limitation in (
+                    calculation.get("limitations") or []
+                )
+                if isinstance(limitation, str)
+            ))
+
+            if calculation_limitations:
+
+                st.markdown("#### Limitaciones de los cálculos")
+
+                for limitation in calculation_limitations:
+                    st.caption(f"⚠️ {limitation}")
+
+
+    # --------------------------------------------------
+    # 5. INDICADORES CALCULADOS
+    # --------------------------------------------------
+
+    st.subheader("Indicadores calculados")
+
+    metric_definitions = [
+        ("monthly_revenue", "Ingresos mensuales"),
+        ("monthly_variable_costs", "Costes variables mensuales"),
+        ("monthly_result", "Resultado mensual"),
+        ("break_even", "Punto de equilibrio"),
+    ]
+
+    rows = []
+
+    for calculation_type, label in metric_definitions:
+
+        row = {"Indicador": label}
+
+        for item in ordered_scenarios:
+
+            scenario = item.get("scenario", {})
+            calculations = item.get("calculations", [])
+
+            scenario_type = scenario.get("scenario_type")
+            scenario_name = scenario_names.get(
+                scenario_type,
+                "Escenario",
             )
 
-        else:
-            st.info(
-                "No hay indicadores económicos con estructura válida."
+            value = get_persisted_value(
+                calculations,
+                calculation_type,
             )
+
+            if calculation_type == "break_even":
+                display = format_economic_value(
+                    value,
+                    "clients",
+                )
+            else:
+                display = format_economic_value(
+                    value,
+                    "EUR/month",
+                )
+
+            row[scenario_name] = display
+
+        rows.append(row)
+
+    if rows and ordered_scenarios:
+
+        indicators_df = pd.DataFrame(rows)
+
+        st.dataframe(
+            indicators_df,
+            use_container_width=True,
+            hide_index=True,
+        )
 
     else:
-        st.info("No hay indicadores económicos calculados.")
+        st.info(
+            "No hay indicadores económicos persistidos "
+            "para comparar."
+        )
 
 
     # --------------------------------------------------
-    # LIMITACIONES
+    # 6. LIMITACIONES GENERALES
     # --------------------------------------------------
 
     if limitations:
 
+        st.divider()
         st.subheader("Limitaciones del análisis")
 
-        for limitation in limitations:
+        unique_limitations = list(dict.fromkeys(
+            limitation
+            for limitation in limitations
+            if isinstance(limitation, str) and limitation.strip()
+        ))
+
+        for limitation in unique_limitations:
             st.warning(limitation)
 
 

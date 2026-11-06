@@ -165,8 +165,8 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
                 variable_cost_per_client=variable_cost,
                 assumptions=[
                     description,
-                    "Los parámetros proceden de assumed_params "
-                    "del encargo.",
+                    "Los parámetros utilizados proceden de los valores "
+                    "asumidos definidos para este encargo."
                 ],
             )
         )
