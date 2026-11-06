@@ -1,0 +1,493 @@
+"""
+GeoRisk Finder — Demo (globo 3D)
+=================================
+Streamlit + pydeck (deck.gl GlobeView) vía streamlit-deckgl.
+
+Esqueleto listo para enchufar los CSVs reales en cuanto lleguen:
+- data/processed/clusters_finales.csv (Persona 5)
+- docs/interpretacion_clusters.csv (Persona 6)
+- docs/casos_estudio.csv (Persona 6)
+- data/processed/grid_features.csv (tú)
+
+Hasta que existan, la app genera datos sintéticos de relleno (misma
+estructura de columnas) para que se pueda ir maquetando el globo sin
+bloquear a nadie.
+
+Ejecutar con: streamlit run demo/app.py
+"""
+
+import time
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pydeck as pdk
+import requests
+import streamlit as st
+from streamlit_deckgl import st_deckgl
+
+# ---------------------------------------------------------------------------
+# Configuración
+# ---------------------------------------------------------------------------
+
+DATA_DIR = Path("data/processed")
+DOCS_DIR = Path("docs")
+
+CLUSTERS_PATH = DATA_DIR / "cluster_labels.csv"
+INTERPRETACION_PATH = DOCS_DIR / "interpretacion_clusters.csv"
+CASOS_ESTUDIO_PATH = DOCS_DIR / "casos_estudio.csv"
+GRID_FEATURES_PATH = DATA_DIR / "grid_features.csv"
+
+
+# Paleta por nivel de riesgo (fallback si el CSV de interpretación aún no
+# incluye una columna "color_rgb" explícita)
+COLOR_POR_RIESGO = {
+    "verde": [46, 204, 113],
+    "naranja": [230, 126, 34],
+    "rojo": [231, 76, 60],
+    "desconocido": [127, 140, 141],
+}
+
+COLOR_RUIDO_DBSCAN = [149, 165, 166]  # gris — celdas "de ruido" / riesgo atípico
+COLOR_CASO_ESTUDIO = [241, 196, 15]   # amarillo — marcadores destacados
+COLOR_GDACS = [155, 89, 182]          # morado — incidentes en vivo
+
+# Paleta del propio globo (fondo espacial + océano + tierra)
+COLOR_FONDO_ESPACIO = "#05070d"
+COLOR_OCEANO = [8, 20, 45]
+COLOR_TIERRA = [35, 40, 45]
+COLOR_BORDES_PAISES = [90, 100, 110]
+
+GDACS_EVENTS_URL = "https://www.gdacs.org/gdacsapi/api/events/geteventlist/EVENTS4APP"
+
+st.set_page_config(page_title="GeoRisk Finder", layout="wide")
+
+# ---------------------------------------------------------------------------
+# Carga de datos (con caché) — cae a datos sintéticos si el fichero no existe
+# ---------------------------------------------------------------------------
+
+def _datos_sinteticos_clusters(n=300, seed=42):
+    rng = np.random.default_rng(seed)
+    lat = rng.uniform(-60, 70, n)
+    lon = rng.uniform(-180, 180, n)
+    cluster_kmeans = rng.integers(0, 4, n)
+    cluster_dbscan = np.where(rng.random(n) < 0.08, -1, cluster_kmeans)
+    return pd.DataFrame(
+        {
+            "cell_id": [f"cell_{i}" for i in range(n)],
+            "lat": lat,
+            "lon": lon,
+            "cluster_kmeans": cluster_kmeans,
+            "cluster_dbscan": cluster_dbscan,
+        }
+    )
+
+
+def _datos_sinteticos_interpretacion():
+    return pd.DataFrame(
+        {
+            "cluster_kmeans": [0, 1, 2, 3],
+            "nombre_cluster": [
+                "Baja actividad",
+                "Sismicidad moderada",
+                "Alta sismicidad + ciclones estacionales",
+                "Volcánico activo",
+            ],
+            "descripcion_negocio": [
+                "Zona de riesgo bajo, apta para operaciones estándar.",
+                "Riesgo sísmico moderado, requiere monitoreo periódico.",
+                "Combinación de sismicidad alta y estacionalidad de ciclones.",
+                "Proximidad a actividad volcánica activa reciente.",
+            ],
+            "nivel_riesgo": ["verde", "verde", "naranja", "rojo"],
+        }
+    )
+
+
+def _datos_sinteticos_casos_estudio():
+    return pd.DataFrame(
+        {
+            "nombre_lugar": ["Japón", "Chile", "Venezuela", "España", "Valencia"],
+            "lat": [36.2, -35.6, 6.4, 40.4, 39.5],
+            "lon": [138.3, -71.5, -66.6, -3.7, -0.4],
+            "cluster_asignado": [3, 2, 1, 0, 1],
+            "texto_caso_estudio": ["Pendiente de Persona 6."] * 5,
+        }
+    )
+
+
+def _datos_sinteticos_grid_features(n=300, seed=1):
+    """Espejo del esquema real de data/processed/grid_features.csv
+    (Persona 3/4), para que el merge y el tooltip se comporten igual
+    con datos sintéticos que con el CSV definitivo."""
+    rng = np.random.default_rng(seed)
+    return pd.DataFrame(
+        {
+            "cell_id": [f"cell_{i}" for i in range(n)],
+            "lat": rng.uniform(-60, 70, n),
+            "lon": rng.uniform(-180, 180, n),
+            "eq_count": rng.integers(0, 50, n),
+            "eq_mag_mean": np.round(rng.uniform(2, 7, n), 1),
+            "eq_mag_max": np.round(rng.uniform(3, 8.5, n), 1),
+            "eq_depth_mean": np.round(rng.uniform(5, 300, n), 1),
+            "eq_energy_log": np.round(rng.uniform(8, 18, n), 2),
+            "eq_days_since_last_major": rng.integers(0, 4000, n),
+            "cyclone_count": rng.integers(0, 15, n),
+            "wind_mean": np.round(rng.uniform(20, 120, n), 1),
+            "wind_max": np.round(rng.uniform(40, 280, n), 1),
+            "pressure_min_mean": np.round(rng.uniform(920, 1010, n), 1),
+            "dist_nearest_volcano_km": np.round(rng.uniform(0, 800, n), 1),
+            "volcano_count": rng.integers(0, 5, n),
+        }
+    )
+
+
+@st.cache_data(ttl=600)
+def cargar_csv_o_sintetico(path: Path, _generador_sintetico):
+    if path.exists():
+        return pd.read_csv(path)
+    st.sidebar.warning(f"⚠️ No encontrado: {path} — usando datos sintéticos de relleno.")
+    return _generador_sintetico()
+
+
+@st.cache_data(ttl=300)
+def cargar_incidentes_gdacs():
+    """Trae los eventos activos ahora mismo desde la API pública de GDACS."""
+    try:
+        resp = requests.get(GDACS_EVENTS_URL, timeout=8)
+        resp.raise_for_status()
+        geojson = resp.json()
+        registros = []
+        for feature in geojson.get("features", []):
+            geom = feature.get("geometry", {})
+            props = feature.get("properties", {})
+            coords = geom.get("coordinates")
+            if geom.get("type") != "Point" or not coords:
+                continue
+            registros.append(
+                {
+                    "lon": coords[0],
+                    "lat": coords[1],
+                    "tipo_evento": props.get("eventtype"),
+                    "nombre": props.get("eventname") or props.get("name"),
+                    "alerta": props.get("alertlevel"),
+                    "fecha": props.get("fromdate"),
+                }
+            )
+        return pd.DataFrame(registros)
+    except Exception as exc:  # red caída, API cambiada, etc. — la demo no debe romperse
+        st.sidebar.error(f"GDACS no disponible ahora mismo ({exc}). Se omite la capa en vivo.")
+        return pd.DataFrame(columns=["lon", "lat", "tipo_evento", "nombre", "alerta", "fecha"])
+
+
+def asegurar_columnas(df: pd.DataFrame, columnas_default: dict) -> pd.DataFrame:
+    """Garantiza que existan las columnas esperadas y sin NaN, sin
+    romper si el CSV real trae un esquema distinto al sintético."""
+    df = df.copy()
+    for col, default in columnas_default.items():
+        if col not in df.columns:
+            df[col] = default
+        else:
+            df[col] = df[col].fillna(default)
+    return df
+
+
+def limpiar_nan_global(df: pd.DataFrame) -> pd.DataFrame:
+    """Rellena cualquier NaN restante en TODO el DataFrame, sin importar
+    el esquema de columnas. Necesario porque pydeck serializa a JSON
+    todas las columnas al pasar el DataFrame a una capa, no solo las
+    que se usan en el tooltip."""
+    df = df.copy()
+    columnas_numericas = df.select_dtypes(include=[np.number]).columns
+    df[columnas_numericas] = df[columnas_numericas].fillna(0)
+    columnas_texto = df.select_dtypes(include=["object"]).columns
+    df[columnas_texto] = df[columnas_texto].fillna("")
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Carga y merge
+# ---------------------------------------------------------------------------
+
+clusters = cargar_csv_o_sintetico(CLUSTERS_PATH, _datos_sinteticos_clusters)
+clusters = clusters.rename(
+    columns={"kmeans_label": "cluster_kmeans", "dbscan_label": "cluster_dbscan"}
+)
+interpretacion = cargar_csv_o_sintetico(INTERPRETACION_PATH, _datos_sinteticos_interpretacion)
+casos_estudio = cargar_csv_o_sintetico(CASOS_ESTUDIO_PATH, _datos_sinteticos_casos_estudio)
+grid_features = cargar_csv_o_sintetico(GRID_FEATURES_PATH, _datos_sinteticos_grid_features)
+
+casos_estudio = limpiar_nan_global(casos_estudio)
+
+# grid_features.csv (Persona 3/4) trae su propio lat/lon por celda, pero
+# la posición "de verdad" para el mapa ya viene de clusters_finales.csv
+# (Persona 5). Se descartan aquí para no acabar con lat_x/lat_y duplicados
+# tras el merge.
+grid_features_sin_geo = grid_features.drop(
+    columns=[c for c in ("lat", "lon") if c in grid_features.columns]
+)
+
+mapa = clusters.merge(interpretacion, on="cluster_kmeans", how="left").merge(
+    grid_features_sin_geo, on="cell_id", how="left"
+)
+
+# --- Limpieza defensiva de columnas clave usadas en el tooltip ---
+# Nombres tal cual los entrega el pipeline real (grid_features.csv):
+mapa = asegurar_columnas(
+    mapa,
+    {
+        "eq_count": 0,
+        "eq_mag_mean": 0,
+        "eq_mag_max": 0,
+        "eq_depth_mean": 0,
+        "eq_energy_log": 0,
+        "eq_days_since_last_major": 0,
+        "cyclone_count": 0,
+        "wind_mean": 0,
+        "wind_max": 0,
+        "pressure_min_mean": 0,
+        "dist_nearest_volcano_km": 0,
+        "volcano_count": 0,
+        "nombre_cluster": "Sin clasificar",
+        "descripcion_negocio": "",
+        "nivel_riesgo": "desconocido",
+    },
+)
+
+# --- Limpieza global final: cubre cualquier otra columna del pipeline
+# real que pueda seguir teniendo NaN y rompería el JSON de pydeck ---
+mapa = limpiar_nan_global(mapa)
+
+mapa["color_rgb"] = mapa["nivel_riesgo"].map(COLOR_POR_RIESGO).apply(
+    lambda c: c if isinstance(c, list) else [127, 140, 141]
+)
+
+# ---------------------------------------------------------------------------
+# Severidad y radio visual por celda
+# ---------------------------------------------------------------------------
+# Combina los tres peligros en un único índice 0-1, y con él se escala el
+# radio del punto en el globo (antes era un valor fijo de 60 km para
+# todas las celdas). Los divisores son umbrales de referencia razonables,
+# no estadísticos exactos del dataset:
+#   - magnitud sísmica media: escala Richter, techo práctico ~9
+#   - viento máximo de ciclón: categoría 5 Saffir-Simpson ronda 250+ km/h
+#   - cercanía a un volcán: satura con una distancia de referencia de 50 km
+RADIO_MIN_M = 35_000
+RADIO_MAX_M = 160_000
+
+componente_sismico = (mapa["eq_mag_mean"] / 9).clip(0, 1)
+componente_ciclonico = (mapa["wind_max"] / 250).clip(0, 1)
+componente_volcanico = (50 / (50 + mapa["dist_nearest_volcano_km"])).clip(0, 1)
+
+mapa["severidad"] = pd.concat(
+    [componente_sismico, componente_ciclonico, componente_volcanico], axis=1
+).max(axis=1)
+
+mapa["radio_m"] = RADIO_MIN_M + mapa["severidad"] * (RADIO_MAX_M - RADIO_MIN_M)
+
+# ---------------------------------------------------------------------------
+# Sidebar — controles
+# ---------------------------------------------------------------------------
+
+st.sidebar.title("🌍 GeoRisk Finder")
+mostrar_dbscan = st.sidebar.checkbox("Resaltar ruido DBSCAN (riesgo atípico)", value=True)
+mostrar_casos = st.sidebar.checkbox("Mostrar casos de estudio", value=True)
+mostrar_gdacs = st.sidebar.checkbox("Incidentes en vivo (GDACS)", value=True)
+
+busqueda_lugar = st.sidebar.text_input("Buscar lugar destacado (por nombre)")
+if busqueda_lugar:
+    coincidencias = casos_estudio[
+        casos_estudio["nombre_lugar"].str.contains(busqueda_lugar, case=False, na=False)
+    ]
+    if not coincidencias.empty:
+        fila = coincidencias.iloc[0]
+        vista_inicial = pdk.ViewState(
+            latitude=float(fila["lat"]), longitude=float(fila["lon"]), zoom=3
+        )
+    else:
+        st.sidebar.caption("Sin coincidencias.")
+        vista_inicial = pdk.ViewState(latitude=20, longitude=0, zoom=0)
+else:
+    vista_inicial = pdk.ViewState(latitude=20, longitude=0, zoom=0)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Leyenda**")
+for nivel, color in COLOR_POR_RIESGO.items():
+    if nivel == "desconocido":
+        continue
+    st.sidebar.markdown(
+        f"<span style='color: rgb({color[0]},{color[1]},{color[2]})'>●</span> {nivel.capitalize()}",
+        unsafe_allow_html=True,
+    )
+st.sidebar.markdown(
+    f"<span style='color: rgb({COLOR_RUIDO_DBSCAN[0]},{COLOR_RUIDO_DBSCAN[1]},{COLOR_RUIDO_DBSCAN[2]})'>●</span> Ruido DBSCAN",
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    f"<span style='color: rgb({COLOR_CASO_ESTUDIO[0]},{COLOR_CASO_ESTUDIO[1]},{COLOR_CASO_ESTUDIO[2]})'>●</span> Caso de estudio",
+    unsafe_allow_html=True,
+)
+st.sidebar.markdown(
+    f"<span style='color: rgb({COLOR_GDACS[0]},{COLOR_GDACS[1]},{COLOR_GDACS[2]})'>●</span> Incidente en vivo (GDACS)",
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# Capas pydeck
+# ---------------------------------------------------------------------------
+
+COUNTRIES_GEOJSON = (
+    "https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_50m_admin_0_scale_rank.geojson"
+)
+
+# Polígono que cubre todo el globo, para simular el "océano" y evitar
+# que se vea a través de la esfera hacia el otro lado (limitación
+# conocida del GlobeView experimental de deck.gl)
+POLIGONO_OCEANO = [
+    {
+        "polygon": [
+            [-180, 90], [0, 90], [180, 90],
+            [180, -90], [0, -90], [-180, -90],
+        ]
+    }
+]
+
+capas = [
+    # Fondo del globo: simula el océano/superficie base
+    pdk.Layer(
+        "SolidPolygonLayer",
+        id="superficie-tierra",
+        data=POLIGONO_OCEANO,
+        get_polygon="polygon",
+        stroked=False,
+        filled=True,
+        get_fill_color=COLOR_OCEANO,
+    ),
+    # Contorno de países sobre el océano
+    pdk.Layer(
+        "GeoJsonLayer",
+        id="base-map",
+        data=COUNTRIES_GEOJSON,
+        stroked=True,
+        filled=True,
+        get_fill_color=COLOR_TIERRA,
+        get_line_color=COLOR_BORDES_PAISES,
+        line_width_min_pixels=1,
+    ),
+    # Celdas coloreadas por cluster / nivel de riesgo; el radio escala
+    # con la severidad combinada (magnitud, viento, cercanía a volcán)
+    pdk.Layer(
+        "ScatterplotLayer",
+        id="clusters",
+        data=mapa[mapa["cluster_dbscan"] != -1] if mostrar_dbscan else mapa,
+        get_position=["lon", "lat"],
+        get_fill_color="color_rgb",
+        get_radius="radio_m",
+        radius_min_pixels=2,
+        radius_max_pixels=40,
+        pickable=True,
+        opacity=0.75,
+    ),
+]
+
+if mostrar_dbscan:
+    ruido = mapa[mapa["cluster_dbscan"] == -1]
+    if not ruido.empty:
+        ruido = ruido.copy()
+        ruido["radio_m"] = ruido["radio_m"] * 1.3  # siempre algo más grande que un punto normal
+        capas.append(
+            pdk.Layer(
+                "ScatterplotLayer",
+                id="ruido-dbscan",
+                data=ruido,
+                get_position=["lon", "lat"],
+                get_fill_color=COLOR_RUIDO_DBSCAN,
+                get_radius="radio_m",
+                radius_min_pixels=3,
+                radius_max_pixels=50,
+                pickable=True,
+                opacity=0.9,
+            )
+        )
+
+if mostrar_casos and not casos_estudio.empty:
+    capas.append(
+        pdk.Layer(
+            "ScatterplotLayer",
+            id="casos-estudio",
+            data=casos_estudio,
+            get_position=["lon", "lat"],
+            get_fill_color=COLOR_CASO_ESTUDIO,
+            get_radius=120000,
+            pickable=True,
+            stroked=True,
+            get_line_color=[0, 0, 0],
+            line_width_min_pixels=2,
+        )
+    )
+
+if mostrar_gdacs:
+    incidentes = cargar_incidentes_gdacs()
+    incidentes = limpiar_nan_global(incidentes)
+    if not incidentes.empty:
+        capas.append(
+            pdk.Layer(
+                "ScatterplotLayer",
+                id="gdacs-live",
+                data=incidentes,
+                get_position=["lon", "lat"],
+                get_fill_color=COLOR_GDACS,
+                get_radius=100000,
+                pickable=True,
+                opacity=0.9,
+            )
+        )
+
+vista_globo = pdk.View(type="_GlobeView", controller=True)
+
+deck = pdk.Deck(
+    views=[vista_globo],
+    initial_view_state=vista_inicial,
+    layers=capas,
+    map_provider=None,  # necesario para que la esfera se vea opaca
+    parameters={"cull": True},
+    tooltip={
+        "html": (
+            "<b>{nombre_cluster}</b><br/>{descripcion_negocio}<br/>"
+            "Sismos: {eq_count} | Mag. media: {eq_mag_mean} | Mag. máx: {eq_mag_max}<br/>"
+            "Ciclones: {cyclone_count} | Viento máx: {wind_max} km/h<br/>"
+            "Volcán más cercano: {dist_nearest_volcano_km} km<br/>"
+            "{nombre_lugar} {texto_caso_estudio}<br/>"
+            "{nombre} ({tipo_evento}, {alerta})"
+        ),
+        "style": {"backgroundColor": "#1e1e1e", "color": "white"},
+    },
+)
+
+# css_background_color no es un argumento del constructor en esta
+# versión de pydeck: se asigna como atributo después de crear el Deck.
+deck.css_background_color = COLOR_FONDO_ESPACIO
+
+# ---------------------------------------------------------------------------
+# Layout
+# ---------------------------------------------------------------------------
+
+st.title("🌍 GeoRisk Finder — Mapa global de riesgo geológico")
+st.caption(
+    "Clusters de K-Means/DBSCAN sobre grid H3 + incidentes activos en vivo (GDACS)."
+)
+
+# Render vía streamlit-deckgl para soportar GlobeView correctamente
+evento = st_deckgl(deck, height=850, key="georisk-globe")
+
+with st.expander("¿Qué se está mostrando?"):
+    st.markdown(
+        """
+- **Puntos de color** → nivel de riesgo del cluster de esa celda (verde/naranja/rojo).
+- **Puntos grises** → celdas marcadas como "ruido" por DBSCAN (riesgo atípico/extremo).
+- **Puntos amarillos** → casos de estudio destacados (Japón, Chile, Venezuela, España, Valencia).
+- **Puntos morados** → incidentes activos ahora mismo, vía la API pública de GDACS.
+"""
+    )
+
+st.caption(f"Última actualización de incidentes GDACS: {time.strftime('%Y-%m-%d %H:%M:%S')}")

@@ -100,7 +100,15 @@ def build_report(
     existing_claim_ids = {claim.claim_id for claim in draft.claims}
 
     for index, metric in enumerate(metrics, start=1):
-        metric_type = metric.context.calculation_result.calculation_type if metric.context else "break_even"
+        # El contexto es obligatorio: build_scenario_claim lo necesita y
+        # la sección de escenarios accede a metric.context.scenario.
+        # Validamos antes para evitar un AttributeError sin explicación.
+        if metric.context is None:
+            raise ValueError(
+                f"La métrica {metric.metric_id} no conserva el contexto "
+                "del cálculo; no puede generar una afirmación trazable."
+            )
+        metric_type = metric.context.calculation_result.calculation_type
         claim_id = f"calculated_{metric_type}_{index}"
 
         if claim_id in existing_claim_ids:

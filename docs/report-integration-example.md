@@ -2,7 +2,7 @@
 
 Este documento describe cómo conectar los módulos existentes de Gema y María con el futuro controlador de Isabella.
 
-La integración del análisis de Laura queda pendiente de acordar su contrato de salida. El recorrido descrito utiliza investigación, sin añadir cálculos financieros.
+La integración del análisis se completa con el contrato `calculation-review-contract.md` y el nodo `analysis` del workflow (`src/graph/workflow.py`). El recorrido descrito ahora incluye cálculos económicos (`CalculatedMetric`) conectados al borrador y al revisor.
 
 ## 1. Generar y conservar el borrador
 
@@ -183,7 +183,7 @@ El coordinador no persiste el resultado ni reintenta automáticamente. Esas deci
 
 Los fragmentos describen puntos de integración; no forman una aplicación ejecutable completa.
 
-Quedan pendientes la interfaz, la persistencia del estado, la gestión global de correcciones y la integración del contrato de análisis de Laura.
+Quedan pendientes la interfaz (`streamlit`), la persistencia del estado global (`workflows.py` con `ApprovalRecord` aún pendiente), la gestión global de correcciones y la integración del contrato de análisis de Laura (`calculation_adapter.py` implementado; pendiente integración en flujo completo con `workflows.py` y PR #35).
 
 ## Revisión con resultados del análisis
 

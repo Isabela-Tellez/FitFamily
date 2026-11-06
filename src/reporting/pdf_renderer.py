@@ -42,8 +42,10 @@ def _paragraph_text(text: str) -> str:
     # Paragraph interpreta algunas etiquetas. Escapamos caracteres
     # como < y > para que el contenido del informe no se interprete
     # como instrucciones de formato.
-    # Después convertimos los saltos de línea al formato de Paragraph.
-    return escape(text).replace("\n", "<br/>")
+    # Convertimos saltos de línea reales y la secuencia literal \n
+    # al formato de Paragraph para que no se muestren como texto plano.
+    escaped = escape(text)
+    return escaped.replace("\\n", "<br/>").replace("\n", "<br/>")
 
 
 def _draw_page_number(canvas: Canvas, document) -> None:

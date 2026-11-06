@@ -48,13 +48,24 @@ with open_checkpointer() as checkpointer:
 
         report_version_id = snapshot.values["report_version_id"]
 
+        # approval_node exige una lista válida y no vacía de acciones
+        # cuando la decisión es 'approved'. Deben pertenecer a
+        # ACTION_ORDER, sin duplicados, y el seguimiento CSV necesita
+        # al menos un formato de informe (Markdown o PDF).
+        resume = {
+            "decision": decision,
+            "report_version_id": report_version_id,
+        }
+
+        if decision == "approved":
+            resume["actions"] = [
+                "export_markdown",
+                "export_pdf",
+                "update_tracking_csv",
+            ]
+
         result = graph.invoke(
-            Command(
-                resume={
-                    "decision": decision,
-                    "report_version_id": report_version_id,
-                }
-            ),
+            Command(resume=resume),
             config=config,
         )
 

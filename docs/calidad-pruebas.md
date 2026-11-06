@@ -64,7 +64,7 @@ Archivos incluidos:
 
 - Una búsqueda o lectura real de Internet: las pruebas de herramientas usan respuestas controladas.
 - Una llamada real a Groq/CrewAI: la ruta LLM se prueba con mocks.
-- Una interfaz Streamlit, el grafo LangGraph o un orquestador global: no existen todavía.
+- Una interfaz Streamlit, el grafo LangGraph o un orquestador global: el workflow (`workflows.py`) y la persistencia (`persistence.py`) están implementados (PR #30); falta el controlador global y la aplicación web.
 - La verificación semántica de que una fuente respalde realmente una afirmación.
 - El cálculo real de `coverage_percentage`: el campo permanece en `0.0`.
 - Rendimiento, concurrencia, autenticación, autorización, despliegue o recuperación ante fallos.

@@ -24,13 +24,11 @@ concluyó que no había fuente para familias ni gimnasios. Ambos datasets tienen
 recursos, y ahí estaban los datos que faltaban. Ningún valor se había inventado,
 pero la conclusión era más fuerte que la evidencia.
 
-**Estado de implementación:** todos los indicadores con valor están publicados en el
-MCP con `reference_period`, `source_url`, `consulted_at` y `verification_status`, y
-son reproducibles con `data/raw/extract_censo_locales.py`,
-`data/raw/extract_households.py` y `data/raw/extract_competitor_registry.py`.
-Los scripts de hogares requieren dependencias offline (`openpyxl`, `pyogrio`,
-`geopandas`, `shapely`) que no están fijadas en `requirements.txt`; el servidor MCP
-no las necesita para responder.
+**Integración en demo (oct 2026):** `demo_mvp_real.py` consume el MCP local y añade
+automáticamente todas las evidencias con `verification_status == "verified"` al
+`ResearchResult`, por lo que el informe incluye población, hogares, gimnasios y
+ocio infantil con fuente y periodo de referencia. Los indicadores no disponibles
+(`families_with_children`, `gyms_with_ludoteca`) se omiten del informe.
 
 ## 2. Causa raíz del fallo del buscador de fuentes
 

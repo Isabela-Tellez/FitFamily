@@ -1,6 +1,6 @@
 # Fase pendiente — Renta neta media por sección censal (INE)
 
-> Estado: **documentado, no implementado**. Preparado para una segunda fase.
+> Estado: **documentado, pendiente real**. Intento 1 (03/11/2026): `ine_intento_real.json`. Intento 2 (03/11/2026): `ine_intento_real_02.json` (`intentado_real`; requiere parámetros específicos API INE). **No se inventan cifras de renta.** Indicadores dependientes siguen `null`.
 > Responsable: Persona 1. Última verificación de metadatos: 21/10/2026 (ver §2).
 > En la revisión final del 21/10/2026 no se ha descargado ni imputado ningún valor de
 > renta; los indicadores que dependen de ella siguen en `null`.
