@@ -124,8 +124,8 @@ def render_scenario_comparison(scenarios):
     st.subheader("Comparación de escenarios")
 
     st.caption(
-        "La gráfica compara los ingresos mensuales estimados "
-        "y el resultado mensual de los escenarios conservador, "
+        "Comparacíon de los ingresos mensuales estimados "
+        "y el resultado de los escenarios conservador, "
         "intermedio y optimista."
     )
 
