@@ -332,7 +332,17 @@ def test_build_global_summary_mentions_evidence_and_competitor_counts():
     assert "El Cañaveral" in summary
 
 
-def test_run_writing_consolidation_produces_global_summary(monkeypatch):
+@pytest.fixture
+def redactor_simulado(monkeypatch):
+    """Permite probar la composición del informe sin crear un cliente de Groq."""
+    from types import SimpleNamespace
+    from src.agents import strategic_writer
+
+    agente = SimpleNamespace(llm=SimpleNamespace(model="groq/openai/gpt-oss-120b"))
+    monkeypatch.setattr(strategic_writer, "build_writer", lambda: agente)
+
+
+def test_run_writing_consolidation_produces_global_summary(monkeypatch, redactor_simulado):
     """run_writing con varios lotes genera un resumen ejecutivo consolidado."""
     from src.agents import strategic_writer
 
@@ -414,7 +424,7 @@ def _make_research_with_evidences(evidences: list[dict]) -> ResearchResult:
     )
 
 
-def test_single_batch_rellena_secciones_vacias(monkeypatch):
+def test_single_batch_rellena_secciones_vacias(monkeypatch, redactor_simulado):
     """Un único lote con secciones vacías debe rellenarlas."""
     from src.agents import strategic_writer
 
@@ -456,7 +466,7 @@ def test_single_batch_rellena_secciones_vacias(monkeypatch):
     assert MISSING_SECTION_TEXT not in seccion_competencia
 
 
-def test_single_batch_no_sobreescribe_secciones_llenas(monkeypatch):
+def test_single_batch_no_sobreescribe_secciones_llenas(monkeypatch, redactor_simulado):
     """Un único lote con secciones ya completas no las sobrescribe."""
     from src.agents import strategic_writer
 
@@ -493,7 +503,7 @@ def test_single_batch_no_sobreescribe_secciones_llenas(monkeypatch):
     assert texto_original in seccion_publico
 
 
-def test_single_batch_no_datos_visuales_mantiene_pendiente(monkeypatch):
+def test_single_batch_no_datos_visuales_mantiene_pendiente(monkeypatch, redactor_simulado):
     """Un único lote sin datos visuales mantiene Análisis visual pendiente."""
     from src.agents import strategic_writer
 
@@ -529,7 +539,7 @@ def test_single_batch_no_datos_visuales_mantiene_pendiente(monkeypatch):
     assert MISSING_SECTION_TEXT in seccion_visual
 
 
-def test_varios_lotes_con_secciones_repeticiones(monkeypatch):
+def test_varios_lotes_con_secciones_repeticiones(monkeypatch, redactor_simulado):
     """Varios lotes con secciones repetidas se unifican sin duplicar."""
     from src.agents import strategic_writer
 
@@ -574,7 +584,7 @@ def test_varios_lotes_con_secciones_repeticiones(monkeypatch):
     assert "Se investigó el mercado" in seccion_resumen
 
 
-def test_varios_lotes_con_secciones_vacias(monkeypatch):
+def test_varios_lotes_con_secciones_vacias(monkeypatch, redactor_simulado):
     """Varios lotes con secciones vacías se rellenan."""
     from src.agents import strategic_writer
 
@@ -744,7 +754,7 @@ def test_precio_plataforma_no_es_tarifa_comercial():
     assert len(contradicciones) == 0
 
 
-def test_contradicciones_se_conservan_en_borrador(monkeypatch):
+def test_contradicciones_se_conservan_en_borrador(monkeypatch, redactor_simulado):
     """Las contradicciones detectadas se añaden a las limitaciones del borrador."""
     from src.agents import strategic_writer
 
