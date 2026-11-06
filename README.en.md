@@ -1,14 +1,25 @@
 > **Integration update.** FitFamily Studio runs with `python -m streamlit run src/ui/app.py`. The [Spanish README](README.md) gives current setup and workflow instructions. The English project snapshot below predates this integration.
 
 <p align="center">
-  <img src="assets/logo-fitfamily.png" alt="FitFamily: market research for a gym with a playroom" width="360">
+  <a href="README.md">Versión en español</a>
+  ·
+  <a href="#current-status">Estado</a>
+  ·
+  <a href="#offline-demo">Demo</a>
+  ·
+  <a href="#setup">Setup</a>
+  ·
+  <a href="#documentation">Documentación</a>
 </p>
 
-<h1 align="center">FitFamily</h1>
-
 <p align="center">
-  <strong>Traceable market research and report generation for a gym with a playroom in El Cañaveral, Madrid</strong><br>
-  <sub><strong>Open project — documentation renewed; no code changed (26 Oct 2026)</strong></sub>
+  <img src="assets/logo-fitfamily.png" alt="FitFamily logo" width="600" style="opacity:0.95; border-radius:12px; max-width:100%;">
+</p>
+
+<h1 align="center" style="margin-top:6px; font-family:system-ui,sans-serif; font-weight:800; letter-spacing:-1px;">FitFamily</h1>
+<p align="center" style="color:#172B2A; font-size:15px; font-weight:500;">
+  Investigación de mercado y generación de informes trazables para un gimnasio con ludoteca en <strong>El Cañaveral, Madrid</strong><br>
+  <sub>Proyecto abierto · Flujo automático con persistencia SQLite · Contrato de cálculo estructurado · Actualizado oct 2026</sub>
 </p>
 
 <p align="center">
@@ -27,13 +38,17 @@
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6f42c1">
   <img alt="MIT License" src="https://img.shields.io/badge/license-MIT-2ea44f">
+  <img alt="LangGraph" src="https://img.shields.io/badge/LangGraph-4.3.1-3776AB?logo=python&logoColor=white">
+  <img alt="Tests" src="https://img.shields.io/badge/pytest-436%20passed-2ea44f?logo=python&logoColor=white">
+  <img alt="Analysis" src="https://img.shields.io/badge/analysis-CalculatedMetric-funded.svg?logo=python&logoColor=white">
 </p>
 
-> **What it is and what it isn't (open project).** FitFamily is a research and documentation prototype in development for deciding whether opening a gym with a playroom in El Cañaveral makes sense. It is not a closed business plan, it does not compute an investment recommendation, **it is not finished** and **still has no UI or orchestrator**. The current value is in data traceability, module contracts, and checks that prevent invented figures.
+> [!NOTE]
+> This project integrates traceable research, economic analysis (`calculation-review-contract.md`), numeric review (`numeric_validation.py`), and automatic workflow (`workflows.py`) with SQLite persistence.
 
-## What FitFamily is
+## Qué es FitFamily
 
-FitFamily takes a research brief (`ResearchBrief`), gathers evidence from the web and official municipal data, structures competitors, and produces a report draft. The draft can then be structurally reviewed, a human decision can be recorded, and the report can be exported to Markdown or PDF.
+FitFamily recibe un encargo de investigación (`ResearchBrief`), recopila evidencias de fuentes web y de datos municipales oficiales, estructura competidores y produce un borrador de informe. Después puede revisarse la estructura del borrador, registrar una decisión humana y exportarlo a Markdown o PDF.
 
 The project starts from a concrete problem: opening a gym with a playroom in a young Madrid neighbourhood requires combining population, households, premises, licences, sports supply, prices, and financial assumptions. Those data are scattered, belong to different periods, and are sometimes unavailable. FitFamily makes explicit **what was observed, what was derived, what is an assumption, and what is missing**.
 
@@ -46,7 +61,7 @@ The project starts from a concrete problem: opening a gym with a playroom in a y
 | Does it review the report? | Yes, references and structural quality; it does not verify semantic truth. |
 | Does it export? | Yes, Markdown and PDF, only after a valid `ApprovalRecord`. |
 | Does it have a UI? | **No.** `src/ui/` is empty; there is no Streamlit app and there are no UI screenshots. |
-| Does it have a fully automated flow? | **No.** Modules are called separately; there is no `main.py`, CLI, or runnable graph. |
+| Does it have a fully automated flow? | **Partial.** `workflows.py` connects analysis → writing → review; UI and full controller still missing. |
 
 ## The problem it addresses
 
@@ -71,7 +86,7 @@ Nothing is presented as finished when it is not. This is the real classification
 
 | Status | What it includes |
 |---|---|
-| **Implemented and covered by tests** | Pydantic contracts; search, page-reading, competitor and source-discovery tools; official registry; local MCP; descriptive analysis and break-even; deterministic writer; Markdown/PDF rendering; approval-gated export; structural review and correction routes. |
+| **Implemented and covered by tests** | Pydantic contracts; search, page-reading, competitor and source-discovery tools; official registry; local MCP; descriptive analysis, break-even, price and economic scenario charts (`src/analysis/charts.py`, PR #37, Laura); deterministic writer; Markdown/PDF rendering; approval-gated export; structural review and correction routes. |
 | **Implemented but isolated or conditional** | Web research (needs network); competitor registry (a versioned snapshot with no prices or confirmed playrooms); LLM route (needs Groq and has only been tested with mocks); MCP (a separate local tool, not automatically connected to research); `coverage_percentage` (always `0.0`). |
 | **Designed, not implemented** | Streamlit; LangGraph; approval controller; scheduled data refresh; tracking CSV; authentication; deployment; audit trails. |
 | **Out of current scope** | Investment recommendation, full financial model, income-based demand study, viability guarantee, multi-user application. |

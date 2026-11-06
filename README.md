@@ -48,6 +48,7 @@ El caso de estudio es la apertura de un gimnasio con ludoteca en El Cañaveral. 
 | Revisión | Comprobación de referencias, valores, unidades, escenarios y procedencia de los cuatro indicadores. |
 | Orquestación | LangGraph, checkpoints SQLite, eventos y recuperación de ejecuciones. |
 | Entrega | Aprobación humana por versión y huella; PDF, Markdown y CSV con reintentos de acciones pendientes. |
+| Interfaz | Aplicación Streamlit profesional en español: navegación por pasos, indicadores, resultados, recomendación y aprobación con diseño accesible. |
 
 ## Flujo de trabajo
 

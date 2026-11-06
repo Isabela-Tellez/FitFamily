@@ -50,7 +50,7 @@ def build_writer_llm() -> LLM:
     project_root = Path(__file__).resolve().parents[2]
     load_dotenv(project_root / ".env", override=False)
 
-    model = os.getenv("WRITER_LLM_MODEL", "").strip()
+    model = os.getenv("WRITER_LLM_MODEL", "groq/openai/gpt-oss-120b").strip() or "groq/openai/gpt-oss-120b"
     api_key = os.getenv("GROQ_API_KEY", "").strip()
 
     if not model:

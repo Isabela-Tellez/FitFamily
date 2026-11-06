@@ -2,9 +2,8 @@
 Formato de salida estructurada del redactor con LLM.
 
 Estos modelos validan la estructura de la respuesta.
-La existencia y el respaldo de las referencias se comprueban después.
+La existencia y el respaldo de las referencias se comprueban despues.
 """
-
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
@@ -13,7 +12,7 @@ from src.reporting.templates import REPORT_SECTION_TITLES
 
 
 class WritingClaim(BaseModel):
-    """Afirmación redactada con referencias a las evidencias recibidas."""
+    """Afirmacion redactada con referencias a las evidencias recibidas."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -32,8 +31,8 @@ class WritingOutput(BaseModel):
     limitations: list[str] = Field(default_factory=list)
 
 
-# El formato del proveedor identifica cada cuerpo por su título. El constructor
-# local controla el número y orden de los apartados, no una lista generada.
+# El formato del proveedor identifica cada cuerpo por su titulo. El constructor
+# local controla el numero y orden de los apartados, no una lista generada.
 WritingSections = create_model(
     "WritingSections",
     __config__=ConfigDict(extra="forbid", strict=True),
@@ -45,7 +44,7 @@ WritingSections = create_model(
 
 
 class WritingResponse(BaseModel):
-    """Contrato de transporte: once cuerpos obligatorios, sin títulos libres."""
+    """Contrato de transporte: once cuerpos obligatorios, sin titulos libres."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
     sections: WritingSections
@@ -75,17 +74,29 @@ def writer_response_schema() -> dict:
 
 
 def writer_response_format(model: str) -> dict:
-    """Usa esquema estricto solo en los modelos GPT-OSS verificados."""
-    if model in {"groq/openai/gpt-oss-120b", "groq/openai/gpt-oss-20b"}:
-        return {"type": "json_schema", "json_schema": {
-            "name": "fitfamily_writing", "strict": True,
-            "schema": writer_response_schema(),
-        }}
+    """Formato de respuesta para el proveedor.
+
+    Evidencia (ejecucion real fitfamily-e2e-demo-001, 2026-11-04):
+    Groq con json_schema rechazo la respuesta del LLM porque este la envolvio
+    en un array [{...}] en lugar de un objeto {...}. El esquema estricto se
+    valida en el servidor y la respuesta nunca llego al parser local.
+    Se usa json_object y se valida localmente con Pydantic (strict=True,
+    extra=forbid), conservando todos los requisitos del informe.
+    """
     return {"type": "json_object"}
 
 
 def parse_writing_output(raw: str) -> WritingOutput:
-    """Valida el contrato y construye los títulos sin completar datos ausentes."""
+    """Valida el contrato y construye los titulos sin completar datos ausentes.
+
+    Normalizacion segura del formato (sin alterar valores):
+    - Objeto JSON valido: se valida directamente.
+    - Array con un unico objeto: se extrae ese objeto.
+    - Array vacio: error claro.
+    - Array con varios objetos: rechazo (estructura ambigua).
+    - Contenido no-objeto: rechazo con mensaje explicativo.
+    - Objeto con campos incorrectos: validacion estricta (Pydantic).
+    """
     import json
 
     def unique_keys(pairs):
@@ -96,14 +107,43 @@ def parse_writing_output(raw: str) -> WritingOutput:
             result[key] = value
         return result
 
-    data = json.loads(raw, object_pairs_hook=unique_keys)
-    if isinstance(data, dict) and isinstance(data.get("sections"), dict):
+    try:
+        data = json.loads(raw, object_pairs_hook=unique_keys)
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise ValueError(
+            "El redactor no devolvio un JSON valido: " + str(exc)
+        ) from exc
+
+    # Normalizacion del formato (sin cambiar valores ni completar campos).
+    if isinstance(data, list):
+        if len(data) == 0:
+            raise ValueError(
+                "La respuesta del redactor es un array vacio; "
+                "se esperaba un objeto JSON."
+            )
+        if len(data) > 1:
+            raise ValueError(
+                "La respuesta del redactor es un array con varios objetos; "
+                "estructura ambigua, no se selecciona ninguno."
+            )
+        data = data[0]
+        if not isinstance(data, dict):
+            raise ValueError(
+                "El unico elemento del array no es un objeto JSON valido."
+            )
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            "La respuesta del redactor no es un objeto JSON valido."
+        )
+
+    if isinstance(data.get("sections"), dict):
         response = WritingResponse.model_validate(data)
         bodies = response.sections.model_dump(by_alias=True)
         return WritingOutput(
             sections=[f"{title}\n{bodies[title]}" for title in REPORT_SECTION_TITLES],
             claims=response.claims, limitations=response.limitations,
         )
-    # Compatibilidad con respuestas/simulaciones anteriores; después se aplica
-    # igualmente validate_report_sections, sin reordenar ni reparar listas.
+    # Compatibilidad con respuestas/simulaciones anteriores; se aplica igualmente
+    # validate_report_sections, sin reordenar ni reparar listas.
     return WritingOutput.model_validate(data)
