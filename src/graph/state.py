@@ -7,6 +7,7 @@ y la exportación controlada de informes.
 """
 
 from datetime import datetime, timezone
+from src.config import settings
 from operator import add
 from typing import Annotated, Any, Literal, TypedDict
 
@@ -227,8 +228,8 @@ def create_initial_state(
         "delivery_status": "not_started",
 
         # Configuración de entrega.
-        "delivery_output_dir": "outputs/reports",
-        "delivery_csv_path": "outputs/tracking.csv",
+        "delivery_output_dir": str(settings.output_dir),
+        "delivery_csv_path": str(settings.tracking_csv_path),
 
         # Control de interrupciones.
         "stop_reason": None,

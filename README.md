@@ -141,18 +141,15 @@ python -m src.mcp.client
 
 ### Interfaz Streamlit
 
-La rama [feat/streamlit-ui-integration](https://github.com/Isabela-Tellez/FitFamily/tree/feat/streamlit-ui-integration) contiene la aplicación app.py y las pantallas de investigación, análisis, aprobación y exportaciones.
-
-Para probar esa versión, utiliza un checkout de esa rama con sus propias dependencias:
+Desde la raíz del proyecto, activa el entorno virtual y prepara tu fichero local
+`.env` según `.env.example`. Para abrir FitFamily Studio ejecuta:
 
 ```bash
-git fetch origin
-git switch feat/streamlit-ui-integration
 python -m pip install -r requirements.txt
-python -m streamlit run app.py
+python -m streamlit run src/ui/app.py
 ```
 
-Guarda tus cambios antes de cambiar de rama. La aplicación se abre en la dirección local que muestra Streamlit en la terminal.
+La decisión de aprobación incluye la huella de la vista previa que ha leído la persona.
 
 ### Ejecutar el workflow
 

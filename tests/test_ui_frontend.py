@@ -347,15 +347,22 @@ def test_approval_registers_record_and_delivers_files(app):
     assert dr.complete is True
     assert set(dr.completed_actions) >= {"export_markdown", "export_pdf", "update_tracking_csv"}
 
-    out_dir = app.session_state and Path("outputs/reports")
-    md_files = list(out_dir.glob("estudio_*.md"))
-    pdf_files = list(out_dir.glob("estudio_*.pdf"))
-    csv_files = list(Path("outputs").glob("tracking.csv"))
-    assert md_files and pdf_files and csv_files
-    md_text = md_files[0].read_text(encoding="utf-8")
-    assert "Escenario" in md_text
-    assert "250" in md_text
-    assert run_id not in csv_files[0].read_text(encoding="utf-8") or True
+    import csv
+
+    markdown = Path(dr.markdown_path)
+    pdf = Path(dr.pdf_path)
+    tracking = Path(dr.tracking_path)
+    for artifact in (markdown, pdf, tracking):
+        assert artifact.is_file(), f"Falta el archivo de la entrega: {artifact}"
+
+    md_text = markdown.read_text(encoding="utf-8")
+    for metric_id in EXPECTED_METRICS:
+        assert metric_id in md_text, f"Falta la métrica en el Markdown: {metric_id}"
+    assert pdf.read_bytes().startswith(b"%PDF-")
+
+    with tracking.open(encoding="utf-8-sig", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert any(row["run_id"] == run_id for row in rows), run_id
 
 
 def delivery_from_state_helper(payload):

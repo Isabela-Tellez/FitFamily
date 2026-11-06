@@ -247,7 +247,7 @@ def render() -> None:
         st.divider()
         section_header(copy.TEXTS["approval.decision_title"])
         st.caption(copy.TEXTS["approval.decision_help"])
-        with st.form("ff_human_approval"):
+        with st.form(f"ff_human_approval_{run_id}_{preview.draft_fingerprint}"):
             decision = st.radio(
                 "Decisión",
                 [
@@ -292,6 +292,7 @@ def render() -> None:
                         report_version_id=state.get("report_version_id") or "",
                         decision="approved" if approved else "rejected",
                         actions=chosen,
+                        draft_fingerprint=preview.draft_fingerprint,
                     )
                     st.session_state["ff_state"] = new_state
                     if approved:

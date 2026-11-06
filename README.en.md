@@ -1,3 +1,5 @@
+> **Integration update.** FitFamily Studio runs with `python -m streamlit run src/ui/app.py`. The [Spanish README](README.md) gives current setup and workflow instructions. The English project snapshot below predates this integration.
+
 <p align="center">
   <a href="README.md">Versión en español</a>
   ·

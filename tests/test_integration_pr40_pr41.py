@@ -160,6 +160,7 @@ def approve_via_interrupt(state, tmp_path, *, actions=None, resume=None):
         payload = resume if resume is not None else {
             "decision": "approved",
             "report_version_id": version_id,
+            "draft_fingerprint": snapshot.interrupts[0].value["draft_fingerprint"],
             "actions": actions
             if actions is not None
             else list(ACTION_ORDER),
@@ -373,6 +374,7 @@ def test_approval_interrupts_and_registers_valid_actions(tmp_path):
             Command(
                 resume={
                     "decision": "approved",
+                    "draft_fingerprint": snapshot.interrupts[0].value["draft_fingerprint"],
                     "report_version_id": version_id,
                     "actions": [
                         "update_tracking_csv",
@@ -618,6 +620,7 @@ def test_end_to_end_workflow_research_to_delivery(tmp_path):
             Command(
                 resume={
                     "decision": "approved",
+                    "draft_fingerprint": snapshot.interrupts[0].value["draft_fingerprint"],
                     "report_version_id": version_id,
                     "actions": [
                         "export_markdown",
@@ -641,3 +644,60 @@ def test_end_to_end_workflow_research_to_delivery(tmp_path):
 
     assert (tmp_path / "tracking.csv").exists()
     assert (tmp_path / "reports").is_dir()
+
+
+@pytest.mark.parametrize("changed", ["draft", "research", "analysis"])
+def test_approval_requires_current_review(tmp_path, changed):
+    state = run_to_approval(tmp_path)
+    if changed == "draft":
+        state["report_draft"]["title"] += " (modificado)"
+    elif changed == "research":
+        state["research_result"]["unresolved_questions"].append("Pregunta posterior")
+    else:
+        state["analysis_result"]["calculated_metrics"][0]["context"]["scenario"]["assumptions"].append("Nuevo supuesto")
+    with pytest.raises(ValueError):
+        approve_via_interrupt(state, tmp_path)
+    assert not list(tmp_path.rglob("*.pdf"))
+
+
+@pytest.mark.parametrize("shown_hash", [None, "vista-previa-antigua"])
+def test_approval_requires_fingerprint_of_displayed_preview(tmp_path, shown_hash):
+    state = run_to_approval(tmp_path)
+    decision = {
+        "decision": "approved",
+        "report_version_id": state["report_version_id"],
+        "actions": ["export_markdown"],
+    }
+    if shown_hash is not None:
+        decision["draft_fingerprint"] = shown_hash
+    with pytest.raises(ValueError, match="huella"):
+        approve_via_interrupt(state, tmp_path, resume=decision)
+
+
+def test_resume_from_reopened_sqlite_uses_displayed_preview(tmp_path):
+    from src.runtime.controller import resume_run
+    from src.ui.controller import draft_from_state
+    from src.ui.report_preview import render_report_preview
+
+    state = make_state(tmp_path)
+    run_id = state["run_id"]
+    db = tmp_path / "restart.sqlite"
+    config = build_thread_config(run_id)
+    with open_checkpointer(db) as cp:
+        graph = build_workflow(checkpointer=cp, events_db_path=tmp_path / "events.sqlite")
+        with patch("src.graph.nodes.run_research", return_value=make_research()), patch(
+            "src.agents.strategic_writer.run_writing", side_effect=_fake_writing
+        ):
+            graph.invoke(state, config=config)
+        paused = graph.get_state(config).values
+        preview = render_report_preview(draft_from_state(paused["report_draft"]))
+    with open_checkpointer(db) as cp:
+        graph = build_workflow(checkpointer=cp, events_db_path=tmp_path / "events.sqlite")
+        result = resume_run(graph, run_id, {
+            "decision": "approved", "report_version_id": paused["report_version_id"],
+            "draft_fingerprint": preview.draft_fingerprint, "actions": ["export_markdown"],
+        })
+    assert tuple(result.completed_actions) == ("export_markdown",)
+    assert Path(result.markdown_path).is_file()
+    assert not list(tmp_path.rglob("*.pdf"))
+    assert not list(tmp_path.rglob("*.csv"))

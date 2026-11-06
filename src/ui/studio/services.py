@@ -135,6 +135,7 @@ def load_study(run_id: str) -> dict[str, Any] | None:
 def decide_approval(
     run_id: str,
     report_version_id: str,
+    draft_fingerprint: str,
     decision: str,
     actions: list[str],
 ) -> tuple[dict[str, Any], Any]:
@@ -153,6 +154,7 @@ def decide_approval(
             {
                 "decision": decision,
                 "report_version_id": report_version_id,
+                "draft_fingerprint": draft_fingerprint,
                 "actions": actions,
             },
         )
