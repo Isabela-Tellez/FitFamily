@@ -10,6 +10,7 @@ from src.analysis.contracts import CalculatedMetric
 from src.analysis.calculation_adapter import metric_context_notes
 from src.reporting.calculated_claims import SCENARIO_NAMES, build_scenario_claim, format_claim_title
 from src.reporting.templates import MISSING_SECTION_TEXT
+from src.reporting.executive_builder import build_executive_report
 
 if TYPE_CHECKING:
     from src.multimodal.image_analyzer import ImageObservation
@@ -197,6 +198,36 @@ def build_report(
     return draft
 
 
+def build_report_outputs(
+    brief: ResearchBrief,
+    research_result: ResearchResult,
+    *,
+    use_llm: bool = False,
+    calculated_metrics: list[CalculatedMetric] | None = None,
+):
+    """Construye el informe completo y su representación ejecutiva."""
+
+    metrics = list(calculated_metrics or [])
+
+    # Generamos el informe completo.
+    draft = build_report(
+        brief,
+        research_result,
+        use_llm=use_llm,
+        calculated_metrics=metrics,
+    )
+
+    # Generamos su representación ejecutiva.
+    executive_report = build_executive_report(
+        draft=draft,
+        brief=brief,
+        research_result=research_result,
+        calculated_metrics=metrics,
+    )
+
+    return draft, executive_report
+
+
 def build_report_markdown(
     brief: ResearchBrief,
     research_result: ResearchResult,
@@ -222,3 +253,27 @@ def build_report_markdown(
     )
 
     return render_report_markdown(draft)
+
+
+def build_report_outputs(
+    brief: ResearchBrief,
+    research_result: ResearchResult,
+    *,
+    use_llm: bool = False,
+    calculated_metrics: list[CalculatedMetric] | None = None,
+):
+    metrics = list(calculated_metrics or [])
+
+    draft = build_report(
+        brief,
+        research_result,
+        use_llm=use_llm,
+        calculated_metrics=metrics,
+    )
+
+    executive_report = build_executive_report(
+        draft,
+        metrics,
+    )
+
+    return draft, executive_report

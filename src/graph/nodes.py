@@ -7,6 +7,7 @@ from math import isfinite
 from typing import Any
 
 from langgraph.types import interrupt
+from src.reporting.report_builder import build_report_outputs
 
 from src.agents.researcher import run_research
 from src.analysis.calculation_adapter import (
@@ -223,10 +224,10 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
     }
 
 
-
 # ============================================================
 # WRITING NODE
 # ============================================================
+
 def writing_node(state: ResearchState) -> dict[str, Any]:
     """Genera un borrador nuevo e invalida autorizaciones anteriores."""
     brief = ResearchBrief.model_validate(state["brief"])
@@ -239,7 +240,8 @@ def writing_node(state: ResearchState) -> dict[str, Any]:
         for item in analysis.get("calculated_metrics", [])
     ]
 
-    draft = build_report(
+    # Generamos el borrador y el informe ejecutivo.
+    draft, executive_report = build_report_outputs(
         brief,
         research,
         use_llm=True,
@@ -248,17 +250,22 @@ def writing_node(state: ResearchState) -> dict[str, Any]:
 
     return {
         "report_draft": _draft_to_dict(draft),
+        "executive_report": asdict(executive_report),
+
         "report_version_id": f"{draft.draft_id}:{draft.version}",
+
         # Invalidamos cualquier aprobación anterior.
         "approval_decision": None,
         "approval_record": None,
         "approved_version_id": None,
         "approved_at": None,
         "authorized_actions": [],
+
         # Invalidamos también las entregas anteriores.
         "delivery_result": None,
         "delivery_status": "not_started",
         "export_paths": [],
+
         "current_stage": "review",
         "updated_at": _utc_now(),
     }

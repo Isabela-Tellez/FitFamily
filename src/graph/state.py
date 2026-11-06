@@ -80,6 +80,7 @@ class ResearchState(TypedDict, total=False):
     report_version_id: str | None
     delivery_version_id: str | None
     approved_version_id: str | None
+    executive_report: dict[str, Any] | None
 
     # --------------------------------------------------------
     # 4. APROBACIÓN HUMANA
@@ -185,6 +186,7 @@ def create_initial_state(
         "research_result": None,
         "analysis_result": None,
         "report_draft": None,
+        "executive_report": None,
         "review_result": None,
         "review_route": None,
 

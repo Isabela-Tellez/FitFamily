@@ -216,15 +216,42 @@ def run_writing(brief: ResearchBrief, research_result: ResearchResult) -> Report
 
     draft = drafts[0]
     sections = []
+
     for index, title in enumerate(REPORT_SECTION_TITLES):
-        populated = []
-        seen_bodies = set()
-        for number, part in enumerate(drafts, start=1):
+        paragraphs = []
+        seen_paragraphs = set()
+
+        for part in drafts:
             body = part.sections[index].partition("\n")[2].strip()
-            if body != MISSING_SECTION_TEXT and body not in seen_bodies:
-                seen_bodies.add(body)
-                populated.append(f"Lote {number} (contexto parcial):\n{body}")
-        sections.append(title + "\n" + "\n\n".join(populated or [MISSING_SECTION_TEXT]))
+
+            if not body or body == MISSING_SECTION_TEXT:
+                continue
+
+            # Separamos el contenido en párrafos.
+            blocks = [
+                block.strip()
+                for block in body.split("\n\n")
+                if block.strip()
+            ]
+
+            for block in blocks:
+                # Evitamos repetir párrafos idénticos.
+                normalized = " ".join(block.split()).casefold()
+
+                if normalized in seen_paragraphs:
+                    continue
+
+                seen_paragraphs.add(normalized)
+                paragraphs.append(block)
+
+        final_body = (
+            "\n\n".join(paragraphs)
+            if paragraphs
+            else MISSING_SECTION_TEXT
+        )
+
+        sections.append(f"{title}\n{final_body}")
+    
     claims = []
     seen = set()
     for part in drafts:

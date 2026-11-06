@@ -1012,82 +1012,104 @@ with tab_report:
             value = re.sub(r"^\s*\d+[\.\)\-:]\s*", "", value)
             return value.strip()
 
-
+        
         def clean_lot_content(content):
             """
-            Combina los textos de los diferentes lotes
-            en un único texto plano y elimina duplicados.
+            Consolida los textos procedentes de diferentes lotes.
+            Elimina las etiquetas Lote 1, Lote 2, Lote 3, etc.
+            y elimina contenidos duplicados.
             """
 
-
             content = str(content or "").strip()
-
 
             if not content:
                 return ""
 
-
-            pattern = re.compile(
-                r"(?im)^\s*Lote\s+\d+\s*"
-                r"\([^)]*\)\s*:\s*"
+            # Eliminar etiquetas de lote al principio de cualquier línea.
+            content = re.sub(
+                r"(?im)^\s*Lote\s+\d+\s*(?:\([^)]*\))?\s*:\s*",
+                "",
+                content,
             )
 
+            # Eliminar etiquetas de lote aunque aparezcan después
+            # de saltos de línea o espacios.
+            content = re.sub(
+                r"(?i)Lote\s+\d+\s*\([^)]*\)\s*:\s*",
+                "",
+                content,
+            )
 
-            matches = list(pattern.finditer(content))
+            # Separar párrafos.
+            paragraphs = re.split(r"\n\s*\n", content)
 
-
-            if not matches:
-                return content
-
-
-            parts = []
-
-
-            # Texto anterior al primer lote, si existe.
-            prefix = content[:matches[0].start()].strip()
-
-
-            if prefix:
-                parts.append(prefix)
-
-
-            for index, match in enumerate(matches):
-
-
-                end = (
-                    matches[index + 1].start()
-                    if index + 1 < len(matches)
-                    else len(content)
-                )
-
-
-                part = content[match.end():end].strip()
-
-
-                if part:
-                    parts.append(part)
-
-
-            unique_parts = []
+            unique_paragraphs = []
             seen = set()
 
+            for paragraph in paragraphs:
 
-            for part in parts:
+                paragraph = paragraph.strip()
 
+                if not paragraph:
+                    continue
 
+                # Normalizar para detectar duplicados.
                 normalized = re.sub(
                     r"\s+",
                     " ",
-                    part.lower(),
+                    paragraph.lower(),
                 ).strip()
-
 
                 if normalized not in seen:
                     seen.add(normalized)
-                    unique_parts.append(part)
+                    unique_paragraphs.append(paragraph)
 
+            return "\n\n".join(unique_paragraphs)
 
-            return "\n\n".join(unique_parts)
+        
+        def format_report_paragraphs(content):
+            """
+            Mejora la presentación de los apartados:
+            - Separa frases que representan ideas independientes.
+            - Conserva los párrafos existentes.
+            - Convierte preguntas y enumeraciones en listas.
+            - Evita mostrar todo como un único bloque.
+            """
+
+            content = str(content or "").strip()
+
+            if not content:
+                return []
+
+            # Normalizar saltos de línea.
+            content = content.replace("\r\n", "\n")
+
+            # Separar párrafos existentes.
+            raw_paragraphs = re.split(r"\n\s*\n", content)
+
+            result = []
+
+            for paragraph in raw_paragraphs:
+
+                paragraph = paragraph.strip()
+
+                if not paragraph:
+                    continue
+
+                # Separar frases que han quedado concatenadas.
+                sentences = re.split(
+                    r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚ¿¡0-9])",
+                    paragraph,
+                )
+
+                for sentence in sentences:
+
+                    sentence = sentence.strip()
+
+                    if sentence:
+                        result.append(sentence)
+
+            return result
 
 
         def is_pending_content(content):
@@ -1196,21 +1218,40 @@ with tab_report:
                 continue
 
             content = clean_report_content(content)
+            content = clean_lot_content(content)
 
             if not content:
                 continue
 
-            # Separar contenido en párrafos.
-            paragraphs = [
-                paragraph.strip()
-                for paragraph in content.split("\n\n")
-                if paragraph.strip()
-            ]
+            # Separar y consolidar las aportaciones de cada lote.
+            paragraphs = re.split(
+                r"\n\s*\n|(?<=[.!?])\s+(?=(?:El |La |Los |Las |También |Además |Por otra parte |Asimismo |En cuanto |Entre |Se |No se |Existe |Existen |Se identificaron |Se realizó |Se ejecutó ))",
+                content,
+                flags=re.IGNORECASE,
+            )
 
             existing = section_contents.get(canonical, [])
 
             for paragraph in paragraphs:
-                if paragraph not in existing:
+
+                paragraph = paragraph.strip()
+
+                if not paragraph:
+                    continue
+
+                # Evitar duplicados sin perder el texto original.
+                normalized = re.sub(
+                    r"\s+",
+                    " ",
+                    paragraph.lower(),
+                ).strip()
+
+                existing_normalized = {
+                    re.sub(r"\s+", " ", item.lower()).strip()
+                    for item in existing
+                }
+
+                if normalized not in existing_normalized:
                     existing.append(paragraph)
 
             section_contents[canonical] = existing
@@ -1346,7 +1387,7 @@ with tab_report:
                     heading == "Evidencias y fuentes"
                     and bool(unique_report_sources)
                 )
-            ]) + 1,
+            ]),
         )
 
 
@@ -1555,10 +1596,19 @@ with tab_report:
                         for question in unique_questions:
                             st.markdown(f"- {question}")
 
-
+                    
                     elif content:
 
-                        st.markdown(content)
+                        paragraphs = format_report_paragraphs(content)
+
+                        if len(paragraphs) > 1:
+
+                            for paragraph in paragraphs:
+                                st.markdown(f"- {paragraph}")
+
+                        elif paragraphs:
+
+                            st.markdown(paragraphs[0])
 
 
                     else:
@@ -1617,7 +1667,15 @@ with tab_report:
 
 
                 elif content:
-                    st.markdown(content)
+
+                    paragraphs = [
+                        paragraph.strip()
+                        for paragraph in content.split("\n\n")
+                        if paragraph.strip()
+                    ]
+
+                    for paragraph in paragraphs:
+                        st.markdown(paragraph)
 
 
 # --------------------------------------------------
