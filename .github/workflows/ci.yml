@@ -36,3 +36,6 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Verificar los nodos compartidos
+        run: python -m pytest tests/workflow_shared_acceptance.py -q

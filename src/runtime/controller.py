@@ -245,6 +245,8 @@ def resume_run(
         Command(
             resume={
                 "decision": decision["decision"],
+                **({"draft_fingerprint": decision["draft_fingerprint"]}
+                   if "draft_fingerprint" in decision else {}),
                 "report_version_id": decision["report_version_id"],
                 "actions": actions,
             }
@@ -328,6 +330,8 @@ def resume_approval(
     thread_id: str,
     decision: str,
     actions: list[str],
+    *,
+    draft_fingerprint: str | None = None,
 ) -> DeliveryResult | None:
     """Reanuda una aprobación humana y recupera su entrega."""
 
@@ -394,6 +398,7 @@ def resume_approval(
             resume={
                 "decision": decision,
                 "report_version_id": report_version_id,
+                "draft_fingerprint": draft_fingerprint,
                 "actions": actions,
             }
         ),

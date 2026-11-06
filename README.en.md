@@ -1,3 +1,5 @@
+> **Integration update.** FitFamily Studio runs with `python -m streamlit run src/ui/app.py`. The [Spanish README](README.md) gives current setup and workflow instructions. The English project snapshot below predates this integration.
+
 <p align="center">
   <img src="assets/logo-fitfamily.png" alt="FitFamily: market research for a gym with a playroom" width="360">
 </p>

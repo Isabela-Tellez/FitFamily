@@ -2,15 +2,19 @@
 
 from dataclasses import asdict
 from datetime import datetime, timezone
-from decimal import Decimal
 from src.config import settings
+from src.review.persisted_context import (
+    metrics_from_state, research_from_state, review_from_state, validate_review_context,
+)
 from math import isfinite
 from typing import Any
 
 from langgraph.types import interrupt
 
 from src.agents.researcher import run_research
-from src.analysis.calculation_adapter import metric_from_break_even
+from src.analysis.calculation_adapter import (
+    metric_from_scenario_calculation,
+)
 from src.analysis.contracts import CalculatedMetric
 from src.analysis.scenarios import (
     create_economic_scenario,
@@ -128,30 +132,13 @@ def analysis_node(state: ResearchState) -> dict[str, Any]:
         ],
     )
 
-    metrics = []
-
-    for calculation in calculations:
-        if calculation.calculation_type == "break_even":
-            metric = metric_from_break_even(
-                scenario,
-                calculation,
-            )
-        else:
-            result = calculation.result
-
-            metric = CalculatedMetric(
-                metric_id=calculation.calculation_type,
-                value=(
-                    Decimal(str(result.value))
-                    if result is not None
-                    else None
-                ),
-                unit=result.unit if result is not None else "unknown",
-                calculation=calculation.operation,
-                evidence_ids=calculation.evidence_ids,
-            )
-
-        metrics.append(metric)
+    # Un único adaptador para los cuatro cálculos: conserva escenario,
+    # cálculo, evidencias e identificador con el contrato de
+    # src/reporting/calculated_claims.py (scenario_<tipo>.<metric>).
+    metrics = [
+        metric_from_scenario_calculation(scenario, calculation)
+        for calculation in calculations
+    ]
 
     return {
         "analysis_result": {
@@ -408,6 +395,15 @@ def approval_node(state: ResearchState) -> dict[str, Any]:
             "No se puede solicitar aprobación con errores pendientes."
         )
 
+    try:
+        review = review_from_state(review_data)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("Se necesita una revisión completa antes de aprobar.") from exc
+    validate_review_context(
+        draft=draft, review=review,
+        research=research_from_state(state["research_result"]),
+        metrics=metrics_from_state(state.get("analysis_result")),
+    )
     fingerprint = calculate_draft_fingerprint(draft)
 
     # Pausa del workflow hasta recibir una decisión humana.
@@ -486,6 +482,9 @@ def approval_node(state: ResearchState) -> dict[str, Any]:
         raise ValueError(
             "El seguimiento CSV requiere autorizar Markdown o PDF."
         )
+
+    if decision.get("draft_fingerprint") != fingerprint:
+        raise ValueError("La huella del informe mostrado ha cambiado. Revisa la vista previa.")
 
     authorized_actions = tuple(
         action

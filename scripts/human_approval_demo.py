@@ -52,6 +52,7 @@ with open_checkpointer() as checkpointer:
             Command(
                 resume={
                     "decision": decision,
+            "draft_fingerprint": snapshot.interrupts[0].value["draft_fingerprint"],
                     "report_version_id": report_version_id,
                 }
             ),

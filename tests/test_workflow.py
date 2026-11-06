@@ -188,15 +188,15 @@ def test_analysis_node_calculates_economic_metrics(
     }
 
     assert float(
-        metrics["monthly_revenue"]["value"]
+        metrics["scenario_intermediate.monthly_revenue"]["value"]
     ) == 8000.0
 
     assert float(
-        metrics["monthly_variable_costs"]["value"]
+        metrics["scenario_intermediate.monthly_variable_costs"]["value"]
     ) == 2000.0
 
     assert float(
-        metrics["monthly_result"]["value"]
+        metrics["scenario_intermediate.monthly_result"]["value"]
     ) == 0.0
 
     break_even = metrics[
@@ -261,9 +261,9 @@ def test_analysis_node_accepts_zero_clients(analysis_state):
         for metric in result["analysis_result"]["calculated_metrics"]
     }
 
-    assert float(metrics["monthly_revenue"]["value"]) == 0.0
-    assert float(metrics["monthly_variable_costs"]["value"]) == 0.0
-    assert float(metrics["monthly_result"]["value"]) == -6000.0
+    assert float(metrics["scenario_intermediate.monthly_revenue"]["value"]) == 0.0
+    assert float(metrics["scenario_intermediate.monthly_variable_costs"]["value"]) == 0.0
+    assert float(metrics["scenario_intermediate.monthly_result"]["value"]) == -6000.0
 
 
 # ============================================================
@@ -306,6 +306,10 @@ def make_approval_state():
         },
     )
 
+    from src.graph.nodes import review_node
+    from src.schemas import ResearchResult
+    state["research_result"] = ResearchResult().model_dump(mode="json")
+    state.update(review_node(state))
     return state
 
 
@@ -399,6 +403,7 @@ def test_approval_interrupts_and_can_be_resumed(tmp_path):
             Command(
                 resume={
                     "decision": "approved",
+                    "draft_fingerprint": graph.get_state(config).interrupts[0].value["draft_fingerprint"],
                     "report_version_id": "draft-001:1",
                     "actions": [
                         "export_markdown",
@@ -668,6 +673,7 @@ def test_approval_alone_does_not_complete_delivery(tmp_path):
             Command(
                 resume={
                     "decision": "approved",
+                    "draft_fingerprint": graph.get_state(config).interrupts[0].value["draft_fingerprint"],
                     "report_version_id": "draft-001:1",
                     "actions": [
                         "export_markdown",
