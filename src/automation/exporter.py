@@ -19,17 +19,20 @@ from src.reporting.markdown_renderer import render_report_markdown
 def _safe_filename(draft: ReportDraft, extension: str) -> str:
     """
     Construye un nombre de archivo legible a partir del área de estudio
-    y un fragmento corto del identificador del borrador.
+    y un fragmento identificador del borrador.
 
-    Mantiene suficiente entropía para evitar colisiones, pero es legible
-    para la persona usuaria.
+    Es legible para la persona usuaria: incluye el área completa (truncada)
+    y los primeros 6 dígitos del hash, con formato consistente.
     """
     area = (draft.study_area or "informe").strip().lower()
     area_safe = "".join(
-        c if c.isalnum() or c in ("-", "_") else "_"
+        c if c.isalnum() or c in ("-", "_") else "_" 
         for c in area
-    )[:40]
-    short_hash = draft.draft_id[:8]
+    )[:30]
+    short_hash = draft.draft_id[:6]
+    # Capitalizar primera letra del área para legibilidad
+    if area_safe:
+        area_safe = area_safe[0].upper() + area_safe[1:]
     return f"estudio_{area_safe}_{short_hash}{extension}"
 
 

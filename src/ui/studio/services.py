@@ -220,17 +220,10 @@ def provider_status() -> dict[str, str]:
     groq = bool(os.getenv("GROQ_API_KEY", "").strip())
     tavily = bool(os.getenv("TAVILY_API_KEY", "").strip())
     return {
-        "llm": (
-            "Groq configurado · la redacción usa el proveedor LLM"
-            if groq
-            else "Sin GROQ_API_KEY · la redacción del informe no podrá completarse"
-        ),
-        "search": (
-            "Tavily configurado"
-            if tavily
-            else "Sin TAVILY_API_KEY · se usará el buscador alternativo si está disponible"
-        ),
+        "llm": "Redacción ✓" if groq else "Redacción ✗",
+        "search": "Búsqueda ✓" if tavily else "Búsqueda ✗",
         "llm_ready": "yes" if groq else "no",
+        "search_ready": "yes" if tavily else "no",
     }
 
 
@@ -249,7 +242,7 @@ async def _query_mcp() -> dict:
 def load_mcp() -> None:
     """Consulta el servidor MCP local y guarda la respuesta en sesión."""
     try:
-        with st.spinner("Consultando el servidor MCP local…"):
+        with st.spinner("Actualizando los indicadores oficiales…"):
             payload = run_async(_query_mcp())
         if payload.get("error"):
             raise RuntimeError(payload["error"])
@@ -279,13 +272,16 @@ def recommend(
     try:
         from src.recommendation.service import recommend as _recommend
 
+        # La fuente verificada depende de si la persona ya consultó los
+        # indicadores oficiales en esta sesión. El cálculo no cambia.
+        indicator_source = "MCP" if st.session_state.get("ff_mcp") else "none"
         result = _recommend(
             scenario_type=scenario_type,
             expected_clients=expected_clients,
             monthly_fee=monthly_fee,
             fixed_costs=fixed_costs,
             variable_cost_per_client=variable_cost_per_client,
-            indicator_source="none",
+            indicator_source=indicator_source,
             competitor_registry_path="data/processed/competitor_registry.json",
             rent_status="pending",
             run_id="fitfamily-recommendation-studio-001",

@@ -1,21 +1,16 @@
 """Pantalla: Aprobación y entrega.
 
-Revisión del informe, decisión humana y entrega de los formatos
-autorizados. La decisión se registra mediante el controlador público
-`resume_run` (src.runtime.controller), de modo que `approval_node`
-valida versión, huella y errores antes de crear el ApprovalRecord, y
-`delivery_node` ejecuta únicamente las acciones autorizadas.
-
-La aprobación no equivale a entrega completada: el resultado mostrado
-es exactamente el DeliveryResult devuelto por el workflow.
+Vista previa del informe, lista de revisión y decisión humana. La
+decisión se registra mediante el controlador público `resume_run`; la
+interfaz no crea aprobaciones ni exporta por su cuenta.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import streamlit as st
 
-from src.automation.exporter import calculate_draft_fingerprint
 from src.ui.controller import (
     delivery_from_state,
     draft_from_state,
@@ -25,20 +20,46 @@ from src.ui.controller import (
     validate_review_context,
 )
 from src.ui.report_preview import render_report_preview
-from src.ui.studio import services
+from src.ui.studio import copy, services
 from src.ui.studio.components import (
+    badge,
     empty_state,
     page_header,
     render_metrics,
     section_header,
 )
+from src.ui.studio.formatting import format_datetime, humanize, status_label
 from src.ui.studio.state import get_state, redact_secrets
 
 ROOT = Path(__file__).resolve().parents[4]
 
+_ACTION_LABELS = {
+    "export_markdown": "Exportar Markdown (.md)",
+    "export_pdf": "Exportar PDF (.pdf)",
+    "update_tracking_csv": "Actualizar CSV de seguimiento",
+}
+_DOWNLOAD_LABELS = {
+    "Markdown": "Descargar informe (Markdown)",
+    "PDF": "Descargar informe (PDF)",
+    "Seguimiento CSV": "Descargar seguimiento (CSV)",
+}
+_INTERNAL_ID_LINE = re.compile(
+    r"^\s*(?:[-*+]\s*)?(?:\*\*)?\s*"
+    r"(identificador( del borrador)?|id( del borrador)?|huella|fingerprint|hash)"
+    r"\b[^:\n]*:",
+    re.IGNORECASE,
+)
+
+
+def _public_markdown(markdown: str) -> str:
+    """Oculta identificadores internos en la vista previa del informe."""
+    return "\n".join(
+        line for line in markdown.splitlines() if not _INTERNAL_ID_LINE.match(line)
+    )
+
 
 def _review_bundle():
-    """Reconstruye borrador + research + métricas + revisión del estado."""
+    """Reconstruye informe, investigación, métricas y revisión del estado."""
     state = get_state()
     if not state or not state.get("report_draft") or not state.get("review_result"):
         return None
@@ -51,51 +72,48 @@ def _review_bundle():
 
 
 def _render_delivery(state: dict, run_id: str) -> None:
-    """Muestra la entrega real registrada en el estado (sin inventar nada)."""
+    """Muestra la entrega real registrada, sin inventar archivos."""
     delivery = delivery_from_state(state.get("delivery_result"))
 
     if delivery is None:
         st.info(
-            "Todavía no hay resultado de entrega registrado. Genera los "
-            "entregables autorizados para ver su estado real."
+            "Todavía no hay entregables generados. Puedes crearlos cuando "
+            "la aprobación esté registrada."
         )
         if st.button(
-            "Generar / reintentar entregables autorizados",
+            "Generar entregables autorizados",
             type="primary",
             use_container_width=True,
+            key="ff_generate_delivery",
         ):
             try:
                 services.retry_delivery(run_id)
                 st.session_state["ff_state"] = services.load_study(run_id)
                 st.rerun()
             except Exception as exc:
-                st.error(f"La entrega no se ha completado: {redact_secrets(exc)}")
+                st.error(f"La entrega no se ha completado: {humanize(redact_secrets(exc))}")
         return
 
     if delivery.complete:
         st.success("Todas las acciones autorizadas se han completado correctamente.")
     else:
         st.warning(
-            "Entrega parcial o fallida: revisa los errores y vuelve a "
-            "intentar las acciones pendientes."
+            "La entrega está incompleta. Revisa los errores y vuelve a intentar "
+            "las acciones pendientes."
         )
 
     cols = st.columns(3)
-    cols[0].metric("Solicitadas", len(delivery.requested_actions))
-    cols[1].metric("Completadas", len(delivery.completed_actions))
-    cols[2].metric("Fallidas", len(delivery.failed_actions))
+    cols[0].metric("Solicitadas", len(delivery.requested_actions), border=True)
+    cols[1].metric("Completadas", len(delivery.completed_actions), border=True)
+    cols[2].metric("Fallidas", len(delivery.failed_actions), border=True)
 
-    # Solo se muestran acciones realmente ejecutadas.
     if delivery.completed_actions:
-        st.caption(
-            "Completadas: " + ", ".join(str(a) for a in delivery.completed_actions)
-        )
+        labels = [_ACTION_LABELS.get(str(a), str(a)) for a in delivery.completed_actions]
+        st.caption("Completadas: " + ", ".join(labels))
     if delivery.failed_actions:
-        st.caption(
-            "Fallidas: " + ", ".join(str(a) for a in delivery.failed_actions)
-        )
+        labels = [_ACTION_LABELS.get(str(a), str(a)) for a in delivery.failed_actions]
+        st.caption("Fallidas: " + ", ".join(labels))
 
-    # Descargas solo cuando el archivo existe realmente en disco.
     downloaded = False
     for action, path in (
         ("Markdown", delivery.markdown_path),
@@ -116,36 +134,39 @@ def _render_delivery(state: dict, run_id: str) -> None:
         )
         downloaded = True
         st.download_button(
-            f"Descargar {action} ({file_path.name})",
+            _DOWNLOAD_LABELS[action],
             data=file_path.read_bytes(),
             file_name=file_path.name,
             mime=mime,
             key=f"download_{file_path.suffix}_{file_path.name}",
         )
+        st.caption(f"Archivo: {file_path.name}")
     if not downloaded and delivery.complete:
-        st.caption("La entrega se registró pero no hay archivos locales disponibles.")
+        st.caption("La entrega se registró, pero no hay archivos locales disponibles.")
 
     for action, message in delivery.errors or ():
-        st.error(f"{action}: {redact_secrets(message)}")
+        st.error(f"{_ACTION_LABELS.get(str(action), str(action))}: {humanize(message)}")
 
-    if st.button("Reintentar entrega autorizada"):
+    if st.button(
+        "Reintentar entrega",
+        use_container_width=False,
+        key="ff_retry_delivery",
+    ):
         try:
             services.retry_delivery(run_id)
             st.session_state["ff_state"] = services.load_study(run_id)
             st.rerun()
         except Exception as exc:
-            st.error(f"La entrega no se ha completado: {redact_secrets(exc)}")
+            st.error(f"La entrega no se ha completado: {humanize(redact_secrets(exc))}")
 
 
 def render() -> None:
     page_header(
-        "Aprobación y entrega",
-        "Revisa el informe, registra tu decisión y genera únicamente "
-        "los formatos autorizados.",
+        copy.TEXTS["approval.title"],
+        copy.TEXTS["approval.subtitle"],
         eyebrow="CONTROL HUMANO Y ENTREGA",
     )
 
-    # Aviso persistente tras el rerun de la decisión humana.
     notice = st.session_state.pop("ff_notice", None)
     if notice:
         kind, message = notice
@@ -159,20 +180,20 @@ def render() -> None:
     except Exception as exc:
         st.error(
             "La revisión ya no corresponde al contenido actual: "
-            f"{redact_secrets(exc)}. Ejecuta un nuevo estudio antes de aprobar."
+            f"{humanize(redact_secrets(exc))}. Inicia un nuevo estudio antes de aprobar."
         )
         bundle = None
 
     if not bundle or not state or not run_id:
         empty_state(
-            "Sin informe pendiente de aprobación",
-            "Esta pantalla se habilita cuando el workflow ha producido un "
-            "borrador y una revisión. Ejecuta primero un estudio real.",
-            action_label="Ir a Nuevo estudio",
+            copy.TEXTS["approval.empty_title"],
+            copy.TEXTS["approval.empty_body"],
+            action_label=copy.TEXTS["action.back_to_new_study"],
+            page="Nuevo estudio",
         )
         return
 
-    draft, research, metrics, review = bundle
+    draft, _, _, review = bundle
     errors = [i for i in review.issues if i.severity == "error"]
     warnings = [i for i in review.issues if i.severity == "warning"]
     preview = render_report_preview(draft)
@@ -181,7 +202,7 @@ def render() -> None:
 
     render_metrics(
         [
-            ("Documento", draft.draft_id[:12], "Identidad del borrador"),
+            ("Documento", "Informe", "Contenido sometido a revisión"),
             ("Versión", str(draft.version), "Versión vigente"),
             ("Errores bloqueantes", str(len(errors)), "Impiden la aprobación"),
         ],
@@ -189,44 +210,72 @@ def render() -> None:
     )
     st.write("")
 
-    section_header("Confirmación del contenido")
-    with st.expander("Abrir informe completo antes de decidir", expanded=True):
-        st.markdown(preview.markdown)
+    section_header(copy.TEXTS["approval.preview_title"])
+    with st.expander("Abrir informe completo", expanded=True):
+        st.markdown(_public_markdown(preview.markdown))
+
+    section_header(copy.TEXTS["approval.checklist_title"])
+    checks = [
+        ("Informe completo", bool(preview.markdown.strip())),
+        ("Sin errores bloqueantes", not errors),
+        (f"Avisos revisados ({len(warnings)})", True),
+    ]
+    for label, ok in checks:
+        st.markdown(f"- {'✓' if ok else '⛔'} {label}")
+    st.caption(
+        "La revisión automática comprueba estructura, fuentes y coherencia. "
+        "La decisión final sigue siendo tuya."
+    )
 
     if warnings:
         with st.expander(f"Avisos informativos ({len(warnings)})"):
             for issue in warnings:
-                st.warning(f"{issue.code}: {issue.message}")
+                st.warning(humanize(issue.message))
 
     if errors:
         st.error("La aprobación está bloqueada hasta corregir todos los errores de revisión.")
         for issue in errors:
-            st.markdown(
-                f"- **{issue.code}** · {issue.message} · etapa: `{issue.correction_stage}`"
-            )
+            st.markdown(f"- {humanize(issue.message)}")
+        with st.expander(copy.TEXTS["recommendation.technical"]):
+            for issue in errors:
+                st.code(
+                    f"{issue.code} · {issue.reference_id} · {issue.correction_stage}",
+                    language="text",
+                )
 
-    # ---- Decisión humana (solicita el workflow) ----
     if awaiting:
         st.divider()
-        section_header("Tu decisión")
-        st.caption(
-            f"Versión sometida a decisión: `{state.get('report_version_id')}` · "
-            "la decisión se registra sobre exactamente esta versión."
-        )
+        section_header(copy.TEXTS["approval.decision_title"])
+        st.caption(copy.TEXTS["approval.decision_help"])
         with st.form("ff_human_approval"):
             decision = st.radio(
-                "Decisión", ["Aprobar para exportar", "Rechazar informe"], horizontal=True
+                "Decisión",
+                [
+                    copy.TEXTS["approval.decision_approve"],
+                    copy.TEXTS["approval.decision_changes"],
+                ],
+                horizontal=True,
+                key="ff_decision",
             )
             confirm_read = st.checkbox(
-                "He leído el informe, las fuentes y las limitaciones mostradas."
+                copy.TEXTS["approval.confirm_read"],
+                key="ff_confirm_read",
             )
-            st.markdown("**Acciones que autorizo**")
-            blocked = bool(errors) or decision.startswith("Rechazar")
-            export_md = st.checkbox("Exportar Markdown (.md)", value=True, disabled=blocked)
-            export_pdf = st.checkbox("Exportar PDF (.pdf)", value=False, disabled=blocked)
-            update_csv = st.checkbox("Actualizar CSV de seguimiento", value=False, disabled=blocked)
+            st.markdown(f"**{copy.TEXTS['approval.actions_title']}**")
+            approved = decision == copy.TEXTS["approval.decision_approve"]
+            blocked = bool(errors) or not approved
+            chosen_actions: list[tuple[str, bool]] = []
+            for action in preview.delivery_actions:
+                label = _ACTION_LABELS.get(str(action))
+                if not label:
+                    continue
+                default = action == "export_markdown"
+                value = st.checkbox(label, value=default, disabled=blocked, key=f"ff_action_{action}")
+                chosen_actions.append((str(action), value))
             submit = st.form_submit_button(
-                "Registrar decisión humana", type="primary", use_container_width=True
+                copy.TEXTS["action.register_decision"],
+                type="primary",
+                use_container_width=True,
             )
 
         if submit:
@@ -236,15 +285,7 @@ def render() -> None:
                     "antes de registrar la decisión."
                 )
             else:
-                approved = decision.startswith("Aprobar")
-                chosen: list[str] = []
-                if approved:
-                    if export_md:
-                        chosen.append("export_markdown")
-                    if export_pdf:
-                        chosen.append("export_pdf")
-                    if update_csv:
-                        chosen.append("update_tracking_csv")
+                chosen = [action for action, selected in chosen_actions if selected and approved]
                 try:
                     new_state, _delivery = services.decide_approval(
                         run_id=run_id,
@@ -262,42 +303,47 @@ def render() -> None:
                     else:
                         st.session_state["ff_notice"] = (
                             "warning",
-                            "Rechazo registrado. No se podrá exportar este informe.",
+                            "Cambios solicitados. Esta versión no se exportará.",
                         )
                     st.rerun()
                 except Exception as exc:
-                    st.error(f"No se pudo registrar la decisión: {redact_secrets(exc)}")
+                    st.error(
+                        "No se pudo registrar la decisión: "
+                        f"{humanize(redact_secrets(exc))}"
+                    )
 
     elif approval:
         st.write("")
         if approval.get("approved"):
-            st.markdown(
-                '<span class="ff-badge ff-badge-ok">Aprobación registrada</span>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(badge("Aprobación registrada", "ok"), unsafe_allow_html=True)
             st.caption(
-                f"Decidida: {approval.get('decided_at')} · "
-                f"Versión: {state.get('approved_version_id') or '—'}"
+                f"Decidida el {format_datetime(approval.get('decided_at'))} · "
+                f"Versión {state.get('approved_version_id') or '—'}"
             )
-            # Si el estado ya es completed, la entrega finalizó.
             if state.get("status") == "completed":
-                st.success(
-                    "El informe ha sido aprobado y entregado completamente."
-                )
+                st.success("El informe ha sido aprobado y entregado completamente.")
         else:
-            st.markdown(
-                '<span class="ff-badge ff-badge-warn">Informe rechazado</span>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(badge("Informe rechazado", "warn"), unsafe_allow_html=True)
             st.caption("No se autoriza ninguna exportación de este informe.")
 
-    # ---- Publicación controlada ----
     if approval and approval.get("approved"):
         st.divider()
-        section_header("Publicación controlada")
+        section_header(copy.TEXTS["approval.delivery_title"])
+        actions = approval.get("actions") or []
         st.caption(
-            "Acciones autorizadas: " + ", ".join(approval.get("actions") or [])
+            "Acciones autorizadas: "
+            + ", ".join(_ACTION_LABELS.get(str(a), str(a)) for a in actions)
         )
         _render_delivery(state, run_id)
     elif approval and not approval.get("approved"):
         st.info("Informe rechazado: no hay entregas disponibles para esta versión.")
+
+    with st.expander("Detalles técnicos"):
+        st.json(
+            {
+                "version_sometida": state.get("report_version_id"),
+                "estado": status_label(state.get("status")),
+                "decision": approval.get("decision") if approval else None,
+                "acciones": approval.get("actions") if approval else None,
+            }
+        )

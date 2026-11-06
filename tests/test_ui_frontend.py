@@ -98,6 +98,73 @@ def find_button(at: AppTest, label: str):
     return next(b for b in at.button if b.label == label)
 
 
+NAV_LABELS = {
+    "Inicio": "Inicio",
+    "Nuevo estudio": "Nuevo estudio",
+    "Indicadores oficiales": "Indicadores",
+    "Resultados": "Resultados",
+    "Recomendación": "Recomendación",
+    "Aprobación y entrega": "Aprobación",
+}
+
+
+# AppTest conserva en su árbol los widgets de la pantalla anterior tras un
+# rerun interno. Streamlit elimina sus claves de sesión, así que el helper
+# repone los valores por defecto antes de navegar. No altera la app real.
+WIDGET_DEFAULTS = {
+    "ff_business_type": "gimnasio con ludoteca",
+    "ff_location": "Madrid",
+    "ff_study_area": "El Cañaveral",
+    "ff_max_results": 8,
+    "ff_questions": "",
+    "ff_expected_clients": "",
+    "ff_monthly_fee": "",
+    "ff_fixed_costs": "",
+    "ff_variable_cost": "",
+    "ff_scenario": "intermediate",
+    "ff_clients": 150,
+    "ff_fee": 40,
+    "ff_fixed_recommendation": 8000,
+    "ff_variable_recommendation": 10,
+    "ff_indicator_search": "",
+    "ff_indicator_filter": [],
+    "ff_decision": "Aprobar y exportar",
+    "ff_confirm_read": False,
+    "ff_action_export_markdown": True,
+    "ff_action_export_pdf": False,
+    "ff_action_update_tracking_csv": False,
+}
+
+
+def _ensure_widget_defaults(at: AppTest) -> None:
+    for key, value in WIDGET_DEFAULTS.items():
+        try:
+            at.session_state[key]
+        except KeyError:
+            at.session_state[key] = value
+
+
+def goto(at: AppTest, page: str) -> None:
+    """Cambia de pantalla por el estado de sesión (router)."""
+    _ensure_widget_defaults(at)
+    at.session_state["ff_page"] = page
+    at.run()
+
+
+def click_nav(at: AppTest, page: str) -> None:
+    """Pulsa el paso numerado de la barra lateral."""
+    _ensure_widget_defaults(at)
+    suffix = NAV_LABELS[page]
+    button = next(
+        b for b in at.button
+        if b.label[:1].isdigit()
+        and b.label.replace("✓", "").strip().endswith(suffix)
+        and not b.disabled
+    )
+    button.click()
+    at.run()
+
+
 def set_finance(at: AppTest, clients: str, fee: str, fixed: str, variable: str) -> None:
     by_label = {t.label: t for t in at.text_input}
     by_label["Clientes previstos"].set_value(clients)
@@ -109,10 +176,9 @@ def set_finance(at: AppTest, clients: str, fee: str, fixed: str, variable: str) 
 def run_study_to_approval(at: AppTest) -> None:
     """Ejecuta un estudio completo hasta awaiting_approval (fronteras simuladas)."""
     with external_boundaries():
-        at.radio(key="ff_page").set_value("Nuevo estudio")
-        at.run()
+        goto(at, "Nuevo estudio")
         set_finance(at, "250", "40", "6000", "10")
-        find_button(at, "Ejecutar estudio real").click()
+        find_button(at, "Iniciar estudio").click()
         at.run()
     assert not at.exception, [str(e.value) for e in at.exception]
     assert at.session_state["ff_state"]["status"] == "awaiting_approval"
@@ -166,11 +232,18 @@ def test_no_deprecation_warnings_from_components(app):
 # B. Navegación
 # ---------------------------------------------------------------------------
 def test_navigation_renders_all_pages(app):
-    pages = ["Inicio", "Nuevo estudio", "Resultados", "Indicadores oficiales",
+    # Sin estudio, los pasos que dependen de datos están bloqueados.
+    for page in ["Inicio", "Nuevo estudio", "Indicadores oficiales", "Recomendación"]:
+        goto(app, page)
+        assert not app.exception, f"{page}: {[str(e.value) for e in app.exception]}"
+        assert len(app.markdown) > 3, f"{page}: página vacía"
+
+    # Con un estudio completo, los seis pasos están disponibles.
+    run_study_to_approval(app)
+    pages = ["Inicio", "Nuevo estudio", "Indicadores oficiales", "Resultados",
              "Recomendación", "Aprobación y entrega"]
     for page in pages:
-        app.radio(key="ff_page").set_value(page)
-        app.run()
+        click_nav(app, page)
         assert not app.exception, f"{page}: {[str(e.value) for e in app.exception]}"
         assert len(app.markdown) > 3, f"{page}: página vacía"
 
@@ -180,11 +253,10 @@ def test_navigation_renders_all_pages(app):
 # ---------------------------------------------------------------------------
 def test_form_rejects_empty_required_fields(app):
     with external_boundaries():
-        app.radio(key="ff_page").set_value("Nuevo estudio")
-        app.run()
+        goto(app, "Nuevo estudio")
         by_label = {t.label: t for t in app.text_input}
         by_label["Tipo de negocio *"].set_value("")
-        find_button(app, "Ejecutar estudio real").click()
+        find_button(app, "Iniciar estudio").click()
         app.run()
     assert not app.exception
     assert any("Completa el tipo de negocio" in e.value for e in app.error)
@@ -197,10 +269,9 @@ def test_form_rejects_empty_required_fields(app):
 ])
 def test_form_rejects_invalid_finance_values(app, clients, expected_fragment):
     with external_boundaries():
-        app.radio(key="ff_page").set_value("Nuevo estudio")
-        app.run()
+        goto(app, "Nuevo estudio")
         set_finance(app, clients, "40", "6000", "10")
-        find_button(app, "Ejecutar estudio real").click()
+        find_button(app, "Iniciar estudio").click()
         app.run()
     assert not app.exception
     assert any(expected_fragment in e.value for e in app.error)
@@ -222,8 +293,7 @@ def test_run_produces_awaiting_approval_state(app):
 # ---------------------------------------------------------------------------
 def test_results_show_four_metrics_with_units_and_traceability(app):
     run_study_to_approval(app)
-    app.radio(key="ff_page").set_value("Resultados")
-    app.run()
+    goto(app, "Resultados")
     dfs = [d.value for d in app.dataframe]
     metric_df = next(df for df in dfs if "Métrica" in df.columns)
     assert METRIC_IDS.issubset(set(metric_df["Métrica"]))
@@ -238,8 +308,7 @@ def test_results_show_four_metrics_with_units_and_traceability(app):
 
 def test_results_show_events_timeline(app):
     run_study_to_approval(app)
-    app.radio(key="ff_page").set_value("Resultados")
-    app.run()
+    goto(app, "Resultados")
     rendered = " ".join(m.value for m in app.markdown)
     assert "Evolución del proceso" in rendered
     from src.ui.studio import services
@@ -256,16 +325,15 @@ def test_approval_registers_record_and_delivers_files(app):
     report_version_id = state["report_version_id"]
     run_id = app.session_state["ff_run_id"]
 
-    app.radio(key="ff_page").set_value("Aprobación y entrega")
-    app.run()
+    goto(app, "Aprobación y entrega")
 
-    decision = next(r for r in app.radio if "Aprobar para exportar" in r.options)
-    decision.set_value("Aprobar para exportar")
+    decision = next(r for r in app.radio if "Aprobar y exportar" in r.options)
+    decision.set_value("Aprobar y exportar")
     cb = {c.label: c for c in app.checkbox}
     cb["He leído el informe, las fuentes y las limitaciones mostradas."].set_value(True)
     cb["Exportar PDF (.pdf)"].set_value(True)
     cb["Actualizar CSV de seguimiento"].set_value(True)
-    find_button(app, "Registrar decisión humana").click()
+    find_button(app, "Registrar decisión").click()
     app.run()
     assert not app.exception, [str(e.value) for e in app.exception]
 
@@ -297,14 +365,13 @@ def delivery_from_state_helper(payload):
 
 def test_rejection_produces_no_exports(app, tmp_path):
     run_study_to_approval(app)
-    app.radio(key="ff_page").set_value("Aprobación y entrega")
-    app.run()
+    goto(app, "Aprobación y entrega")
 
-    decision = next(r for r in app.radio if "Aprobar para exportar" in r.options)
-    decision.set_value("Rechazar informe")
+    decision = next(r for r in app.radio if "Aprobar y exportar" in r.options)
+    decision.set_value("Solicitar cambios")
     cb = {c.label: c for c in app.checkbox}
     cb["He leído el informe, las fuentes y las limitaciones mostradas."].set_value(True)
-    find_button(app, "Registrar decisión humana").click()
+    find_button(app, "Registrar decisión").click()
     app.run()
     assert not app.exception, [str(e.value) for e in app.exception]
 
@@ -318,14 +385,13 @@ def test_rejection_produces_no_exports(app, tmp_path):
 
 def test_wrong_version_approval_shows_backend_error(app):
     run_study_to_approval(app)
-    app.radio(key="ff_page").set_value("Aprobación y entrega")
-    app.run()
+    goto(app, "Aprobación y entrega")
 
-    decision = next(r for r in app.radio if "Aprobar para exportar" in r.options)
-    decision.set_value("Aprobar para exportar")
+    decision = next(r for r in app.radio if "Aprobar y exportar" in r.options)
+    decision.set_value("Aprobar y exportar")
     cb = {c.label: c for c in app.checkbox}
     cb["He leído el informe, las fuentes y las limitaciones mostradas."].set_value(True)
-    find_button(app, "Registrar decisión humana").click()
+    find_button(app, "Registrar decisión").click()
 
     with patch("src.ui.studio.services.decide_approval", side_effect=ValueError("La decisión corresponde a otra versión.")):
         app.run()
@@ -337,37 +403,35 @@ def test_wrong_version_approval_shows_backend_error(app):
 # ---------------------------------------------------------------------------
 def test_duplicate_submission_is_blocked(app):
     with patch("src.runtime.controller.start_run") as spy:
-        app.radio(key="ff_page").set_value("Nuevo estudio")
-        app.run()
+        goto(app, "Nuevo estudio")
         app.session_state["ff_running"] = True
-        find_button(app, "Ejecutar estudio real").click()
+        find_button(app, "Iniciar estudio").click()
         app.run()
         assert spy.call_count == 0
         assert any("Ya hay un estudio en ejecución" in w.value for w in app.warning)
 
 
 def test_missing_groq_blocks_run_with_clear_message(app, monkeypatch):
-    # Simula ausencia de .env (load_dotenv no reinyecta la clave) y de GROQ.
+    # Simula ausencia de .env (load_dotenv no reinyecta la clave) y de la
+    # clave de redacción. La interfaz debe explicarlo sin jerga técnica.
     monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: None)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
-    app.radio(key="ff_page").set_value("Nuevo estudio")
-    app.run()
-    assert any("GROQ_API_KEY" in w.value for w in app.warning)
+    goto(app, "Nuevo estudio")
+    assert any("redacción" in w.value.lower() for w in app.warning)
     with patch("src.runtime.controller.start_run") as spy:
-        find_button(app, "Ejecutar estudio real").click()
+        find_button(app, "Iniciar estudio").click()
         app.run()
         assert spy.call_count == 0
-        assert any("GROQ_API_KEY" in e.value for e in app.error)
+        assert any("redacción no está disponible" in e.value.lower() for e in app.error)
 
 
 def test_mcp_error_is_reported_without_crashing(app):
     with patch("src.ui.studio.services._query_mcp", side_effect=RuntimeError("servidor MCP no disponible")):
-        app.radio(key="ff_page").set_value("Indicadores oficiales")
-        app.run()
-        find_button(app, "Consultar indicadores MCP").click()
+        goto(app, "Indicadores oficiales")
+        find_button(app, "Actualizar indicadores oficiales").click()
         app.run()
     assert app.session_state["ff_mcp_error"] is not None
-    assert any("No se pudo consultar MCP" in e.value for e in app.error)
+    assert any("No se pudieron actualizar los indicadores oficiales" in e.value for e in app.error)
     assert not app.exception
 
 
@@ -377,10 +441,12 @@ def test_mcp_error_is_reported_without_crashing(app):
 def test_previous_run_listed_and_loadable(app):
     run_study_to_approval(app)
     run_id = app.session_state["ff_run_id"]
-    app.radio(key="ff_page").set_value("Inicio")
-    app.run()
-    assert run_id in [c.value for c in app.code]
-    load_btn = next(b for b in app.button if b.label == "Cargar")
+    goto(app, "Inicio")
+    rendered = " ".join(m.value for m in app.markdown).lower()
+    assert "gimnasio con ludoteca" in rendered
+    # La portada nunca muestra el identificador interno de la ejecución.
+    assert run_id not in " ".join(c.value for c in app.code)
+    load_btn = next(b for b in app.button if b.label == "Reanudar")
     load_btn.click()
     app.run()
     assert not app.exception
@@ -398,9 +464,8 @@ def test_recommendation_screen_runs_deterministic_model(app, tmp_path):
     dst.parent.mkdir(parents=True, exist_ok=True)
     if src.is_file():
         shutil.copy2(src, dst)
-    app.radio(key="ff_page").set_value("Recomendación")
-    app.run()
-    find_button(app, "Ejecutar recomendación determinista").click()
+    goto(app, "Recomendación")
+    find_button(app, "Calcular recomendación").click()
     app.run()
     assert not app.exception
     rendered = " ".join(m.value for m in app.markdown)
@@ -412,16 +477,20 @@ def test_recommendation_screen_runs_deterministic_model(app, tmp_path):
 # J. Recomendación: traducción de estados y explicación de la puntuación
 # ---------------------------------------------------------------------------
 def test_recommendation_translates_insufficient_evidence(app):
-    app.radio(key="ff_page").set_value("Recomendación")
-    app.run()
-    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    goto(app, "Recomendación")
+    btn = next(b for b in app.button if b.label == "Calcular recomendación")
     btn.click()
     app.run()
     assert not app.exception
     md = " ".join(m.value for m in app.markdown)
     captions = " ".join(c.value for c in app.caption)
-    assert "### Evidencia insuficiente para emitir una recomendación concluyente" in md
-    assert "Código interno del modelo (trazabilidad): `insufficient_evidence`" in captions
+    alerts = " ".join(w.value for w in app.warning)
+    assert "Evidencia insuficiente para emitir una recomendación concluyente" in alerts
+    # El código interno queda solo en los detalles técnicos, no en la vista principal.
+    assert "insufficient_evidence" not in md
+    assert "insufficient_evidence" not in captions
+    assert "insufficient_evidence" not in alerts
+    assert "insufficient_evidence" in " ".join(c.value for c in app.code)
 
 
 def test_recommendation_preserves_internal_code_for_diagnostics(app):
@@ -452,9 +521,8 @@ def _make_result_stub(code: str):
 
 
 def test_recommendation_explains_score(app):
-    app.radio(key="ff_page").set_value("Recomendación")
-    app.run()
-    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    goto(app, "Recomendación")
+    btn = next(b for b in app.button if b.label == "Calcular recomendación")
     btn.click()
     app.run()
     captions = " ".join(c.value for c in app.caption)
@@ -464,9 +532,8 @@ def test_recommendation_explains_score(app):
 
 
 def test_recommendation_shows_missing_evidence_and_factors(app):
-    app.radio(key="ff_page").set_value("Recomendación")
-    app.run()
-    btn = next(b for b in app.button if b.label == "Ejecutar recomendación determinista")
+    goto(app, "Recomendación")
+    btn = next(b for b in app.button if b.label == "Calcular recomendación")
     btn.click()
     app.run()
     md = " ".join(m.value for m in app.markdown)
