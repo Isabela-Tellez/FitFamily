@@ -123,6 +123,12 @@ def render_scenario_comparison(scenarios):
 
     st.subheader("Comparación de escenarios")
 
+    st.caption(
+        "La gráfica compara los ingresos mensuales estimados "
+        "y el resultado mensual de los escenarios conservador, "
+        "intermedio y optimista."
+    )
+
     rows = []
 
     for item in scenarios:
@@ -246,9 +252,4 @@ def render_scenario_composition(scenarios):
         ],
         height=300,
         width="stretch",
-    )
-
-    st.caption(
-        "Verde salvia: costes fijos y variables. "
-        "Coral: resultado mensual."
     )
