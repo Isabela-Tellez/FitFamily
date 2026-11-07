@@ -17,6 +17,7 @@
 </p>
 
 <p align="center">
+  <img alt="Streamlit" src="https://img.shields.io/badge/Streamlit-Studio-FF4B4B?logo=streamlit&amp;logoColor=white">
   <img alt="Python 3.13" src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&amp;logoColor=white">
   <img alt="LangGraph orquestación" src="https://img.shields.io/badge/LangGraph-orquestación-1C3C3C?logo=langchain&amp;logoColor=white">
   <img alt="CrewAI agentes" src="https://img.shields.io/badge/CrewAI-agentes-FF5A50">
@@ -31,7 +32,7 @@
   <img alt="Licencia MIT" src="https://img.shields.io/badge/Licencia-MIT-2EA44F">
 </p>
 
-FitFamily reúne investigación web, datos municipales, análisis económico, redacción asistida y revisión en un flujo de LangGraph. El resultado es un borrador con fuentes, supuestos y referencias a los cálculos. Una persona revisa el documento y autoriza su entrega en Markdown, PDF y CSV.
+FitFamily reúne investigación web, datos municipales, análisis económico, redacción asistida y revisión en un flujo de LangGraph. El resultado es un borrador con fuentes, supuestos y referencias a los cálculos. La aprobación humana autoriza la exportación a Markdown o PDF y la actualización del CSV de seguimiento.
 
 El caso de estudio es la apertura de un gimnasio con ludoteca en El Cañaveral. El informe ayuda a comparar la oferta existente y explorar escenarios de clientela, cuota y costes. Las conclusiones distinguen datos observados, cálculos, hipótesis y preguntas abiertas.
 
@@ -48,7 +49,7 @@ El caso de estudio es la apertura de un gimnasio con ludoteca en El Cañaveral. 
 | Revisión | Comprobación de referencias, valores, unidades, escenarios y procedencia de los cuatro indicadores. |
 | Orquestación | LangGraph, checkpoints SQLite, eventos y recuperación de ejecuciones. |
 | Entrega | Aprobación humana por versión y huella; PDF, Markdown y CSV con reintentos de acciones pendientes. |
-| Interfaz | Aplicación Streamlit profesional en español: navegación por pasos, indicadores, resultados, recomendación y aprobación con diseño accesible. |
+| Interfaz | FitFamily Studio en español, con pantallas de estudios, indicadores, resultados, recomendación y aprobación. |
 
 ## Flujo de trabajo
 
@@ -139,17 +140,17 @@ Para consultar los indicadores municipales del MCP local:
 python -m src.mcp.client
 ```
 
-### Interfaz Streamlit
+### FitFamily Studio
 
-Desde la raíz del proyecto, activa el entorno virtual y prepara tu fichero local
-`.env` según `.env.example`. Para abrir FitFamily Studio ejecuta:
+Desde la raíz del repositorio, con las dependencias instaladas y el entorno activado:
 
 ```bash
-python -m pip install -r requirements.txt
 python -m streamlit run src/ui/app.py
 ```
 
-La decisión de aprobación incluye la huella de la vista previa que ha leído la persona.
+Abre la dirección local que muestra Streamlit. En **Nuevo estudio**, introduce el encargo y los supuestos económicos. Consulta **Indicadores oficiales** y **Resultados**, y abre **Aprobación y entrega** para revisar el borrador. Para iniciar un estudio con redacción real, configura Groq y habilita la conexión a las fuentes web.
+
+La aprobación vincula las acciones elegidas a la versión y a la huella de la vista previa. Si cambian el borrador, la investigación o el análisis, se requiere una nueva revisión. **Solicitar cambios** rechaza esa versión y bloquea su entrega.
 
 ### Ejecutar el workflow
 
@@ -191,7 +192,7 @@ with open_checkpointer(settings.checkpoints_db_path) as checkpointer:
     print(result)
 ```
 
-Al alcanzar la aprobación, consulta el borrador antes de reanudar. El controlador recibe la decisión, el report_version_id del estado y la lista de acciones autorizadas. Las funciones start_run, load_run, resume_run y retry_delivery se encuentran en [src/runtime/controller.py](src/runtime/controller.py). Mantén abierta la conexión del checkpointer durante el uso del grafo.
+Al alcanzar la aprobación, consulta el borrador antes de reanudar. El controlador recibe la decisión, el `report_version_id`, la `draft_fingerprint` de la vista previa y la lista de acciones autorizadas. Las funciones start_run, load_run, resume_run y retry_delivery se encuentran en [src/runtime/controller.py](src/runtime/controller.py). Mantén abierta la conexión del checkpointer durante el uso del grafo.
 
 ## Informe y trazabilidad
 
@@ -223,7 +224,7 @@ La redacción recibió los registros municipales y las referencias. Los importes
 
 ![Primera página del borrador redactado con Groq](assets/report-groq-preview.png)
 
-La captura corresponde al borrador real de esta prueba. Los supuestos económicos son ilustrativos y la muestra administrativa se limita a tres registros. El resultado acredita la integración de redacción, métricas, revisión y renderizado para esas entradas. La búsqueda web, la interfaz y la entrega tras aprobación se validan mediante sus propios recorridos.
+La captura corresponde al borrador real de esta prueba. Los supuestos económicos son ilustrativos y la muestra administrativa se limita a tres registros. El resultado acredita la integración de redacción, métricas, revisión y renderizado para esas entradas. Las pruebas de Studio cubren el rechazo y la entrega aprobada con búsqueda y redacción simuladas. GitHub Actions también comprueba que Streamlit arranca.
 
 Puedes repetir la prueba con:
 
@@ -255,7 +256,7 @@ Los artefactos versionados tienen su propia fecha. Cada nueva investigación deb
 | Familias con hijos | `null` | — | No disponible: no es una categoría oficial de barrio |
 | Gimnasios con ludoteca | `null` | — | No disponible: ningún epígrafe combina ambas actividades |
 
-**Fechas de los datos.** La población corresponde a octubre de 2026 y los hogares a enero de 2025. El número medio de personas por hogar utiliza la población y los hogares de enero de 2025 para comparar datos del mismo periodo.
+**Fechas de los datos.** La población corresponde a octubre de 2026 y los hogares a enero de 2025. El tamaño medio del hogar utiliza la población y los hogares de enero de 2025 para comparar datos del mismo periodo.
 
 ### Lo que el registro de competidores añade
 
@@ -274,17 +275,15 @@ Los datos de hogares y población deben combinarse respetando el periodo. La ren
 
 Para regenerar datos oficiales, consulta [data/raw/README.md](data/raw/README.md) y [docs/auditoria-fuentes-datos.md](docs/auditoria-fuentes-datos.md). Algunos procesos geográficos requieren dependencias adicionales.
 
-## Equipo y responsabilidades
+## Componentes
 
-| Persona | Responsabilidad |
+| Módulo | Función |
 |---|---|
-| Juan | Investigación, herramientas web, datos municipales, registro de competidores y MCP. |
-| Laura | Análisis, cálculos económicos, gráficos y análisis de imagen. |
-| Gema | Redacción, informe, vista previa, PDF/Markdown y coordinación de entrega con CSV. |
-| María | Calidad de evidencias, revisión económica y vigencia de las revisiones. |
-| Isabela | Workflow LangGraph, persistencia, controlador, aprobación humana e integración de interfaz. |
-
-CrewAI ejecuta la tarea de redacción con Groq. LangGraph coordina las etapas y sus transiciones. Las herramientas Python recopilan datos y calculan indicadores reproducibles.
+| Investigación y datos | Fuentes web, registro municipal, evidencias y servidor MCP. |
+| Análisis | Indicadores económicos, gráficos y observaciones visuales. |
+| Informes | Redacción con CrewAI y Groq, vista previa y exportación. |
+| Revisión | Calidad de evidencias, procedencia de cifras y vigencia de la revisión. |
+| Orquestación e interfaz | LangGraph, persistencia, FitFamily Studio y aprobación humana. |
 
 ## Pruebas
 
@@ -316,7 +315,7 @@ FitFamily/
 │   ├── review/             # validación y calidad
 │   ├── runtime/            # controlador, eventos y presupuesto
 │   ├── tools/              # búsqueda, lectura y extracción
-│   ├── ui/                 # vista previa reutilizable
+│   ├── ui/                 # Studio, controlador y vista previa
 │   └── schemas.py          # contratos de investigación
 ├── tests/
 ├── demo_review.py
