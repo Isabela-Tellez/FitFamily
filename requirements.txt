@@ -41,3 +41,7 @@ pytest-cov==7.1.0
 reportlab==5.1.0
 pyproj==3.7.2
 matplotlib==3.11.2
+
+# Interfaz y configuración local
+streamlit>=1.50,<2
+python-dotenv>=1,<2

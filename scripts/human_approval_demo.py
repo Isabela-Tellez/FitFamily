@@ -55,6 +55,7 @@ with open_checkpointer() as checkpointer:
         resume = {
             "decision": decision,
             "report_version_id": report_version_id,
+            "draft_fingerprint": snapshot.interrupts[0].value["draft_fingerprint"],
         }
 
         if decision == "approved":

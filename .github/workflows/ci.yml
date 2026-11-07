@@ -37,7 +37,7 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
-      - name: Smoke test: arranque de Streamlit
+      - name: "Smoke test: arranque de Streamlit"
         run: |
           python -m streamlit run src/ui/app.py --server.port 8503 --server.headless true --server.address 127.0.0.1 &
           for i in $(seq 1 30); do
@@ -49,3 +49,6 @@ jobs:
           done
           echo "Streamlit no arranco a tiempo."
           exit 1
+
+      - name: Verificar los nodos compartidos
+        run: python -m pytest tests/workflow_shared_acceptance.py -q
