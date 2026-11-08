@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <strong>Team</strong> · Juan · Laura · Gema · María · Isabela
+</p>
+
+<p align="center">
   <a href="#setup">Setup</a> ·
   <a href="#local-demos">Demo</a> ·
   <a href="#workflow">Workflow</a> ·
@@ -22,17 +26,14 @@
   <img alt="LangGraph orquestación" src="https://img.shields.io/badge/LangGraph-orquestación-1C3C3C?logo=langchain&amp;logoColor=white">
   <img alt="CrewAI agentes" src="https://img.shields.io/badge/CrewAI-agentes-FF5A50">
   <img alt="Groq LLM_y_visión" src="https://img.shields.io/badge/Groq-LLM_y_visión-F55036">
-  <img alt="Pydantic contratos" src="https://img.shields.io/badge/Pydantic-contratos-E92063?logo=pydantic&amp;logoColor=white">
-  <img alt="pandas análisis" src="https://img.shields.io/badge/pandas-análisis-150458?logo=pandas&amp;logoColor=white">
-  <img alt="Matplotlib gráficos" src="https://img.shields.io/badge/Matplotlib-gráficos-11557C">
-  <img alt="SQLite persistencia" src="https://img.shields.io/badge/SQLite-persistencia-003B57?logo=sqlite&amp;logoColor=white">
-  <img alt="MCP datos_locales" src="https://img.shields.io/badge/MCP-datos_locales-6F42C1">
-  <img alt="ReportLab PDF" src="https://img.shields.io/badge/ReportLab-PDF-006D66">
-  <img alt="pytest pruebas" src="https://img.shields.io/badge/pytest-pruebas-0A9EDC?logo=pytest&amp;logoColor=white">
   <img alt="Licencia MIT" src="https://img.shields.io/badge/Licencia-MIT-2EA44F">
 </p>
 
+This English guide covers installation, configuration and Studio. The [Spanish README](README.md) also documents the backend API and includes additional examples.
+
 FitFamily combines web research, municipal records, economic analysis, report writing and review in a LangGraph workflow. The case study compares the local offer and explores scenarios for opening a gym with childcare in El Cañaveral, Madrid.
+
+![FitFamily Studio home screen](assets/studio-inicio.jpg)
 
 ## Workflow
 
@@ -46,21 +47,43 @@ LangGraph persists execution state in SQLite. FitFamily Studio provides screens 
 
 ## Setup
 
-Use Python 3.13, the version used by GitHub Actions. Clone the repository, check out dev, and run these commands from its root.
+Use Python 3.13, the version used by GitHub Actions. Run the following from the repository root.
 
 ```bash
+git switch dev
 python -m venv .venv
-# Git Bash on Windows
-source .venv/Scripts/activate
-# macOS or Linux
-# source .venv/bin/activate
+```
+
+Activate the environment using the command for your shell.
+
+| Shell | Command |
+|---|---|
+| Git Bash on Windows | `source .venv/Scripts/activate` |
+| PowerShell | `./.venv/Scripts/Activate.ps1` |
+| macOS or Linux | `source .venv/bin/activate` |
+
+```bash
 python -m pip install -r requirements.txt
+```
+
+Copy [.env.example](.env.example) to a local .env file. If you already have one, update its settings in place.
+
+| Variable | Purpose |
+|---|---|
+| GROQ_API_KEY | Groq credentials for writing and visual analysis. |
+| WRITER_LLM_MODEL | Text model with the groq/ prefix. |
+| VISION_LLM_MODEL | Optional image-capable Groq model. |
+| TAVILY_API_KEY | Optional alternate web search provider. |
+| FITFAMILY_CHECKPOINTS_DB and FITFAMILY_EVENTS_DB | SQLite paths for checkpoints and events. |
+| FITFAMILY_OUTPUT_DIR and FITFAMILY_TRACKING_CSV | Report and delivery tracking paths. |
+
+Run Studio:
+
+```bash
 python -m streamlit run src/ui/app.py
 ```
 
-In PowerShell, activate with .\.venv\Scripts\Activate.ps1. Open the local URL printed by Streamlit. Start from **Nuevo estudio**, then review the draft under **Aprobación y entrega**. **Solicitar cambios** rejects that version and blocks delivery.
-
-Use [.env.example](.env.example) to configure the local environment. GROQ_API_KEY and WRITER_LLM_MODEL enable provider-backed writing. VISION_LLM_MODEL configures the optional visual provider. TAVILY_API_KEY enables the alternate search provider. Keep provider keys local. See [the Spanish setup guide](README.md#puesta-en-marcha) for the backend API example and persistence settings.
+Open the local URL printed by Streamlit. Start from **Nuevo estudio**, then review the draft under **Aprobación y entrega**. **Solicitar cambios** rejects that version and blocks delivery. For programmatic execution, see the [backend example](README.md#ejecutar-el-workflow).
 
 ## Local demos
 

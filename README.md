@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <strong>Equipo</strong> · Juan · Laura · Gema · María · Isabela
+</p>
+
+<p align="center">
   <a href="#puesta-en-marcha">Instalación</a> ·
   <a href="#demostración-local">Demo</a> ·
   <a href="#flujo-de-trabajo">Workflow</a> ·
@@ -22,19 +26,14 @@
   <img alt="LangGraph orquestación" src="https://img.shields.io/badge/LangGraph-orquestación-1C3C3C?logo=langchain&amp;logoColor=white">
   <img alt="CrewAI agentes" src="https://img.shields.io/badge/CrewAI-agentes-FF5A50">
   <img alt="Groq LLM_y_visión" src="https://img.shields.io/badge/Groq-LLM_y_visión-F55036">
-  <img alt="Pydantic contratos" src="https://img.shields.io/badge/Pydantic-contratos-E92063?logo=pydantic&amp;logoColor=white">
-  <img alt="pandas análisis" src="https://img.shields.io/badge/pandas-análisis-150458?logo=pandas&amp;logoColor=white">
-  <img alt="Matplotlib gráficos" src="https://img.shields.io/badge/Matplotlib-gráficos-11557C">
-  <img alt="SQLite persistencia" src="https://img.shields.io/badge/SQLite-persistencia-003B57?logo=sqlite&amp;logoColor=white">
-  <img alt="MCP datos_locales" src="https://img.shields.io/badge/MCP-datos_locales-6F42C1">
-  <img alt="ReportLab PDF" src="https://img.shields.io/badge/ReportLab-PDF-006D66">
-  <img alt="pytest pruebas" src="https://img.shields.io/badge/pytest-pruebas-0A9EDC?logo=pytest&amp;logoColor=white">
   <img alt="Licencia MIT" src="https://img.shields.io/badge/Licencia-MIT-2EA44F">
 </p>
 
 FitFamily reúne investigación web, datos municipales, análisis económico, redacción asistida y revisión en un flujo de LangGraph. El resultado es un borrador con fuentes, supuestos y referencias a los cálculos. La aprobación humana autoriza la exportación a Markdown o PDF y la actualización del CSV de seguimiento.
 
 El caso de estudio es la apertura de un gimnasio con ludoteca en El Cañaveral. El informe ayuda a comparar la oferta existente y explorar escenarios de clientela, cuota y costes. Las conclusiones distinguen datos observados, cálculos, hipótesis y preguntas abiertas.
+
+![Pantalla de inicio de FitFamily Studio](assets/studio-inicio.jpg)
 
 ## Funcionalidades
 
